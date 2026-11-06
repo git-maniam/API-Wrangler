@@ -9,6 +9,31 @@ namespace ApiWrangler.IntegrationTests;
 public sealed class ProjectPersistenceTests
 {
     [Fact]
+    public async Task Read_MissingRequiredField_ReportsFileAndFieldPointer()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "ApiWrangler-project-tests", Guid.NewGuid().ToString("N"));
+        var projectRoot = Path.Combine(root, "project");
+        Directory.CreateDirectory(root);
+        try
+        {
+            await using var session = await new ProjectRepository(Path.Combine(root, "state")).InitializeAsync(projectRoot, "Fixture");
+            var path = "collections/default/requests/hello.request.json";
+            var assetPath = Path.Combine(projectRoot, path.Replace('/', Path.DirectorySeparatorChar));
+            var invalid = CanonicalJson.Parse(await File.ReadAllBytesAsync(assetPath));
+            invalid.Remove("method");
+            await File.WriteAllBytesAsync(assetPath, CanonicalJson.Serialize(invalid));
+
+            var view = await session.ReadAsync();
+
+            Assert.Contains(view.Diagnostics, diagnostic => diagnostic.File == path && diagnostic.Pointer == "/method" && diagnostic.Message.Contains("method", StringComparison.Ordinal));
+        }
+        finally
+        {
+            if (Directory.Exists(root)) Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
     public async Task Recover_ExternalEditInTransaction_PreservesAllCurrentFiles()
     {
         var root = Path.Combine(Path.GetTempPath(), "ApiWrangler-project-tests", Guid.NewGuid().ToString("N"));

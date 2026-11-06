@@ -8,12 +8,16 @@ namespace ApiWrangler.Storage;
 internal sealed class AssetValidator
 {
     internal static readonly IReadOnlyDictionary<string, byte[]> SchemaFiles = LoadSchemas();
-    private sealed record SchemaCache(IReadOnlyDictionary<AssetKind, JsonSchema> Schemas, IReadOnlyList<JsonDocument> Documents);
+    private sealed record SchemaCache(
+        IReadOnlyDictionary<AssetKind, JsonSchema> Schemas,
+        IReadOnlyDictionary<AssetKind, string[]> RequiredFields,
+        IReadOnlyList<JsonDocument> Documents);
     private static readonly SchemaCache Cache = LoadValidatedSchemas();
 
     private static SchemaCache LoadValidatedSchemas()
     {
         var schemas = new Dictionary<AssetKind, JsonSchema>();
+        var requiredFields = new Dictionary<AssetKind, string[]>();
         var documents = new List<JsonDocument>();
         foreach (var kind in Enum.GetValues<AssetKind>())
         {
@@ -21,8 +25,10 @@ internal sealed class AssetValidator
             var document = JsonDocument.Parse(SchemaFiles[name + ".schema.json"]);
             documents.Add(document);
             schemas[kind] = JsonSchema.Build(document.RootElement, new BuildOptions { Dialect = Dialect.Draft202012 });
+            requiredFields[kind] = document.RootElement.GetProperty("required").EnumerateArray()
+                .Select(property => property.GetString()!).ToArray();
         }
-        return new(schemas, documents);
+        return new(schemas, requiredFields, documents);
     }
 
     public static AssetKind? KindFor(string path) => Path.GetFileName(path) switch
@@ -41,6 +47,10 @@ internal sealed class AssetValidator
         var problems = new List<ProjectDiagnostic>();
         foreach (var asset in assets)
         {
+            foreach (var field in Cache.RequiredFields[asset.Kind])
+                if (!asset.Content.ContainsKey(field))
+                    problems.Add(new(asset.Path, "/" + field.Replace("~", "~0", StringComparison.Ordinal).Replace("/", "~1", StringComparison.Ordinal),
+                        $"Required field '{field}' is missing.", asset.Id));
             var results = Cache.Schemas[asset.Kind].Evaluate(JsonSerializer.SerializeToElement(asset.Content),
                 new EvaluationOptions { OutputFormat = OutputFormat.List, RequireFormatValidation = true });
             AddErrors(results, asset, problems);
