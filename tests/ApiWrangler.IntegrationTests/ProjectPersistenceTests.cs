@@ -9,6 +9,43 @@ namespace ApiWrangler.IntegrationTests;
 public sealed class ProjectPersistenceTests
 {
     [Fact]
+    public async Task Watch_ExternalEdit_PreservesDirtyDraftAndRequiresConflictResolution()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "ApiWrangler-project-tests", Guid.NewGuid().ToString("N"));
+        var projectRoot = Path.Combine(root, "project");
+        Directory.CreateDirectory(root);
+        try
+        {
+            await using var session = await new ProjectRepository(Path.Combine(root, "state")).InitializeAsync(projectRoot, "Fixture");
+            var path = "collections/default/requests/hello.request.json";
+            var asset = (await session.ReadAsync()).Assets.Single(item => item.Path == path);
+            var dirtyContent = (JsonObject)asset.Content.DeepClone();
+            dirtyContent["name"] = "Unsaved editor draft";
+            var draft = new EditorDraft(path, asset.Hash, dirtyContent);
+            await session.SaveDraftAsync(draft);
+
+            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            await using var changes = session.WatchAsync(timeout.Token).GetAsyncEnumerator();
+            var externalContent = (JsonObject)asset.Content.DeepClone();
+            externalContent["name"] = "External change";
+            var fullPath = Path.Combine(projectRoot, path.Replace('/', Path.DirectorySeparatorChar));
+            await File.WriteAllBytesAsync(fullPath, CanonicalJson.Serialize(externalContent));
+
+            Assert.True(await changes.MoveNextAsync().AsTask().WaitAsync(timeout.Token));
+            var preserved = await session.ReadDraftAsync(path, timeout.Token);
+            Assert.NotNull(preserved);
+            Assert.Equal(asset.Hash, preserved.BaseHash);
+            Assert.Equal("Unsaved editor draft", preserved.Content["name"]?.GetValue<string>());
+            await Assert.ThrowsAsync<ProjectConflictException>(() => session.SaveAsync([new(path, preserved.Content, preserved.BaseHash)]));
+            Assert.Equal("Unsaved editor draft", (await session.ReadDraftAsync(path))!.Content["name"]?.GetValue<string>());
+        }
+        finally
+        {
+            if (Directory.Exists(root)) Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
     public async Task LocalSettings_SaveAndReload_PreservesLastProject()
     {
         var root = Path.Combine(Path.GetTempPath(), "ApiWrangler-project-tests", Guid.NewGuid().ToString("N"));
