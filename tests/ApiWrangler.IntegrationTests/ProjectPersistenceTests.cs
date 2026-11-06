@@ -9,6 +9,39 @@ namespace ApiWrangler.IntegrationTests;
 public sealed class ProjectPersistenceTests
 {
     [Fact]
+    public async Task Save_ExtensionFieldsRemainCanonical_AndUnchangedSaveProducesNoDiff()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "ApiWrangler-project-tests", Guid.NewGuid().ToString("N"));
+        var projectRoot = Path.Combine(root, "project");
+        var repository = new ProjectRepository(Path.Combine(root, "state"));
+        Directory.CreateDirectory(root);
+        try
+        {
+            await using var session = await repository.InitializeAsync(projectRoot, "Fixture");
+            var request = (await session.ReadAsync()).Assets.Single(asset => asset.Kind == AssetKind.Request);
+            var edited = (JsonObject)request.Content.DeepClone();
+            edited["vendorExtension"] = new JsonObject { ["enabled"] = true, ["label"] = "preserved" };
+            await session.SaveAsync([new(request.Path, edited, request.Hash)]);
+
+            var path = Path.Combine(projectRoot, request.Path.Replace('/', Path.DirectorySeparatorChar));
+            var firstSave = await File.ReadAllBytesAsync(path);
+            var text = System.Text.Encoding.UTF8.GetString(firstSave);
+            Assert.EndsWith("\n", text);
+            Assert.DoesNotContain("\r", text, StringComparison.Ordinal);
+            Assert.True(text.IndexOf("\"id\"", StringComparison.Ordinal) < text.IndexOf("\"vendorExtension\"", StringComparison.Ordinal));
+            Assert.Equal("preserved", CanonicalJson.Parse(firstSave)["vendorExtension"]?["label"]?.GetValue<string>());
+
+            var saved = (await session.ReadAsync()).Assets.Single(asset => asset.Path == request.Path);
+            await session.SaveAsync([new(saved.Path, saved.Content.DeepClone().AsObject(), saved.Hash)]);
+            Assert.Equal(firstSave, await File.ReadAllBytesAsync(path));
+        }
+        finally
+        {
+            if (Directory.Exists(root)) Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
     public async Task Open_SecondWriterIsReadOnly_AndExternalEditsCauseConflict()
     {
         var root = Path.Combine(Path.GetTempPath(), "ApiWrangler-project-tests", Guid.NewGuid().ToString("N"));
