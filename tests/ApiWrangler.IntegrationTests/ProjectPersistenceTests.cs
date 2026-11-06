@@ -9,6 +9,32 @@ namespace ApiWrangler.IntegrationTests;
 public sealed class ProjectPersistenceTests
 {
     [Fact]
+    public async Task Watch_ExternalProjectEdit_EmitsDebouncedChange()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "ApiWrangler-project-tests", Guid.NewGuid().ToString("N"));
+        var projectRoot = Path.Combine(root, "project");
+        var repository = new ProjectRepository(Path.Combine(root, "state"));
+        Directory.CreateDirectory(root);
+        try
+        {
+            await using var session = await repository.InitializeAsync(projectRoot, "Fixture");
+            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            await using var changes = session.WatchAsync(timeout.Token).GetAsyncEnumerator();
+            var requestPath = Path.Combine(projectRoot, "collections", "default", "requests", "hello.request.json");
+            var request = CanonicalJson.Parse(await File.ReadAllBytesAsync(requestPath));
+            request["name"] = "Edited externally";
+            await File.WriteAllBytesAsync(requestPath, CanonicalJson.Serialize(request));
+
+            Assert.True(await changes.MoveNextAsync().AsTask().WaitAsync(timeout.Token));
+            Assert.True(changes.Current);
+        }
+        finally
+        {
+            if (Directory.Exists(root)) Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
     public async Task Save_ExtensionFieldsRemainCanonical_AndUnchangedSaveProducesNoDiff()
     {
         var root = Path.Combine(Path.GetTempPath(), "ApiWrangler-project-tests", Guid.NewGuid().ToString("N"));
