@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType><AssemblyName>api-wrangler</AssemblyName></PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../ApiWrangler.Execution/ApiWrangler.Execution.csproj" />
+    <PackageReference Include="System.CommandLine" />
+  </ItemGroup>
+</Project>

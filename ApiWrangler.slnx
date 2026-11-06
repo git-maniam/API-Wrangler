@@ -1,0 +1,16 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/ApiWrangler.Application/ApiWrangler.Application.csproj" />
+    <Project Path="src/ApiWrangler.Cli/ApiWrangler.Cli.csproj" />
+    <Project Path="src/ApiWrangler.Desktop/ApiWrangler.Desktop.csproj" />
+    <Project Path="src/ApiWrangler.Domain/ApiWrangler.Domain.csproj" />
+    <Project Path="src/ApiWrangler.Execution/ApiWrangler.Execution.csproj" />
+    <Project Path="src/ApiWrangler.Storage/ApiWrangler.Storage.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/ApiWrangler.IntegrationTests/ApiWrangler.IntegrationTests.csproj" />
+  </Folder>
+  <Folder Name="/tests/Fixtures/">
+    <Project Path="tests/Fixtures/ApiWrangler.FixtureApi/ApiWrangler.FixtureApi.csproj" />
+  </Folder>
+</Solution>

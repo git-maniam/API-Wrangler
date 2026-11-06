@@ -1,0 +1,45 @@
+name: Foundation checks
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  headless:
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '26.13.0'
+      - run: npm ci --ignore-scripts
+        working-directory: workers/node
+      - run: npm run build
+        working-directory: workers/node
+      - run: dotnet restore tests/ApiWrangler.IntegrationTests --locked-mode
+      - name: Test shared engine and process probes
+        shell: pwsh
+        run: |
+          $env:AWR_NODE = (Get-Command node).Source
+          $env:AWR_NODE_WORKER = Join-Path $PWD 'workers/node/dist/probe.js'
+          dotnet test tests/ApiWrangler.IntegrationTests -c Release --no-restore --logger trx
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results-${{ matrix.os }}
+          path: tests/**/TestResults/*.trx
+  desktop:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - run: dotnet restore ApiWrangler.slnx --locked-mode
+      - run: dotnet build ApiWrangler.slnx -c Release --no-restore
+      - run: dotnet format ApiWrangler.slnx --verify-no-changes --no-restore
+      - run: dotnet publish src/ApiWrangler.Desktop -c Release -r win-x64 --self-contained true -p:RestoreLockedMode=true -p:PublishTrimmed=false -o artifacts/x64

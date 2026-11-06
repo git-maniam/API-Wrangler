@@ -55,3 +55,12 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+
+# Repository-local tooling and generated worker output
+.tools/
+.dotnet-home/
+.packages/
+node_modules/
+workers/node/dist/
+.vs/
+*.user

@@ -1,0 +1,1133 @@
+{
+  "repository": "git-maniam/API-Wrangler",
+  "owner": "git-maniam",
+  "projectNumber": 4,
+  "projectUrl": "https://github.com/users/git-maniam/projects/4",
+  "desktopTarget": "Windows 11 x64",
+  "headlessTarget": "Windows and Linux x64",
+  "tickets": [
+    {
+      "key": "P0",
+      "title": "[Phase 0] Foundation and feasibility",
+      "kind": "epic",
+      "phase": 0,
+      "milestone": "Milestone A — Team HTTP regression",
+      "status": "In progress",
+      "priority": "P0",
+      "size": "XL",
+      "spec": "3, 26–27, 31–32",
+      "dependsOn": [],
+      "description": "Deliver phase 0 of the accepted API Wrangler implementation plan. A foundation implementation already exists locally; it is uncommitted and has not been reviewed or merged.",
+      "acceptance": [
+        "Complete P0.1: Pinned solution, shared HTTP engine, and WPF workbench.",
+        "Complete P0.2: Paged dataset and desktop performance baseline.",
+        "Complete P0.3: Installed Git and trusted Node feasibility probes.",
+        "Complete P0.4: Windows x64 packaging, Linux checks, and dependency review.",
+        "Complete P0.5: Validate private HTTPS/SSH Git authentication and phase-0 acceptance.",
+        "Attach meaningful executed verification, update living documentation, and review phase exit criteria.",
+        "Do not close this epic until all required sub-issues are verified and merged."
+      ]
+    },
+    {
+      "key": "P0.1",
+      "title": "[P0.1] Pinned solution, shared HTTP engine, and WPF workbench",
+      "kind": "task",
+      "parent": "P0",
+      "phase": 0,
+      "milestone": "Milestone A — Team HTTP regression",
+      "status": "In progress",
+      "priority": "P0",
+      "size": "L",
+      "spec": "3, 26–27, 31–32",
+      "dependsOn": [],
+      "description": "Build the minimal Domain/Application/Execution/Desktop/CLI solution with pinned dependencies, MVVM, native Fluent styling, and AvalonEdit.",
+      "acceptance": [
+        "Release build and locked restore pass without warnings.",
+        "Desktop and CLI share transport behavior; HTTP is off the dispatcher.",
+        "Streaming limits, TLS defaults, cancellation, timeout, and unsafe-input tests pass."
+      ],
+      "progress": "Implemented in part and verified locally; changes are uncommitted. See local docs/implementation-status.md. Review, merge, and remaining acceptance checks are still pending."
+    },
+    {
+      "key": "P0.2",
+      "title": "[P0.2] Paged dataset and desktop performance baseline",
+      "kind": "task",
+      "parent": "P0",
+      "phase": 0,
+      "milestone": "Milestone A — Team HTTP regression",
+      "status": "In progress",
+      "priority": "P0",
+      "size": "L",
+      "spec": "3, 26–27, 31–32",
+      "dependsOn": [
+        "P0.1"
+      ],
+      "description": "Implement the read-only 100,000-row feasibility grid and reproducible desktop measurement harness.",
+      "acceptance": [
+        "Rows and columns are virtualized; cache remains bounded.",
+        "Record real startup, memory, grid timing, hardware, sample counts, and limitations.",
+        "Verify keyboard/focus, screen-reader labels, high contrast, and DPI behavior; do not claim full NFR acceptance from empty-shell results."
+      ],
+      "progress": "Implemented in part and verified locally; changes are uncommitted. See local docs/implementation-status.md. Review, merge, and remaining acceptance checks are still pending."
+    },
+    {
+      "key": "P0.3",
+      "title": "[P0.3] Installed Git and trusted Node feasibility probes",
+      "kind": "task",
+      "parent": "P0",
+      "phase": 0,
+      "milestone": "Milestone A — Team HTTP regression",
+      "status": "In progress",
+      "priority": "P0",
+      "size": "L",
+      "spec": "3, 26–27, 31–32",
+      "dependsOn": [
+        "P0.1"
+      ],
+      "description": "Validate argument-safe installed-Git execution and framed on-demand Node IPC.",
+      "acceptance": [
+        "Local fetch preserves working files and uses existing Git configuration.",
+        "Node protocol checks size, version, correlation, and deadlines; cancellation terminates descendants.",
+        "Unicode arguments and bounded output tests pass; document production trust/job-object work remaining."
+      ],
+      "progress": "Implemented in part and verified locally; changes are uncommitted. See local docs/implementation-status.md. Review, merge, and remaining acceptance checks are still pending."
+    },
+    {
+      "key": "P0.4",
+      "title": "[P0.4] Windows x64 packaging, Linux checks, and dependency review",
+      "kind": "task",
+      "parent": "P0",
+      "phase": 0,
+      "milestone": "Milestone A — Team HTTP regression",
+      "status": "In progress",
+      "priority": "P0",
+      "size": "L",
+      "spec": "3, 26–27, 31–32",
+      "dependsOn": [
+        "P0.1"
+      ],
+      "description": "Produce Windows 11 x64 previews, verify shared code on Linux x64, and record dependency/license review.",
+      "acceptance": [
+        "Windows and Linux tests run with Node tests enabled and explicit pass/fail evidence.",
+        "Self-contained x64 preview runs; package generation preserves locked restores.",
+        "Document all phase-0 evidence, unresolved gates, and requirement links; ARM64 is explicitly deferred."
+      ],
+      "progress": "Implemented in part and verified locally; changes are uncommitted. See local docs/implementation-status.md. Review, merge, and remaining acceptance checks are still pending."
+    },
+    {
+      "key": "P0.5",
+      "title": "[P0.5] Validate private HTTPS/SSH Git authentication and phase-0 acceptance",
+      "kind": "task",
+      "parent": "P0",
+      "phase": 0,
+      "milestone": "Milestone A — Team HTTP regression",
+      "status": "Ready",
+      "priority": "P0",
+      "size": "L",
+      "spec": "3, 26–27, 31–32",
+      "dependsOn": [
+        "P0.1"
+      ],
+      "description": "Finish user-environment authentication and native desktop acceptance checks before closing phase 0.",
+      "acceptance": [
+        "Test an authorized private HTTPS repository with the configured helper and an authorized SSH repository.",
+        "Confirm rejected credentials and offline fetch surface failures without credential disclosure.",
+        "Review phase-0 exit criteria; attach evidence and record any explicitly accepted deferrals."
+      ],
+      "progress": "Not yet completed. Public-origin and local bare-remote fetch succeeded; private HTTPS/SSH and broader desktop acceptance still need evidence."
+    },
+    {
+      "key": "P1",
+      "title": "[Phase 1] Project format and persistence",
+      "kind": "epic",
+      "phase": 1,
+      "milestone": "Milestone A — Team HTTP regression",
+      "status": "Backlog",
+      "priority": "P0",
+      "size": "XL",
+      "spec": "4–5, 14.2, 30",
+      "dependsOn": [
+        "P0"
+      ],
+      "description": "Deliver phase 1 of the accepted API Wrangler implementation plan. Do not mark complete until the child tickets and the specification exit criteria pass.",
+      "acceptance": [
+        "Complete P1.1: Versioned schemas, project discovery, and canonical assets.",
+        "Complete P1.2: Atomic saves, writer ownership, and recovery journals.",
+        "Complete P1.3: File watching, local settings, and execution snapshots.",
+        "Attach meaningful executed verification, update living documentation, and review phase exit criteria.",
+        "Do not close this epic until all required sub-issues are verified and merged."
+      ]
+    },
+    {
+      "key": "P1.1",
+      "title": "[P1.1] Versioned schemas, project discovery, and canonical assets",
+      "kind": "task",
+      "parent": "P1",
+      "phase": 1,
+      "milestone": "Milestone A — Team HTTP regression",
+      "status": "Backlog",
+      "priority": "P0",
+      "size": "L",
+      "spec": "4–5, 14.2, 30",
+      "dependsOn": [
+        "P0"
+      ],
+      "description": "Implement standalone/repository project discovery, initialization, manifest/entity schemas, stable UUIDs, and canonical serialization.",
+      "acceptance": [
+        "Ship valid local schema references and actionable file/entity/field errors.",
+        "UTF-8/LF/two-space JSON is deterministic; unchanged saves create no diff.",
+        "Preserve extension fields and reject unsupported newer major versions for editing."
+      ]
+    },
+    {
+      "key": "P1.2",
+      "title": "[P1.2] Atomic saves, writer ownership, and recovery journals",
+      "kind": "task",
+      "parent": "P1",
+      "phase": 1,
+      "milestone": "Milestone A — Team HTTP regression",
+      "status": "Backlog",
+      "priority": "P0",
+      "size": "L",
+      "spec": "4–5, 14.2, 30",
+      "dependsOn": [
+        "P0"
+      ],
+      "description": "Implement one-writer ownership, optimistic external-change checks, recovery copies, and journaled multi-file imports.",
+      "acceptance": [
+        "Interrupted writes retain the prior valid asset; failed imports roll back or recover deterministically.",
+        "Second instances offer read-only access; never remove Git locks automatically.",
+        "Migration preview/backups, idempotence, and recovery scenarios have tests."
+      ]
+    },
+    {
+      "key": "P1.3",
+      "title": "[P1.3] File watching, local settings, and execution snapshots",
+      "kind": "task",
+      "parent": "P1",
+      "phase": 1,
+      "milestone": "Milestone A — Team HTTP regression",
+      "status": "Backlog",
+      "priority": "P0",
+      "size": "L",
+      "spec": "4–5, 14.2, 30",
+      "dependsOn": [
+        "P0"
+      ],
+      "description": "Implement debounced watching/rescan, dirty-editor conflict handling, host-local settings, and immutable run snapshots.",
+      "acceptance": [
+        "Watcher overflow rescans and branch changes invalidate caches.",
+        "Clean editors reload; dirty buffers are preserved and require conflict decisions.",
+        "Dirty runs snapshot exact inputs; record hashes without exposing secret values in shared metadata."
+      ]
+    },
+    {
+      "key": "P2",
+      "title": "[Phase 2] HTTP testing workbench",
+      "kind": "epic",
+      "phase": 2,
+      "milestone": "Milestone A — Team HTTP regression",
+      "status": "Backlog",
+      "priority": "P1",
+      "size": "XL",
+      "spec": "8–9, 15, 26",
+      "dependsOn": [
+        "P1"
+      ],
+      "description": "Deliver phase 2 of the accepted API Wrangler implementation plan. Do not mark complete until the child tickets and the specification exit criteria pass.",
+      "acceptance": [
+        "Complete P2.1: Persistent request workbench and complete HTTP transport controls.",
+        "Complete P2.2: Variable scopes, local secrets, and deterministic data helpers.",
+        "Complete P2.3: Required authentication flows and lifecycle.",
+        "Attach meaningful executed verification, update living documentation, and review phase exit criteria.",
+        "Do not close this epic until all required sub-issues are verified and merged."
+      ]
+    },
+    {
+      "key": "P2.1",
+      "title": "[P2.1] Persistent request workbench and complete HTTP transport controls",
+      "kind": "task",
+      "parent": "P2",
+      "phase": 2,
+      "milestone": "Milestone A — Team HTTP regression",
+      "status": "Backlog",
+      "priority": "P1",
+      "size": "L",
+      "spec": "8–9, 15, 26",
+      "dependsOn": [
+        "P1"
+      ],
+      "description": "Add request tree/tabs, save/reopen, response inspection, uploads, cookies, proxy/certificates, HTTP preference, redirects, and streaming.",
+      "acceptance": [
+        "Create/send/save/close/reopen/rerun passes UI tests.",
+        "Repeated headers/query parameters, multipart/file-backed bodies, compression, and bounded previews work.",
+        "TLS overrides are explicit; cross-origin auth stripping and non-idempotent retry protection are tested."
+      ]
+    },
+    {
+      "key": "P2.2",
+      "title": "[P2.2] Variable scopes, local secrets, and deterministic data helpers",
+      "kind": "task",
+      "parent": "P2",
+      "phase": 2,
+      "milestone": "Milestone A — Team HTTP regression",
+      "status": "Backlog",
+      "priority": "P1",
+      "size": "L",
+      "spec": "8–9, 15, 26",
+      "dependsOn": [
+        "P1"
+      ],
+      "description": "Implement documented precedence, type-aware substitutions, run-local state, explicit secret namespace, and DPAPI-protected desktop secrets.",
+      "acceptance": [
+        "Missing/circular substitutions fail with locations; nesting is bounded.",
+        "Dataset names cannot shadow secret references; effective-source inspection redacts values.",
+        "Seeded helpers and time-dependent generation are recorded; logs/reports/clipboard share redaction policy."
+      ]
+    },
+    {
+      "key": "P2.3",
+      "title": "[P2.3] Required authentication flows and lifecycle",
+      "kind": "task",
+      "parent": "P2",
+      "phase": 2,
+      "milestone": "Milestone A — Team HTTP regression",
+      "status": "Backlog",
+      "priority": "P1",
+      "size": "L",
+      "spec": "8–9, 15, 26",
+      "dependsOn": [
+        "P1"
+      ],
+      "description": "Implement None/Basic/Bearer/API-key, OAuth PKCE/client credentials/refresh, Windows integrated authentication, and client certificates.",
+      "acceptance": [
+        "Local fixtures verify success, expiry, refresh, rejection, and cancellation.",
+        "Credentials stay host-local and out of Git/diagnostics.",
+        "Imported unsupported authentication is rejected before execution."
+      ]
+    },
+    {
+      "key": "P3",
+      "title": "[Phase 3] Collections, assertions, and CLI",
+      "kind": "epic",
+      "phase": 3,
+      "milestone": "Milestone A — Team HTTP regression",
+      "status": "Backlog",
+      "priority": "P1",
+      "size": "XL",
+      "spec": "11, 14, 28–29",
+      "dependsOn": [
+        "P2"
+      ],
+      "description": "Deliver phase 3 of the accepted API Wrangler implementation plan. Do not mark complete until the child tickets and the specification exit criteria pass.",
+      "acceptance": [
+        "Complete P3.1: Collection lifecycle, isolated iterations, and bounded flow control.",
+        "Complete P3.2: Typed assertions, result aggregation, and evidence browser.",
+        "Complete P3.3: Project CLI contract and CI examples.",
+        "Attach meaningful executed verification, update living documentation, and review phase exit criteria.",
+        "Do not close this epic until all required sub-issues are verified and merged."
+      ]
+    },
+    {
+      "key": "P3.1",
+      "title": "[P3.1] Collection lifecycle, isolated iterations, and bounded flow control",
+      "kind": "task",
+      "parent": "P3",
+      "phase": 3,
+      "milestone": "Milestone A — Team HTTP regression",
+      "status": "Backlog",
+      "priority": "P1",
+      "size": "L",
+      "spec": "11, 14, 28–29",
+      "dependsOn": [
+        "P2"
+      ],
+      "description": "Implement selections, setup/teardown, inheritance ordering, concurrency, cookies, request dependencies, loops/polls, and graceful/forced cancellation.",
+      "acceptance": [
+        "CRUD workflow executes deterministically through desktop and CLI.",
+        "Iterations do not share mutable state implicitly; dependent requests are not parallelized accidentally.",
+        "Teardown always follows the documented policy; every loop/poll has a budget."
+      ]
+    },
+    {
+      "key": "P3.2",
+      "title": "[P3.2] Typed assertions, result aggregation, and evidence browser",
+      "kind": "task",
+      "parent": "P3",
+      "phase": 3,
+      "milestone": "Milestone A — Team HTTP regression",
+      "status": "Backlog",
+      "priority": "P1",
+      "size": "L",
+      "spec": "11, 14, 28–29",
+      "dependsOn": [
+        "P2"
+      ],
+      "description": "Implement all specified assertion types, attempt-level results, baselines, reruns, JSON/JUnit/HTML/Markdown reporters, and sanitized evidence export.",
+      "acceptance": [
+        "Failed assertions differ from transport errors; cancelled/timed-out/not-run work never appears passed.",
+        "Teardown errors survive aggregate calculation; ignored baseline fields require explicit acceptance.",
+        "Run metadata, dataset case, snapshots, seed, engine/dependencies, and attempts are preserved."
+      ]
+    },
+    {
+      "key": "P3.3",
+      "title": "[P3.3] Project CLI contract and CI examples",
+      "kind": "task",
+      "parent": "P3",
+      "phase": 3,
+      "milestone": "Milestone A — Team HTTP regression",
+      "status": "Backlog",
+      "priority": "P1",
+      "size": "L",
+      "spec": "11, 14, 28–29",
+      "dependsOn": [
+        "P2"
+      ],
+      "description": "Implement init/validate/run and reporter/selection options, stable JSON output, exit-code precedence, and generic/GitHub Actions examples.",
+      "acceptance": [
+        "Documented commands execute real behavior without desktop installation.",
+        "Noninteractive CI resolves host secrets, preserves failure artifacts, and never automatically pushes.",
+        "Invalid config, missing dependency, infrastructure error, cancellation, assertion failure, and success have tested exit codes."
+      ]
+    },
+    {
+      "key": "P4",
+      "title": "[Phase 4] Datasets and clipboard",
+      "kind": "epic",
+      "phase": 4,
+      "milestone": "Milestone A — Team HTTP regression",
+      "status": "Backlog",
+      "priority": "P1",
+      "size": "XL",
+      "spec": "10",
+      "dependsOn": [
+        "P3"
+      ],
+      "description": "Deliver phase 4 of the accepted API Wrangler implementation plan. Do not mark complete until the child tickets and the specification exit criteria pass.",
+      "acceptance": [
+        "Complete P4.1: Streaming imports and explicit type/null semantics.",
+        "Complete P4.2: Editable virtualized grid, clipboard workflows, and export.",
+        "Attach meaningful executed verification, update living documentation, and review phase exit criteria.",
+        "Do not close this epic until all required sub-issues are verified and merged."
+      ]
+    },
+    {
+      "key": "P4.1",
+      "title": "[P4.1] Streaming imports and explicit type/null semantics",
+      "kind": "task",
+      "parent": "P4",
+      "phase": 4,
+      "milestone": "Milestone A — Team HTTP regression",
+      "status": "Backlog",
+      "priority": "P1",
+      "size": "L",
+      "spec": "10",
+      "dependsOn": [
+        "P3"
+      ],
+      "description": "Implement CSV/TSV/delimiters, JSON arrays/JSONL/inline datasets, preview/mapping, encodings, culture, and stable case identity.",
+      "acceptance": [
+        "Quoted multiline CSV, leading zeros, missing-vs-null, duplicate headers/IDs, and nested JSON fixtures pass.",
+        "Imports are transactional and type conversions require preview.",
+        "Live source views remain deferred; reproducible static input snapshots are supported."
+      ]
+    },
+    {
+      "key": "P4.2",
+      "title": "[P4.2] Editable virtualized grid, clipboard workflows, and export",
+      "kind": "task",
+      "parent": "P4",
+      "phase": 4,
+      "milestone": "Milestone A — Team HTTP regression",
+      "status": "Backlog",
+      "priority": "P1",
+      "size": "L",
+      "spec": "10",
+      "dependsOn": [
+        "P3"
+      ],
+      "description": "Add multi-cell editing, undo/redo, fill/duplicate, filters/sorts/pinning, bulk previews, case selection, and external result attachments.",
+      "acceptance": [
+        "100,000-row view remains responsive while editing/pasting.",
+        "Sorting does not silently reorder source files; pasted commands never execute.",
+        "Spreadsheet-safe export preserves native values; external results retain provenance and are not labeled as Wrangler executions."
+      ]
+    },
+    {
+      "key": "P5",
+      "title": "[Phase 5] Git collaboration and conflicts",
+      "kind": "epic",
+      "phase": 5,
+      "milestone": "Milestone A — Team HTTP regression",
+      "status": "Backlog",
+      "priority": "P1",
+      "size": "XL",
+      "spec": "6–7",
+      "dependsOn": [
+        "P4"
+      ],
+      "description": "Deliver phase 5 of the accepted API Wrangler implementation plan. Do not mark complete until the child tickets and the specification exit criteria pass.",
+      "acceptance": [
+        "Complete P5.1: Repository and branch workflows with explicit integration.",
+        "Complete P5.2: Reviewed scoped commits and secret scanning.",
+        "Complete P5.3: Semantic three-way conflicts and Milestone A acceptance.",
+        "Attach meaningful executed verification, update living documentation, and review phase exit criteria.",
+        "Do not close this epic until all required sub-issues are verified and merged."
+      ]
+    },
+    {
+      "key": "P5.1",
+      "title": "[P5.1] Repository and branch workflows with explicit integration",
+      "kind": "task",
+      "parent": "P5",
+      "phase": 5,
+      "milestone": "Milestone A — Team HTTP regression",
+      "status": "Backlog",
+      "priority": "P1",
+      "size": "L",
+      "spec": "6–7",
+      "dependsOn": [
+        "P4"
+      ],
+      "description": "Implement open/clone/init/standalone, status facts, history, remote selection, fetch, branch switching, fast-forward, merge/rebase, and restore.",
+      "acceptance": [
+        "Dirty/unrelated files, detached HEAD, worktrees, active merges/rebases, offline and rejected push cases preserve work.",
+        "Fetch never changes working files; no automatic stash, force push, or hard reset.",
+        "External branch changes suspend writes and invalidate caches; existing hooks/signing are respected."
+      ]
+    },
+    {
+      "key": "P5.2",
+      "title": "[P5.2] Reviewed scoped commits and secret scanning",
+      "kind": "task",
+      "parent": "P5",
+      "phase": 5,
+      "milestone": "Milestone A — Team HTTP regression",
+      "status": "Backlog",
+      "priority": "P1",
+      "size": "L",
+      "spec": "6–7",
+      "dependsOn": [
+        "P4"
+      ],
+      "description": "Implement selected API-Wrangler-file staging, validation, diff review, secret detection, commit message, and explicit push.",
+      "acceptance": [
+        "Never use git add .; block when unrelated files are already staged without modifying that index.",
+        "Show exact commit contents and Git-hook execution implications.",
+        "Use installed Git authentication; never extract credentials or imply unrelated API authorization."
+      ]
+    },
+    {
+      "key": "P5.3",
+      "title": "[P5.3] Semantic three-way conflicts and Milestone A acceptance",
+      "kind": "task",
+      "parent": "P5",
+      "phase": 5,
+      "milestone": "Milestone A — Team HTTP regression",
+      "status": "Backlog",
+      "priority": "P1",
+      "size": "L",
+      "spec": "6–7",
+      "dependsOn": [
+        "P4"
+      ],
+      "description": "Implement JSON ID-aware merge, ordered headers, dataset row/cell merge, script editor, binary choose/save-both, and whole-product milestone checks.",
+      "acceptance": [
+        "Same-field/cell, duplicate IDs, and delete-versus-edit conflicts require resolution.",
+        "Parse/schema/reference validation and final diff precede marking resolved.",
+        "Two independent clones complete team regression journeys without losing unrelated work; Milestone A is reviewable."
+      ]
+    },
+    {
+      "key": "P6",
+      "title": "[Phase 6] Trusted scripting and migration",
+      "kind": "epic",
+      "phase": 6,
+      "milestone": "Milestone B — Complete required platform",
+      "status": "Backlog",
+      "priority": "P1",
+      "size": "XL",
+      "spec": "12–13",
+      "dependsOn": [
+        "P5"
+      ],
+      "description": "Deliver phase 6 of the accepted API Wrangler implementation plan. Do not mark complete until the child tickets and the specification exit criteria pass.",
+      "acceptance": [
+        "Complete P6.1: Production Node worker, trust policy, and packages.",
+        "Complete P6.2: Postman compatibility adapter and fixtures.",
+        "Complete P6.3: Transactional Postman/OpenAPI/cURL/HAR import and supported exports.",
+        "Attach meaningful executed verification, update living documentation, and review phase exit criteria.",
+        "Do not close this epic until all required sub-issues are verified and merged."
+      ]
+    },
+    {
+      "key": "P6.1",
+      "title": "[P6.1] Production Node worker, trust policy, and packages",
+      "kind": "task",
+      "parent": "P6",
+      "phase": 6,
+      "milestone": "Milestone B — Complete required platform",
+      "status": "Backlog",
+      "priority": "P1",
+      "size": "L",
+      "spec": "12–13",
+      "dependsOn": [
+        "P5"
+      ],
+      "description": "Implement native script APIs, repository-local trust, visible script changes, deadlines/process containment, lockfile installs, and bounded logs.",
+      "acceptance": [
+        "Opening/cloning/fetching/importing never runs scripts or installs packages.",
+        "npm ci uses ignore-scripts by default; lifecycle execution is separate and explicit.",
+        "Node is diagnosed/pinned; infinite loops/descendants terminate; no security-sandbox claim."
+      ]
+    },
+    {
+      "key": "P6.2",
+      "title": "[P6.2] Postman compatibility adapter and fixtures",
+      "kind": "task",
+      "parent": "P6",
+      "phase": 6,
+      "milestone": "Milestone B — Complete required platform",
+      "status": "Backlog",
+      "priority": "P1",
+      "size": "L",
+      "spec": "12–13",
+      "dependsOn": [
+        "P5"
+      ],
+      "description": "Implement the supported pm.* subset, provenance, native assertions/variables/secondary requests/flow control, and compatibility reporting.",
+      "acceptance": [
+        "Supported real-world script fixtures pass.",
+        "Unsupported APIs fail visibly and before unsafe execution where detectable.",
+        "Desktop and unattended execution share explicit snapshot-admission rules."
+      ]
+    },
+    {
+      "key": "P6.3",
+      "title": "[P6.3] Transactional Postman/OpenAPI/cURL/HAR import and supported exports",
+      "kind": "task",
+      "parent": "P6",
+      "phase": 6,
+      "milestone": "Milestone B — Complete required platform",
+      "status": "Backlog",
+      "priority": "P1",
+      "size": "L",
+      "spec": "12–13",
+      "dependsOn": [
+        "P5"
+      ],
+      "description": "Implement all phase-6 import/export formats, previews, secret extraction guidance, counts, unsupported-feature reports, and fidelity fixtures.",
+      "acceptance": [
+        "Never execute cURL or imported source; validate staged references before publishing.",
+        "Supported Postman v2.1 round trips pass; lossy conversions are listed.",
+        "Failed imports cannot partially overwrite valid project assets."
+      ]
+    },
+    {
+      "key": "P7",
+      "title": "[Phase 7] GraphQL, gRPC, and streaming",
+      "kind": "epic",
+      "phase": 7,
+      "milestone": "Milestone B — Complete required platform",
+      "status": "Backlog",
+      "priority": "P1",
+      "size": "XL",
+      "spec": "16",
+      "dependsOn": [
+        "P6"
+      ],
+      "description": "Deliver phase 7 of the accepted API Wrangler implementation plan. Do not mark complete until the child tickets and the specification exit criteria pass.",
+      "acceptance": [
+        "Complete P7.1: GraphQL and gRPC editors, adapters, and contracts.",
+        "Complete P7.2: WebSocket and SSE sessions and bounded transcripts.",
+        "Attach meaningful executed verification, update living documentation, and review phase exit criteria.",
+        "Do not close this epic until all required sub-issues are verified and merged."
+      ]
+    },
+    {
+      "key": "P7.1",
+      "title": "[P7.1] GraphQL and gRPC editors, adapters, and contracts",
+      "kind": "task",
+      "parent": "P7",
+      "phase": 7,
+      "milestone": "Milestone B — Complete required platform",
+      "status": "Backlog",
+      "priority": "P1",
+      "size": "L",
+      "spec": "16",
+      "dependsOn": [
+        "P6"
+      ],
+      "description": "Implement GraphQL operations/variables/schema completion and gRPC descriptors/reflection/unary/streaming/metadata/TLS/deadlines.",
+      "acceptance": [
+        "Local fixture suites pass for supported operations and contract assertions.",
+        "Streaming transcripts retain protocol-specific completion/trailer/status semantics.",
+        "Imports/include paths and unavailable reflection produce useful diagnostics."
+      ]
+    },
+    {
+      "key": "P7.2",
+      "title": "[P7.2] WebSocket and SSE sessions and bounded transcripts",
+      "kind": "task",
+      "parent": "P7",
+      "phase": 7,
+      "milestone": "Milestone B — Complete required platform",
+      "status": "Backlog",
+      "priority": "P1",
+      "size": "L",
+      "spec": "16",
+      "dependsOn": [
+        "P6"
+      ],
+      "description": "Implement connect/send/await-predicate/disconnect, authentication, timeouts, cancellation, assertions, and reconnect policy.",
+      "acceptance": [
+        "Large/continuous streams remain bounded and cancellable.",
+        "Transcript completion/failure is explicit rather than faked as an HTTP response.",
+        "Exports clearly disclose unsupported protocol conversions."
+      ]
+    },
+    {
+      "key": "P8",
+      "title": "[Phase 8] Mocks and webhook debugging",
+      "kind": "epic",
+      "phase": 8,
+      "milestone": "Milestone B — Complete required platform",
+      "status": "Backlog",
+      "priority": "P1",
+      "size": "XL",
+      "spec": "17–18",
+      "dependsOn": [
+        "P7"
+      ],
+      "description": "Deliver phase 8 of the accepted API Wrangler implementation plan. Do not mark complete until the child tickets and the specification exit criteria pass.",
+      "acceptance": [
+        "Complete P8.1: Local mock engine, deterministic matching, and fault scenarios.",
+        "Complete P8.2: Webhook capture, public gateway, forwarding, and replay.",
+        "Attach meaningful executed verification, update living documentation, and review phase exit criteria.",
+        "Do not close this epic until all required sub-issues are verified and merged."
+      ]
+    },
+    {
+      "key": "P8.1",
+      "title": "[P8.1] Local mock engine, deterministic matching, and fault scenarios",
+      "kind": "task",
+      "parent": "P8",
+      "phase": 8,
+      "milestone": "Milestone B — Complete required platform",
+      "status": "Backlog",
+      "priority": "P1",
+      "size": "L",
+      "spec": "17–18",
+      "dependsOn": [
+        "P7"
+      ],
+      "description": "Implement loopback ASP.NET Core mock process, static/stateful/dataset/script responses, captured examples, and OpenAPI examples.",
+      "acceptance": [
+        "Priority/specificity precedence and ambiguous/unknown matches are deterministic and diagnosable.",
+        "Delay/error/termination/seeded intermittent-failure fixtures pass.",
+        "External binding requires explicit configuration; desktop start never exposes the internet automatically."
+      ]
+    },
+    {
+      "key": "P8.2",
+      "title": "[P8.2] Webhook capture, public gateway, forwarding, and replay",
+      "kind": "task",
+      "parent": "P8",
+      "phase": 8,
+      "milestone": "Milestone B — Complete required platform",
+      "status": "Backlog",
+      "priority": "P1",
+      "size": "L",
+      "spec": "17–18",
+      "dependsOn": [
+        "P7"
+      ],
+      "description": "Implement listener IDs, raw event store, signature validation, local connection, forwarding, original/edit replay, and operational controls.",
+      "acceptance": [
+        "Verify signatures before parsing/reserialization; original replay preserves bytes.",
+        "TLS/auth, rate/body/time limits, destination policy, retention, and audit records prevent unrestricted forwarding.",
+        "Definitions live in Git; captures and signing secrets remain operational/host-local."
+      ]
+    },
+    {
+      "key": "P9",
+      "title": "[Phase 9] Local performance testing",
+      "kind": "epic",
+      "phase": 9,
+      "milestone": "Milestone B — Complete required platform",
+      "status": "Backlog",
+      "priority": "P1",
+      "size": "XL",
+      "spec": "19",
+      "dependsOn": [
+        "P8"
+      ],
+      "description": "Deliver phase 9 of the accepted API Wrangler implementation plan. Do not mark complete until the child tickets and the specification exit criteria pass.",
+      "acceptance": [
+        "Complete P9.1: Closed-loop and open-loop load execution.",
+        "Complete P9.2: Latency histograms, thresholds, and performance reports.",
+        "Attach meaningful executed verification, update living documentation, and review phase exit criteria.",
+        "Do not close this epic until all required sub-issues are verified and merged."
+      ]
+    },
+    {
+      "key": "P9.1",
+      "title": "[P9.1] Closed-loop and open-loop load execution",
+      "kind": "task",
+      "parent": "P9",
+      "phase": 9,
+      "milestone": "Milestone B — Complete required platform",
+      "status": "Backlog",
+      "priority": "P1",
+      "size": "L",
+      "spec": "19",
+      "dependsOn": [
+        "P8"
+      ],
+      "description": "Implement virtual users then arrivals, ramp/spike/step profiles, rate caps, think time, dataset allocation, teardown, and cancellation.",
+      "acceptance": [
+        "Explicit target confirmation and configured safety thresholds are enforced.",
+        "Requested/achieved load, dropped work, generator saturation, and coordinated-omission limitations are reported.",
+        "Cancellation leaves no worker processes behind."
+      ]
+    },
+    {
+      "key": "P9.2",
+      "title": "[P9.2] Latency histograms, thresholds, and performance reports",
+      "kind": "task",
+      "parent": "P9",
+      "phase": 9,
+      "milestone": "Milestone B — Complete required platform",
+      "status": "Backlog",
+      "priority": "P1",
+      "size": "L",
+      "spec": "19",
+      "dependsOn": [
+        "P8"
+      ],
+      "description": "Implement monotonic duration measurement, compatible histogram aggregation, error categories, resource metrics, and threshold outcomes.",
+      "acceptance": [
+        "p50/p90/p95/p99 derive from histograms rather than averaged percentiles.",
+        "Functional failure, transport error, and load threshold failures remain distinct.",
+        "Repeatable local load fixtures validate achieved-rate and aggregation accuracy."
+      ]
+    },
+    {
+      "key": "P10",
+      "title": "[Phase 10] Unattended execution and monitoring",
+      "kind": "epic",
+      "phase": 10,
+      "milestone": "Milestone B — Complete required platform",
+      "status": "Backlog",
+      "priority": "P1",
+      "size": "XL",
+      "spec": "20–21, 29",
+      "dependsOn": [
+        "P9"
+      ],
+      "description": "Deliver phase 10 of the accepted API Wrangler implementation plan. Do not mark complete until the child tickets and the specification exit criteria pass.",
+      "acceptance": [
+        "Complete P10.1: Runner service, enrollment, and exact-snapshot execution.",
+        "Complete P10.2: Control plane, fenced leases, artifacts, and crash recovery.",
+        "Complete P10.3: Scheduler ownership, time policy, and notifications.",
+        "Attach meaningful executed verification, update living documentation, and review phase exit criteria.",
+        "Do not close this epic until all required sub-issues are verified and merged."
+      ]
+    },
+    {
+      "key": "P10.1",
+      "title": "[P10.1] Runner service, enrollment, and exact-snapshot execution",
+      "kind": "task",
+      "parent": "P10",
+      "phase": 10,
+      "milestone": "Milestone B — Complete required platform",
+      "status": "Backlog",
+      "priority": "P1",
+      "size": "L",
+      "spec": "20–21, 29",
+      "dependsOn": [
+        "P9"
+      ],
+      "description": "Implement Windows runner and Linux container worker, scoped token enrollment/rotation/revocation, capability labels, isolated checkout, and host secrets.",
+      "acceptance": [
+        "Jobs execute exact commits and locked dependencies under dedicated accounts.",
+        "Desktop credentials never upload; jobs contain no plaintext long-lived secrets.",
+        "CLI and unattended execution work without desktop installation."
+      ]
+    },
+    {
+      "key": "P10.2",
+      "title": "[P10.2] Control plane, fenced leases, artifacts, and crash recovery",
+      "kind": "task",
+      "parent": "P10",
+      "phase": 10,
+      "milestone": "Milestone B — Complete required platform",
+      "status": "Backlog",
+      "priority": "P1",
+      "size": "L",
+      "spec": "20–21, 29",
+      "dependsOn": [
+        "P9"
+      ],
+      "description": "Implement single-node SQLite queue, outbound polling, leases/heartbeats, cancellation, status, and artifact backends.",
+      "acceptance": [
+        "At-least-once dispatch and idempotent completion use fenced ownership.",
+        "Lost potentially mutating jobs become indeterminate and are not silently retried.",
+        "Filesystem/shared/GitHub artifact adapters and optional S3 support limits, retention, metrics, health checks, backup/restore."
+      ]
+    },
+    {
+      "key": "P10.3",
+      "title": "[P10.3] Scheduler ownership, time policy, and notifications",
+      "kind": "task",
+      "parent": "P10",
+      "phase": 10,
+      "milestone": "Milestone B — Complete required platform",
+      "status": "Backlog",
+      "priority": "P1",
+      "size": "L",
+      "spec": "20–21, 29",
+      "dependsOn": [
+        "P9"
+      ],
+      "description": "Implement Git-defined cron/interval schedules, IANA zones, designated deployment ownership, admission, overlap/missed-run policy, and HTTP notifications.",
+      "acceptance": [
+        "Opening the repository on multiple clients never duplicates monitoring.",
+        "UTC/DST, skip missed intervals, prevent overlap, pinned approval, and retry policies are tested.",
+        "Deduplication/cooldowns/recovery messages/delivery diagnostics work with host-local notification secrets."
+      ]
+    },
+    {
+      "key": "P11",
+      "title": "[Phase 11] Distributed load and hosted mocks",
+      "kind": "epic",
+      "phase": 11,
+      "milestone": "Milestone B — Complete required platform",
+      "status": "Backlog",
+      "priority": "P1",
+      "size": "XL",
+      "spec": "17.4, 19.4, 32",
+      "dependsOn": [
+        "P10"
+      ],
+      "description": "Deliver phase 11 of the accepted API Wrangler implementation plan. Do not mark complete until the child tickets and the specification exit criteria pass.",
+      "acceptance": [
+        "Complete P11.1: Distributed worker coordination and truthful aggregation.",
+        "Complete P11.2: Shared mock deployment and operational verification.",
+        "Attach meaningful executed verification, update living documentation, and review phase exit criteria.",
+        "Do not close this epic until all required sub-issues are verified and merged."
+      ]
+    },
+    {
+      "key": "P11.1",
+      "title": "[P11.1] Distributed worker coordination and truthful aggregation",
+      "kind": "task",
+      "parent": "P11",
+      "phase": 11,
+      "milestone": "Milestone B — Complete required platform",
+      "status": "Backlog",
+      "priority": "P1",
+      "size": "L",
+      "spec": "17.4, 19.4, 32",
+      "dependsOn": [
+        "P10"
+      ],
+      "description": "Implement pinned snapshot distribution, input slices, load assignment, coordinated start, cancellation, worker loss, and merged metrics.",
+      "acceptance": [
+        "All workers report the same snapshot and compatible histograms.",
+        "Clock skew cannot corrupt durations; missing workers and achieved load remain visible.",
+        "Multi-worker threshold/failure scenarios reconcile to the final report."
+      ]
+    },
+    {
+      "key": "P11.2",
+      "title": "[P11.2] Shared mock deployment and operational verification",
+      "kind": "task",
+      "parent": "P11",
+      "phase": 11,
+      "milestone": "Milestone B — Complete required platform",
+      "status": "Backlog",
+      "priority": "P1",
+      "size": "L",
+      "spec": "17.4, 19.4, 32",
+      "dependsOn": [
+        "P10"
+      ],
+      "description": "Deploy the same mock definitions on self-hosted services with authentication, explicit bindings, artifacts, and operational documentation.",
+      "acceptance": [
+        "Local/hosted matching and state semantics are equivalent.",
+        "Deployment, restart, access control, retention, and failure recovery scenarios pass.",
+        "No proprietary account or hosting service is required."
+      ]
+    },
+    {
+      "key": "P12",
+      "title": "[Phase 12] Playwright integration and visual flows",
+      "kind": "epic",
+      "phase": 12,
+      "milestone": "Milestone B — Complete required platform",
+      "status": "Backlog",
+      "priority": "P1",
+      "size": "XL",
+      "spec": "22–23",
+      "dependsOn": [
+        "P11"
+      ],
+      "description": "Deliver phase 12 of the accepted API Wrangler implementation plan. Do not mark complete until the child tickets and the specification exit criteria pass.",
+      "acceptance": [
+        "Complete P12.1: Playwright package, traffic matching, and combined results.",
+        "Complete P12.2: Text-backed visual flows using shared execution primitives.",
+        "Attach meaningful executed verification, update living documentation, and review phase exit criteria.",
+        "Do not close this epic until all required sub-issues are verified and merged."
+      ]
+    },
+    {
+      "key": "P12.1",
+      "title": "[P12.1] Playwright package, traffic matching, and combined results",
+      "kind": "task",
+      "parent": "P12",
+      "phase": 12,
+      "milestone": "Milestone B — Complete required platform",
+      "status": "Backlog",
+      "priority": "P1",
+      "size": "L",
+      "spec": "22–23",
+      "dependsOn": [
+        "P11"
+      ],
+      "description": "Create the integration package for existing suites, explicit request matching, bounded capture, dependency maps, and draft request generation.",
+      "acceptance": [
+        "A passing UI scenario with an API assertion failure fails the combined result and names the scenario.",
+        "Ambiguous/unmatched traffic is visible; credentials/cookies are redacted.",
+        "Caching/service-worker/streaming/WebSocket limitations are explicit; CI artifacts are generated."
+      ]
+    },
+    {
+      "key": "P12.2",
+      "title": "[P12.2] Text-backed visual flows using shared execution primitives",
+      "kind": "task",
+      "parent": "P12",
+      "phase": 12,
+      "milestone": "Milestone B — Complete required platform",
+      "status": "Backlog",
+      "priority": "P1",
+      "size": "L",
+      "spec": "22–23",
+      "dependsOn": [
+        "P11"
+      ],
+      "description": "Implement native graph editor, stable nodes/edges, branches/loops/parallel joins/subflows, validation, debugger stepping, and CLI execution.",
+      "acceptance": [
+        "Unreachable nodes and unbounded loops are rejected; cancellation propagates.",
+        "Canvas coordinates are separate from semantics.",
+        "Visual flows and collections reuse one execution engine; variable inspection redacts secrets."
+      ]
+    },
+    {
+      "key": "P13",
+      "title": "[Phase 13] Contracts, optional AI, and release hardening",
+      "kind": "epic",
+      "phase": 13,
+      "milestone": "Milestone B — Complete required platform",
+      "status": "Backlog",
+      "priority": "P1",
+      "size": "XL",
+      "spec": "24–25, 27, 30–35",
+      "dependsOn": [
+        "P12"
+      ],
+      "description": "Deliver phase 13 of the accepted API Wrangler implementation plan. Do not mark complete until the child tickets and the specification exit criteria pass.",
+      "acceptance": [
+        "Complete P13.1: Contracts, static documentation, catalog, and SDK generation.",
+        "Complete P13.2: Optional AI with explicit context and reviewable changes.",
+        "Complete P13.3: Windows x64 installer, release NFRs, accessibility, and Milestone B.",
+        "Attach meaningful executed verification, update living documentation, and review phase exit criteria.",
+        "Do not close this epic until all required sub-issues are verified and merged."
+      ]
+    },
+    {
+      "key": "P13.1",
+      "title": "[P13.1] Contracts, static documentation, catalog, and SDK generation",
+      "kind": "task",
+      "parent": "P13",
+      "phase": 13,
+      "milestone": "Milestone B — Complete required platform",
+      "status": "Backlog",
+      "priority": "P1",
+      "size": "L",
+      "spec": "24–25, 27, 30–35",
+      "dependsOn": [
+        "P12"
+      ],
+      "description": "Complete OpenAPI/JSON Schema/GraphQL/Protobuf validation and breaking-change comparisons; generate HTML/Markdown docs and rebuildable catalog.",
+      "acceptance": [
+        "Requests link to contract operations; docs omit secret values.",
+        "Search has measured 10,000-request acceptance results.",
+        "Established SDK generators/templates are pinned and generated changes are previewed in separate output directories."
+      ]
+    },
+    {
+      "key": "P13.2",
+      "title": "[P13.2] Optional AI with explicit context and reviewable changes",
+      "kind": "task",
+      "parent": "P13",
+      "phase": 13,
+      "milestone": "Milestone B — Complete required platform",
+      "status": "Backlog",
+      "priority": "P1",
+      "size": "L",
+      "spec": "24–25, 27, 30–35",
+      "dependsOn": [
+        "P12"
+      ],
+      "description": "Implement configurable hosted/compatible/local endpoints and user-provider keys for drafting/explanation/dataset/import/script assistance.",
+      "acceptance": [
+        "AI is disabled until configured and the product remains useful without it.",
+        "Only explicitly selected redacted context is sent; Git credentials never enter prompts.",
+        "Generated diffs require review; generated code never runs or commits automatically."
+      ]
+    },
+    {
+      "key": "P13.3",
+      "title": "[P13.3] Windows x64 installer, release NFRs, accessibility, and Milestone B",
+      "kind": "task",
+      "parent": "P13",
+      "phase": 13,
+      "milestone": "Milestone B — Complete required platform",
+      "status": "Backlog",
+      "priority": "P1",
+      "size": "L",
+      "spec": "24–25, 27, 30–35",
+      "dependsOn": [
+        "P12"
+      ],
+      "description": "Create per-user installer and portable ZIP, signing/checksums/SBOM/notices, upgrade/rollback, and validated operational manuals.",
+      "acceptance": [
+        "Fresh install/upgrade/uninstall preserves user data; Windows 11 x64 and Linux headless checks pass.",
+        "All specified performance, accessibility, offline, security, reliability, compatibility, and recovery gates have evidence.",
+        "No critical placeholder ships; full capability matrix is reviewed before Milestone B closes."
+      ]
+    },
+    {
+      "key": "LATER-ARM64",
+      "title": "[Deferred] Native Windows 11 ARM64 desktop support and validation",
+      "kind": "task",
+      "phase": "Later",
+      "milestone": "Later — Deferred roadmap",
+      "status": "Backlog",
+      "priority": "P2",
+      "size": "L",
+      "spec": "3, 27, 31.7; user scope update on 2026-11-06",
+      "dependsOn": [
+        "P13"
+      ],
+      "description": "The user explicitly deferred ARM64. Current desktop delivery targets Windows 11 x64 only. Preserve this work as a later roadmap item; it must not block Milestones A or B.",
+      "acceptance": [
+        "Reintroduce win-arm64 packaging when this ticket is prioritized.",
+        "Provide an actual Windows 11 ARM64 runner and test native installation, HTTP, Node/processes, accessibility, and performance.",
+        "Cross-compilation alone never counts as native acceptance."
+      ]
+    }
+  ]
+}

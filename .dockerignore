@@ -1,0 +1,11 @@
+.git
+.tools
+.packages
+.dotnet-home
+.vs
+artifacts
+**/bin
+**/obj
+**/TestResults
+**/node_modules
+workers/node/dist

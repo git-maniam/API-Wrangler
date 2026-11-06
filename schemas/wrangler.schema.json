@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://api-wrangler.local/schemas/wrangler.schema.json",
+  "title": "API Wrangler v1 wrangler",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "projectId",
+    "name",
+    "paths"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "projectId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "defaultEnvironmentId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "paths": {
+      "type": "object",
+      "required": [
+        "collections",
+        "environments",
+        "datasets"
+      ],
+      "additionalProperties": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "execution": {
+      "type": "object",
+      "properties": {
+        "requestTimeoutMs": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maxConcurrentRequests": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maxRedirects": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tlsVerification": {
+          "type": "boolean"
+        }
+      }
+    },
+    "results": {
+      "type": "object",
+      "properties": {
+        "defaultRetentionDays": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "shareRawBodiesByDefault": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

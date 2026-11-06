@@ -1,0 +1,9 @@
+{
+  "name": "@api-wrangler/worker-probe",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": "26.13.0" },
+  "scripts": { "build": "tsc", "check": "tsc --noEmit" },
+  "devDependencies": { "@types/node": "26.0.0", "typescript": "5.9.3" }
+}

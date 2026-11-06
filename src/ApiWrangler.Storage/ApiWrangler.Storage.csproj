@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="../ApiWrangler.Application/ApiWrangler.Application.csproj" />
+    <PackageReference Include="JsonSchema.Net" />
+    <EmbeddedResource Include="../../schemas/*.json" Link="Schemas/%(Filename)%(Extension)" />
+  </ItemGroup>
+</Project>
