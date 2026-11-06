@@ -88,6 +88,12 @@ internal sealed class ProjectSession : IProjectSession
             EnsureWritable();
             EnsureNoGitIntegration();
             var view = await ReadAsync(token).ConfigureAwait(false);
+            var newerVersion = view.Assets.FirstOrDefault(asset =>
+                asset.Content["schemaVersion"] is JsonValue version &&
+                version.TryGetValue<int>(out var schemaVersion) && schemaVersion > 1);
+            if (newerVersion is not null)
+                throw new ProjectValidationException([new(newerVersion.Path, "/schemaVersion",
+                    "This asset uses a newer schema version and is read-only in this application.", newerVersion.Id)]);
             if (!view.IsValid) throw new ProjectValidationException(view.Diagnostics);
             var manifest = view.Assets.Single(a => a.Kind == AssetKind.Manifest).Content;
             var updated = view.Assets.ToDictionary(a => a.Path, StringComparer.OrdinalIgnoreCase);

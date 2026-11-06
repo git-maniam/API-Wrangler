@@ -8,16 +8,21 @@ namespace ApiWrangler.Storage;
 internal sealed class AssetValidator
 {
     internal static readonly IReadOnlyDictionary<string, byte[]> SchemaFiles = LoadSchemas();
-    private readonly Dictionary<AssetKind, JsonSchema> schemas = new();
+    private sealed record SchemaCache(IReadOnlyDictionary<AssetKind, JsonSchema> Schemas, IReadOnlyList<JsonDocument> Documents);
+    private static readonly SchemaCache Cache = LoadValidatedSchemas();
 
-    public AssetValidator()
+    private static SchemaCache LoadValidatedSchemas()
     {
+        var schemas = new Dictionary<AssetKind, JsonSchema>();
+        var documents = new List<JsonDocument>();
         foreach (var kind in Enum.GetValues<AssetKind>())
         {
             var name = kind == AssetKind.Manifest ? "wrangler" : kind.ToString().ToLowerInvariant();
-            using var document = JsonDocument.Parse(SchemaFiles[name + ".schema.json"]);
+            var document = JsonDocument.Parse(SchemaFiles[name + ".schema.json"]);
+            documents.Add(document);
             schemas[kind] = JsonSchema.Build(document.RootElement, new BuildOptions { Dialect = Dialect.Draft202012 });
         }
+        return new(schemas, documents);
     }
 
     public static AssetKind? KindFor(string path) => Path.GetFileName(path) switch
@@ -36,7 +41,7 @@ internal sealed class AssetValidator
         var problems = new List<ProjectDiagnostic>();
         foreach (var asset in assets)
         {
-            var results = schemas[asset.Kind].Evaluate(JsonSerializer.SerializeToElement(asset.Content),
+            var results = Cache.Schemas[asset.Kind].Evaluate(JsonSerializer.SerializeToElement(asset.Content),
                 new EvaluationOptions { OutputFormat = OutputFormat.List, RequireFormatValidation = true });
             AddErrors(results, asset, problems);
         }

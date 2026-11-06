@@ -29,7 +29,7 @@ Measurement host: Windows x64, AMD Ryzen 7 6800H, eight physical cores, about 21
 | Phase | Status / next required work |
 |---|---|
 | 0 | Local foundation implemented; private HTTPS/SSH credential flows, accessibility checks, and broader performance validation remain open; ARM64 is deferred |
-| 1 | Not started: schemas, canonical assets, atomic/journaled persistence, watching, recovery, snapshots |
+| 1 | In progress: project discovery/initialization, schemas, canonical assets, atomic/journaled persistence, watching, recovery, and snapshots are implemented locally; newer schema majors can be inspected but not edited. Forward-version, interrupted multi-file recovery, and snapshot metadata checks pass. Full phase acceptance and migration/recovery edge cases remain open. |
 | 2 | Only basic HTTP feasibility exists; saved workbench, variables, secrets, authentication, cookies, proxy/certificates remain |
 | 3 | Not started: collections, assertions, lifecycle, isolated iteration execution, reports, final CLI contracts |
 | 4 | Only the read-only grid probe exists; imports, editing, type/null semantics, stable cases, and export remain |
@@ -41,8 +41,10 @@ Measurement host: Windows x64, AMD Ryzen 7 6800H, eight physical cores, about 21
 
 The current desktop release target is Windows 11 x64. ARM64 was explicitly deferred by the user and no longer blocks current milestones. Linux headless build/tests were executed in a local Linux container; hosted GitHub Actions has not executed in this session. Do not equate a workflow definition with an executed hosted check.
 
+The P1.1 forward-version guard was verified on Windows x64: an initialized request updated to schema version 2 remains inspectable and save attempts fail with a `/schemaVersion` diagnostic without changing the file. Locked restore and Release build passed; 14 tests passed and four optional Node tests were skipped because Node worker variables were not configured. Changed-file formatting verification passed. Repository-wide format verification still reports existing formatting violations in storage files outside this slice.
+
 The GitHub project tracks the full plan in phase epics and implementation tickets. Local work remains In progress until reviewed and merged. See `docs/planning/README.md` for synchronization rules.
 
 ## Next implementation slice
 
-Complete outstanding phase-0 validation, then implement phase 1 as a vertical slice: initialize/open a project, validate and save one request canonically, detect external edits, recover an interrupted write, and snapshot the exact run inputs. Keep the remaining roadmap and acceptance criteria in `api-wrangler-prod-spec.md` authoritative.
+Finish phase-0 private HTTPS/SSH and accessibility validation. For phase 1, close remaining P1.1 forward-compatibility/schema diagnostics, then verify P1.2 transaction recovery and P1.3 watcher/snapshot acceptance edge cases. Keep the remaining roadmap and acceptance criteria in `api-wrangler-prod-spec.md` authoritative.
