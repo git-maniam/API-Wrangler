@@ -9,6 +9,57 @@ namespace ApiWrangler.IntegrationTests;
 public sealed class ProjectPersistenceTests
 {
     [Fact]
+    public async Task Recover_ExternalEditInTransaction_PreservesAllCurrentFiles()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "ApiWrangler-project-tests", Guid.NewGuid().ToString("N"));
+        var projectRoot = Path.Combine(root, "project");
+        var stateRoot = Path.Combine(root, "state");
+        Directory.CreateDirectory(root);
+        try
+        {
+            await using var session = await new ProjectRepository(stateRoot).InitializeAsync(projectRoot, "Fixture");
+            var paths = new[]
+            {
+                "collections/default/collection.json",
+                "collections/default/requests/hello.request.json"
+            };
+            var id = Guid.NewGuid().ToString("N");
+            var journalDirectory = Path.Combine(stateRoot, "transactions", id);
+            Directory.CreateDirectory(journalDirectory);
+            var entries = new List<JournalEntry>();
+            var replacementBytes = new List<byte[]>();
+            for (var index = 0; index < paths.Length; index++)
+            {
+                var relative = paths[index];
+                var target = Path.Combine(projectRoot, relative.Replace('/', Path.DirectorySeparatorChar));
+                var original = await File.ReadAllBytesAsync(target);
+                var replacement = original.Concat(new byte[] { (byte)' ' }).ToArray();
+                var stage = Path.GetDirectoryName(relative)!.Replace('\\', '/') + $"/.awr-{id}-{index}.tmp";
+                entries.Add(new(relative, CanonicalJson.Hash(original), CanonicalJson.Hash(replacement), stage, $"{index}.before"));
+                replacementBytes.Add(replacement);
+                await FileTransactions.WriteDurableAsync(Path.Combine(journalDirectory, $"{index}.before"), original, CancellationToken.None);
+                await FileTransactions.WriteDurableAsync(Path.Combine(projectRoot, stage.Replace('/', Path.DirectorySeparatorChar)), replacement, CancellationToken.None);
+            }
+            await File.WriteAllBytesAsync(Path.Combine(journalDirectory, "journal.json"),
+                JsonSerializer.SerializeToUtf8Bytes(new WriteJournal("prepared", entries)));
+            File.Move(Path.Combine(projectRoot, entries[0].Stage.Replace('/', Path.DirectorySeparatorChar)),
+                Path.Combine(projectRoot, entries[0].Path.Replace('/', Path.DirectorySeparatorChar)), overwrite: true);
+            var externalEdit = System.Text.Encoding.UTF8.GetBytes("external edit");
+            await File.WriteAllBytesAsync(Path.Combine(projectRoot, entries[1].Path.Replace('/', Path.DirectorySeparatorChar)), externalEdit);
+
+            await Assert.ThrowsAsync<ProjectConflictException>(() => new FileTransactions(projectRoot, stateRoot).RecoverAsync(CancellationToken.None));
+
+            Assert.Equal(replacementBytes[0], await File.ReadAllBytesAsync(Path.Combine(projectRoot, entries[0].Path.Replace('/', Path.DirectorySeparatorChar))));
+            Assert.Equal(externalEdit, await File.ReadAllBytesAsync(Path.Combine(projectRoot, entries[1].Path.Replace('/', Path.DirectorySeparatorChar))));
+            Assert.True(File.Exists(Path.Combine(projectRoot, entries[1].Stage.Replace('/', Path.DirectorySeparatorChar))));
+        }
+        finally
+        {
+            if (Directory.Exists(root)) Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
     public async Task Watch_ExternalProjectEdit_EmitsDebouncedChange()
     {
         var root = Path.Combine(Path.GetTempPath(), "ApiWrangler-project-tests", Guid.NewGuid().ToString("N"));
