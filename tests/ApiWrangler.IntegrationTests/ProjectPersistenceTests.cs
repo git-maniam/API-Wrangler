@@ -9,6 +9,26 @@ namespace ApiWrangler.IntegrationTests;
 public sealed class ProjectPersistenceTests
 {
     [Fact]
+    public async Task Discover_RepositoryRootWithNestedProject_FindsApiWranglerDirectory()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "ApiWrangler-project-tests", Guid.NewGuid().ToString("N"));
+        var repositoryRoot = Path.Combine(root, "repository");
+        var projectRoot = Path.Combine(repositoryRoot, "api-wrangler");
+        Directory.CreateDirectory(Path.Combine(repositoryRoot, ".git"));
+        try
+        {
+            await using var session = await new ProjectRepository(Path.Combine(root, "state")).InitializeAsync(projectRoot, "Fixture");
+
+            Assert.Equal(Path.GetFullPath(projectRoot), ProjectRepository.Discover(repositoryRoot));
+            Assert.Equal(Path.GetFullPath(projectRoot), ProjectRepository.Discover(Path.Combine(projectRoot, "wrangler.json")));
+        }
+        finally
+        {
+            if (Directory.Exists(root)) Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
     public async Task Watch_BufferOverflow_RequestsFullRescan()
     {
         var root = Path.Combine(Path.GetTempPath(), "ApiWrangler-project-tests", Guid.NewGuid().ToString("N"));
