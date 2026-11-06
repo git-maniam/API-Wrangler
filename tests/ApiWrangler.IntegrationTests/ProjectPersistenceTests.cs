@@ -9,6 +9,36 @@ namespace ApiWrangler.IntegrationTests;
 public sealed class ProjectPersistenceTests
 {
     [Fact]
+    public async Task Open_SecondWriterIsReadOnly_AndExternalEditsCauseConflict()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "ApiWrangler-project-tests", Guid.NewGuid().ToString("N"));
+        var projectRoot = Path.Combine(root, "project");
+        var repository = new ProjectRepository(Path.Combine(root, "state"));
+        Directory.CreateDirectory(root);
+        try
+        {
+            await using var writer = await repository.InitializeAsync(projectRoot, "Fixture");
+            await using var second = await repository.OpenAsync(projectRoot);
+            Assert.False(writer.IsReadOnly);
+            Assert.True(second.IsReadOnly);
+            await Assert.ThrowsAsync<ProjectReadOnlyException>(() => second.SaveAsync([]));
+
+            var asset = (await writer.ReadAsync()).Assets.Single(item => item.Kind == AssetKind.Request);
+            var external = (JsonObject)asset.Content.DeepClone();
+            external["name"] = "Changed outside this session";
+            await File.WriteAllBytesAsync(Path.Combine(projectRoot, asset.Path.Replace('/', Path.DirectorySeparatorChar)), CanonicalJson.Serialize(external));
+            var local = (JsonObject)asset.Content.DeepClone();
+            local["name"] = "Local edit";
+
+            await Assert.ThrowsAsync<ProjectConflictException>(() => writer.SaveAsync([new(asset.Path, local, asset.Hash)]));
+        }
+        finally
+        {
+            if (Directory.Exists(root)) Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
     public async Task Snapshot_CapturesExactProjectFiles_WithoutSecretValuesInMetadata()
     {
         var root = Path.Combine(Path.GetTempPath(), "ApiWrangler-project-tests", Guid.NewGuid().ToString("N"));
