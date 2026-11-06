@@ -9,6 +9,26 @@ namespace ApiWrangler.IntegrationTests;
 public sealed class ProjectPersistenceTests
 {
     [Fact]
+    public async Task LocalSettings_SaveAndReload_PreservesLastProject()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "ApiWrangler-project-tests", Guid.NewGuid().ToString("N"));
+        try
+        {
+            var store = new LocalSettingsStore(root);
+            var settings = new LocalSettings("D:/work/my-api-project");
+
+            await store.SaveAsync(settings);
+
+            Assert.Equal(settings, await store.ReadAsync());
+            Assert.True(File.Exists(Path.Combine(root, "desktop.json")));
+        }
+        finally
+        {
+            if (Directory.Exists(root)) Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
     public async Task Read_MissingRequiredField_ReportsFileAndFieldPointer()
     {
         var root = Path.Combine(Path.GetTempPath(), "ApiWrangler-project-tests", Guid.NewGuid().ToString("N"));
