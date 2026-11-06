@@ -9,6 +9,49 @@ namespace ApiWrangler.IntegrationTests;
 public sealed class ProjectPersistenceTests
 {
     [Fact]
+    public async Task Save_ReplacementFailure_RollsBackAllFiles()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "ApiWrangler-project-tests", Guid.NewGuid().ToString("N"));
+        var projectRoot = Path.Combine(root, "project");
+        var stateRoot = Path.Combine(root, "state");
+        Directory.CreateDirectory(root);
+        try
+        {
+            await using var session = await new ProjectRepository(stateRoot).InitializeAsync(projectRoot, "Fixture");
+            var files = new[]
+            {
+                "collections/default/collection.json",
+                "collections/default/requests/hello.request.json"
+            };
+            var changes = new List<FileChange>();
+            var originals = new List<byte[]>();
+            foreach (var relative in files)
+            {
+                var path = Path.Combine(projectRoot, relative.Replace('/', Path.DirectorySeparatorChar));
+                var original = await File.ReadAllBytesAsync(path);
+                originals.Add(original);
+                changes.Add(new(relative, original.Concat(new byte[] { (byte)' ' }).ToArray(), CanonicalJson.Hash(original)));
+            }
+            var transaction = new FileTransactions(projectRoot, stateRoot)
+            {
+                AfterReplacement = index =>
+                {
+                    if (index == 0) throw new IOException("Simulated process-time replacement failure.");
+                }
+            };
+
+            await Assert.ThrowsAsync<IOException>(() => transaction.ApplyAsync(changes, CancellationToken.None));
+
+            for (var index = 0; index < files.Length; index++)
+                Assert.Equal(originals[index], await File.ReadAllBytesAsync(Path.Combine(projectRoot, files[index].Replace('/', Path.DirectorySeparatorChar))));
+        }
+        finally
+        {
+            if (Directory.Exists(root)) Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
     public async Task Discover_RepositoryRootWithNestedProject_FindsApiWranglerDirectory()
     {
         var root = Path.Combine(Path.GetTempPath(), "ApiWrangler-project-tests", Guid.NewGuid().ToString("N"));
