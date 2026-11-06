@@ -9,6 +9,30 @@ namespace ApiWrangler.IntegrationTests;
 public sealed class ProjectPersistenceTests
 {
     [Fact]
+    public async Task Watch_BufferOverflow_RequestsFullRescan()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "ApiWrangler-project-tests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        try
+        {
+            await using var session = (ProjectSession)await new ProjectRepository(Path.Combine(root, "state"))
+                .InitializeAsync(Path.Combine(root, "project"), "Fixture");
+            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            await using var changes = session.WatchAsync(timeout.Token).GetAsyncEnumerator();
+
+            session.OnWatcherError(session, new ErrorEventArgs(new InternalBufferOverflowException()));
+
+            Assert.True(await changes.MoveNextAsync().AsTask().WaitAsync(timeout.Token));
+            Assert.True(changes.Current);
+            Assert.True((await session.ReadAsync(timeout.Token)).IsValid);
+        }
+        finally
+        {
+            if (Directory.Exists(root)) Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
     public async Task Watch_ExternalEdit_PreservesDirtyDraftAndRequiresConflictResolution()
     {
         var root = Path.Combine(Path.GetTempPath(), "ApiWrangler-project-tests", Guid.NewGuid().ToString("N"));

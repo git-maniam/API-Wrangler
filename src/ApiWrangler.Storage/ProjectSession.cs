@@ -45,9 +45,11 @@ internal sealed class ProjectSession : IProjectSession
         watcher.Created += OnChange;
         watcher.Deleted += OnChange;
         watcher.Renamed += OnChange;
-        watcher.Error += (_, _) => changes.Writer.TryWrite(true); // Overflow always forces a full rescan.
+        watcher.Error += OnWatcherError;
         watcher.EnableRaisingEvents = true;
     }
+
+    internal void OnWatcherError(object? sender, ErrorEventArgs args) => changes.Writer.TryWrite(true);
 
     internal Task RecoverAsync(CancellationToken token) => Transactions.RecoverAsync(token);
 

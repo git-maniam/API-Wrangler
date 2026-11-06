@@ -15,6 +15,7 @@ public interface IProjectSession : IAsyncDisposable
     Task<ProjectView> ReadAsync(CancellationToken token = default);
     Task SaveAsync(IReadOnlyList<AssetEdit> changes, CancellationToken token = default);
     Task<SnapshotInfo> SnapshotAsync(CancellationToken token = default);
+    // Each coalesced notification, including watcher overflow, requires a full project rescan.
     IAsyncEnumerable<bool> WatchAsync(CancellationToken token = default);
     Task SaveDraftAsync(EditorDraft draft, CancellationToken token = default);
     Task<EditorDraft?> ReadDraftAsync(string path, CancellationToken token = default);
