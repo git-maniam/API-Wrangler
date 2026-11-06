@@ -164,6 +164,7 @@ public sealed class ProjectPersistenceTests
                 Path.Combine(projectRoot, first.Path.Replace('/', Path.DirectorySeparatorChar)), overwrite: true);
 
             await new FileTransactions(projectRoot, stateRoot).RecoverAsync(CancellationToken.None);
+            await new FileTransactions(projectRoot, stateRoot).RecoverAsync(CancellationToken.None);
 
             foreach (var entry in entries)
             {
