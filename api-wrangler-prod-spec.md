@@ -2532,15 +2532,18 @@ Do not begin distributed infrastructure before these decisions are settled.
 
 **Implementation checkpoint (2026-11-07):** Phase 1 project discovery, versioned schemas, canonical assets, journaled persistence, watcher/recovery behavior, snapshots, local settings, and a desktop asset editor are implemented in PR #57. The five Phase 1 exit checks pass locally. After the Linux writer-lease fix, hosted Windows and Linux headless jobs each passed 30 tests with zero skipped; desktop build, format, and publish passed. ADR-0002 defines version 1 as the first supported format. P1.1-P1.3 are In review; P1.4 manual project-editor accessibility acceptance is In progress. The phase epic remains In progress until review, acceptance, and merge. See docs/implementation-status.md and docs/phase-1-exit-review.md.
 
-#### Restart bookmark (updated 2026-11-07 20:57 IST)
+#### Restart bookmark (updated 2026-11-07 21:12 IST)
 
-Verified: commit `e8edb4c` on branch `phase1-project-editor-acceptance` passed all hosted GitHub Actions CI checks (headless Windows, headless Linux, desktop). Local verification confirmed clean test pass (26 passed, 0 failed, 4 skipped Node tests pending environment) and zero format violations. Specification section 31.0 and AGENTS.md updated to strictly enforce running tests and builds only when absolutely necessary and batching all parameters into minimal executions to save tokens and minimize latency.
+Verified: PR #57 merged into main (commit `ed823c6`). Phase 1 sub-issues P1.1 (#8), P1.2 (#9), and P1.3 (#10) are verified and marked Done on GitHub Project 4. P1.4 (#58) and Phase 1 remain open pending manual accessibility acceptance. Phase 2 (`P2`, #11) and `P2.1` (#12) are In progress on branch `phase2-request-workbench`.
+P2.1 implementation verified:
+- `RequestAssetSerializer` converts `HttpRequestDefinition` to/from canonical v1 JSON and validates against `schemas/request.schema.json`.
+- `HttpTransport` supports repeated headers and query parameters, multipart form-data, urlencoded bodies, file-backed streaming bodies, automatic gzip decompression, cookie parsing, explicit TLS override option, cross-origin redirect authorization stripping, and non-idempotent retry protection.
+- `MainViewModel` and `MainWindow.xaml` provide complete request workbench controls: create, send, save to project, close, reopen from project, and rerun.
+- Consolidated batched verification: Release solution build passed with zero warnings/errors; `dotnet test` passed 36 integration tests (0 failed, 4 skipped Node tests); `scripts/Test-Desktop.ps1` HTTP desktop smoke passed with cancellation and responsiveness; `dotnet format --verify-no-changes` passed.
 
-PR #57 remains open and mergeable with all CI green. P1.1-P1.3 are In review; P1.4 (#58) and Phase 1 remain In progress pending manual accessibility acceptance. ARM64 remains deferred.
+Next: create PR for P2.1, link issue #12, update project ticket to In review, and proceed to P2.2 (variables and environments).
 
-Next: merge PR #57 or proceed with Phase 2 implementation per user direction; continue adhering strictly to batched and necessary-only test/build runs.
-
-Handoff: specification and AGENTS.md updated with test/build batching policies; working tree ready for commit.
+Handoff: working tree clean with P2.1 changes and consolidated passing checks ready for commit and push.
 
 During active work, publish a 2-3 line status at least every 10 minutes, refresh this bookmark at least every 30 minutes and at handoff, and synchronize GitHub issues at material checkpoints. Run builds or tests only for a concrete risk or required gate and batch related checks.
 ### Phase 2 — HTTP testing workbench

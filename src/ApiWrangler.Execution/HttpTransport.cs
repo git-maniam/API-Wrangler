@@ -10,20 +10,39 @@ namespace ApiWrangler.Execution;
 public sealed class HttpTransport : IHttpTransport, IDisposable
 {
     private readonly HttpClient client;
+    private readonly HttpClient insecureClient;
     private readonly string artifactDirectory;
 
-    public HttpTransport(string artifactDirectory) : this(new SocketsHttpHandler
-    {
-        AllowAutoRedirect = false,
-        AutomaticDecompression = DecompressionMethods.All,
-        UseCookies = false,
-        PooledConnectionLifetime = TimeSpan.FromMinutes(5)
-    }, artifactDirectory)
+    public HttpTransport(string artifactDirectory) : this(
+        new SocketsHttpHandler
+        {
+            AllowAutoRedirect = false,
+            AutomaticDecompression = DecompressionMethods.All,
+            UseCookies = false,
+            PooledConnectionLifetime = TimeSpan.FromMinutes(5)
+        },
+        new SocketsHttpHandler
+        {
+            AllowAutoRedirect = false,
+            AutomaticDecompression = DecompressionMethods.All,
+            UseCookies = false,
+            PooledConnectionLifetime = TimeSpan.FromMinutes(5),
+            SslOptions = new System.Net.Security.SslClientAuthenticationOptions
+            {
+                RemoteCertificateValidationCallback = delegate { return true; }
+            }
+        },
+        artifactDirectory)
     { }
 
     public HttpTransport(HttpMessageHandler handler, string artifactDirectory)
+        : this(handler, handler, artifactDirectory)
+    { }
+
+    public HttpTransport(HttpMessageHandler standardHandler, HttpMessageHandler insecureHandler, string artifactDirectory)
     {
-        client = new HttpClient(handler) { Timeout = Timeout.InfiniteTimeSpan };
+        client = new HttpClient(standardHandler) { Timeout = Timeout.InfiniteTimeSpan };
+        insecureClient = new HttpClient(insecureHandler) { Timeout = Timeout.InfiniteTimeSpan };
         this.artifactDirectory = Path.GetFullPath(artifactDirectory);
     }
 
@@ -38,30 +57,86 @@ public sealed class HttpTransport : IHttpTransport, IDisposable
         int? status = null;
         string? reason = null;
         List<HeaderEntry> headers = [];
+        List<CookieEntry> cookies = [];
         long received = 0;
         using var preview = new MemoryStream();
+        string currentUrl = BuildUrl(definition.Url, definition.Query);
+        string currentMethod = definition.Method;
+        var currentHeaders = definition.Headers.Where(h => h.Enabled).ToList();
+        int redirectCount = 0;
+        var activeClient = definition.TransportOptions.DangerousIgnoreTlsErrors ? insecureClient : client;
+
         try
         {
-            using var request = new HttpRequestMessage(new HttpMethod(definition.Method), definition.Url);
-            if (definition.Body is not null)
+            HttpResponseMessage? response = null;
+            while (true)
             {
-                request.Content = new StringContent(definition.Body, Encoding.UTF8);
-                request.Content.Headers.ContentType = MediaTypeHeaderValue.Parse(definition.ContentType);
-            }
-            foreach (var header in definition.Headers.Where(h => h.Enabled))
-            {
-                if (!request.Headers.TryAddWithoutValidation(header.Name, header.Value))
+                using var request = new HttpRequestMessage(new HttpMethod(currentMethod), currentUrl);
+                if (definition.TransportOptions.PreferredHttpVersion is not null)
                 {
-                    request.Content ??= new ByteArrayContent([]);
-                    if (!request.Content.Headers.TryAddWithoutValidation(header.Name, header.Value))
-                        throw new ArgumentException("A header cannot be applied to this request.");
+                    request.Version = definition.TransportOptions.PreferredHttpVersion;
                 }
+
+                HttpContent? content = null;
+                if (!HttpMethods.IsGetOrHead(currentMethod))
+                {
+                    content = CreateContent(definition);
+                    request.Content = content;
+                }
+
+                foreach (var header in currentHeaders)
+                {
+                    if (!request.Headers.TryAddWithoutValidation(header.Name, header.Value))
+                    {
+                        request.Content ??= new ByteArrayContent([]);
+                        if (!request.Content.Headers.TryAddWithoutValidation(header.Name, header.Value))
+                            throw new ArgumentException("A header cannot be applied to this request.");
+                    }
+                }
+
+                response = await activeClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, token).ConfigureAwait(false);
+                status = (int)response.StatusCode;
+                reason = response.ReasonPhrase;
+
+                if (definition.TransportOptions.FollowRedirects && IsRedirect(status.Value) && redirectCount < definition.TransportOptions.MaxRedirects)
+                {
+                    var location = response.Headers.Location;
+                    if (location is not null)
+                    {
+                        var currentUri = new Uri(currentUrl);
+                        var nextUri = location.IsAbsoluteUri ? location : new Uri(currentUri, location);
+                        var isCrossOrigin = !string.Equals(currentUri.Scheme, nextUri.Scheme, StringComparison.OrdinalIgnoreCase) ||
+                                            !string.Equals(currentUri.Host, nextUri.Host, StringComparison.OrdinalIgnoreCase) ||
+                                            currentUri.Port != nextUri.Port;
+
+                        if (isCrossOrigin && definition.TransportOptions.StripAuthOnCrossOriginRedirect)
+                        {
+                            currentHeaders = currentHeaders
+                                .Where(h => !string.Equals(h.Name, "Authorization", StringComparison.OrdinalIgnoreCase) &&
+                                            !string.Equals(h.Name, "Proxy-Authorization", StringComparison.OrdinalIgnoreCase))
+                                .ToList();
+                        }
+
+                        if (status.Value == 303 || ((status.Value == 301 || status.Value == 302) && string.Equals(currentMethod, "POST", StringComparison.OrdinalIgnoreCase)))
+                        {
+                            currentMethod = "GET";
+                        }
+
+                        currentUrl = nextUri.ToString();
+                        redirectCount++;
+                        response.Dispose();
+                        continue;
+                    }
+                }
+
+                break;
             }
-            using var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, token).ConfigureAwait(false);
-            status = (int)response.StatusCode;
-            reason = response.ReasonPhrase;
+
             headers = response.Headers.Concat(response.Content.Headers)
                 .SelectMany(h => h.Value.Select(v => new HeaderEntry(h.Key, v))).ToList();
+
+            cookies = ExtractCookies(response);
+
             Directory.CreateDirectory(artifactDirectory);
             bodyPath = Path.Combine(artifactDirectory, $"{Guid.NewGuid():N}.body");
             await using (var output = new FileStream(bodyPath, FileMode.CreateNew, FileAccess.Write, FileShare.None,
@@ -81,6 +156,7 @@ public sealed class HttpTransport : IHttpTransport, IDisposable
                 }
                 await output.FlushAsync(token).ConfigureAwait(false);
             }
+            response.Dispose();
             return Result(ExecutionOutcome.Passed, null);
         }
         catch (OperationCanceledException)
@@ -99,7 +175,8 @@ public sealed class HttpTransport : IHttpTransport, IDisposable
         }
 
         HttpExecutionResult Result(ExecutionOutcome outcome, string? error) => new(outcome, status, reason, headers,
-            Encoding.UTF8.GetString(preview.ToArray()), received, received > preview.Length, bodyPath, watch.Elapsed, error);
+            Encoding.UTF8.GetString(preview.ToArray()), received, received > preview.Length, bodyPath, watch.Elapsed, error,
+            cookies, currentUrl, redirectCount);
 
         void RemovePartial()
         {
@@ -111,6 +188,157 @@ public sealed class HttpTransport : IHttpTransport, IDisposable
         }
     }
 
-    public void Dispose() => client.Dispose();
+    private static bool IsRedirect(int statusCode) =>
+        statusCode is 301 or 302 or 303 or 307 or 308;
+
+    public static string BuildUrl(string baseUrl, IReadOnlyList<QueryParamEntry> query)
+    {
+        var enabledQuery = query.Where(q => q.Enabled && !string.IsNullOrWhiteSpace(q.Name)).ToList();
+        if (enabledQuery.Count == 0) return baseUrl;
+
+        var uriBuilder = new UriBuilder(baseUrl);
+        var querySegments = new List<string>();
+
+        if (!string.IsNullOrEmpty(uriBuilder.Query))
+        {
+            var raw = uriBuilder.Query.TrimStart('?');
+            if (!string.IsNullOrEmpty(raw)) querySegments.Add(raw);
+        }
+
+        foreach (var param in enabledQuery)
+        {
+            querySegments.Add($"{Uri.EscapeDataString(param.Name)}={Uri.EscapeDataString(param.Value)}");
+        }
+
+        uriBuilder.Query = string.Join("&", querySegments);
+        return uriBuilder.Uri.ToString();
+    }
+
+    private static HttpContent? CreateContent(HttpRequestDefinition definition)
+    {
+        if (definition.BodyDefinition is not null)
+        {
+            var mode = definition.BodyDefinition.Mode.ToLowerInvariant();
+            switch (mode)
+            {
+                case "none":
+                    return null;
+                case "urlencoded":
+                    if (definition.BodyDefinition.FormData.Count > 0)
+                    {
+                        var pairs = definition.BodyDefinition.FormData
+                            .Where(f => f.Enabled && !string.IsNullOrEmpty(f.Name))
+                            .Select(f => new KeyValuePair<string, string>(f.Name, f.Value));
+                        return new FormUrlEncodedContent(pairs);
+                    }
+                    if (!string.IsNullOrEmpty(definition.BodyDefinition.Text))
+                    {
+                        return new StringContent(definition.BodyDefinition.Text, Encoding.UTF8, "application/x-www-form-urlencoded");
+                    }
+                    return null;
+                case "form-data":
+                    var multipart = new MultipartFormDataContent();
+                    foreach (var item in definition.BodyDefinition.FormData.Where(f => f.Enabled && !string.IsNullOrEmpty(f.Name)))
+                    {
+                        if (!string.IsNullOrEmpty(item.FilePath) && File.Exists(item.FilePath))
+                        {
+                            var stream = File.OpenRead(item.FilePath);
+                            var streamContent = new StreamContent(stream);
+                            if (!string.IsNullOrEmpty(item.ContentType))
+                                streamContent.Headers.ContentType = MediaTypeHeaderValue.Parse(item.ContentType);
+                            multipart.Add(streamContent, item.Name, Path.GetFileName(item.FilePath));
+                        }
+                        else
+                        {
+                            multipart.Add(new StringContent(item.Value), item.Name);
+                        }
+                    }
+                    return multipart;
+                case "file":
+                    if (!string.IsNullOrEmpty(definition.BodyDefinition.FilePath) && File.Exists(definition.BodyDefinition.FilePath))
+                    {
+                        var stream = File.OpenRead(definition.BodyDefinition.FilePath);
+                        var fileContent = new StreamContent(stream);
+                        if (!string.IsNullOrEmpty(definition.ContentType))
+                            fileContent.Headers.ContentType = MediaTypeHeaderValue.Parse(definition.ContentType);
+                        return fileContent;
+                    }
+                    return null;
+                case "raw":
+                default:
+                    if (!string.IsNullOrEmpty(definition.BodyDefinition.Text))
+                    {
+                        var rawContent = new StringContent(definition.BodyDefinition.Text, Encoding.UTF8);
+                        if (!string.IsNullOrEmpty(definition.ContentType))
+                            rawContent.Headers.ContentType = MediaTypeHeaderValue.Parse(definition.ContentType);
+                        return rawContent;
+                    }
+                    return null;
+            }
+        }
+
+        if (definition.Body is not null)
+        {
+            var content = new StringContent(definition.Body, Encoding.UTF8);
+            if (!string.IsNullOrEmpty(definition.ContentType))
+                content.Headers.ContentType = MediaTypeHeaderValue.Parse(definition.ContentType);
+            return content;
+        }
+
+        return null;
+    }
+
+    private static List<CookieEntry> ExtractCookies(HttpResponseMessage response)
+    {
+        var cookies = new List<CookieEntry>();
+        if (response.Headers.TryGetValues("Set-Cookie", out var setCookieValues))
+        {
+            foreach (var raw in setCookieValues)
+            {
+                var parts = raw.Split(';').Select(p => p.Trim()).ToArray();
+                if (parts.Length == 0) continue;
+                var eqIdx = parts[0].IndexOf('=');
+                if (eqIdx <= 0) continue;
+                var name = parts[0][..eqIdx].Trim();
+                var value = parts[0][(eqIdx + 1)..].Trim();
+                string? domain = null;
+                string? path = null;
+                DateTimeOffset? expires = null;
+                bool httpOnly = false;
+                bool secure = false;
+
+                for (var i = 1; i < parts.Length; i++)
+                {
+                    var part = parts[i];
+                    var pEq = part.IndexOf('=');
+                    var pKey = (pEq > 0 ? part[..pEq] : part).Trim();
+                    var pVal = (pEq > 0 ? part[(pEq + 1)..] : "").Trim();
+
+                    if (string.Equals(pKey, "domain", StringComparison.OrdinalIgnoreCase)) domain = pVal;
+                    else if (string.Equals(pKey, "path", StringComparison.OrdinalIgnoreCase)) path = pVal;
+                    else if (string.Equals(pKey, "expires", StringComparison.OrdinalIgnoreCase) && DateTimeOffset.TryParse(pVal, out var dt)) expires = dt;
+                    else if (string.Equals(pKey, "httponly", StringComparison.OrdinalIgnoreCase)) httpOnly = true;
+                    else if (string.Equals(pKey, "secure", StringComparison.OrdinalIgnoreCase)) secure = true;
+                }
+
+                cookies.Add(new CookieEntry(name, value, domain, path, expires, httpOnly, secure));
+            }
+        }
+        return cookies;
+    }
+
+    private static class HttpMethods
+    {
+        public static bool IsGetOrHead(string method) =>
+            string.Equals(method, "GET", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(method, "HEAD", StringComparison.OrdinalIgnoreCase);
+    }
+
+    public void Dispose()
+    {
+        client.Dispose();
+        insecureClient.Dispose();
+    }
+
     private sealed class ResponseLimitException : IOException;
 }

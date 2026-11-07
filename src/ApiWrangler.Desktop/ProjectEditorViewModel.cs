@@ -38,6 +38,8 @@ public partial class ProjectEditorViewModel(IProjectRepository repository) : Obs
     public bool IsEditorReadOnly => !CanEdit;
     public bool CanUseDisk => IsDirty && session is { IsReadOnly: false } && !operationPending;
     public bool CanUseDraft => HasConflict && CanEdit;
+    public IProjectSession? CurrentSession => session;
+    public async Task RefreshProjectAsync() => await RefreshAsync();
 
     [RelayCommand]
     private async Task OpenProjectAsync()

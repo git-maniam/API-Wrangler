@@ -45,25 +45,56 @@
                     </Grid>
                 </Grid>
             </TabItem>
-            <TabItem Header="HTTP request">
+            <TabItem Header="HTTP workbench">
                 <Grid Margin="12">
-                    <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="2*" /><RowDefinition Height="6" /><RowDefinition Height="3*" /></Grid.RowDefinitions>
-                    <Grid Margin="0,0,0,12">
+                    <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="2*" /><RowDefinition Height="6" /><RowDefinition Height="3*" /></Grid.RowDefinitions>
+                    <DockPanel Margin="0,0,0,8">
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                            <Button Content="_New" Command="{Binding NewRequestCommand}" Margin="4,0" AutomationProperties.Name="New request" />
+                            <Button Content="_Save request" Command="{Binding SaveRequestCommand}" Margin="4,0" AutomationProperties.Name="Save request" />
+                            <Button Content="_Close" Command="{Binding CloseRequestCommand}" Margin="4,0" AutomationProperties.Name="Close request" />
+                            <ComboBox ItemsSource="{Binding ProjectRequests}" SelectedItem="{Binding SelectedProjectRequest}" DisplayMemberPath="Path" Width="180" Margin="8,0,0,0" AutomationProperties.Name="Saved project requests" />
+                            <Button Content="_Open" Command="{Binding LoadRequestCommand}" Margin="4,0,0,0" AutomationProperties.Name="Open selected request" />
+                        </StackPanel>
+                        <Label Content="Request _name:" Target="{Binding ElementName=RequestNameBox}" Padding="0" VerticalAlignment="Center" Margin="0,0,8,0" />
+                        <TextBox x:Name="RequestNameBox" Text="{Binding RequestName, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" AutomationProperties.Name="Request name" />
+                    </DockPanel>
+                    <Grid Grid.Row="1" Margin="0,0,0,8">
                         <Grid.ColumnDefinitions><ColumnDefinition Width="110" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                         <ComboBox ItemsSource="{Binding Methods}" Text="{Binding Method}" IsEditable="True" VerticalContentAlignment="Center" AutomationProperties.Name="HTTP method" />
                         <TextBox Grid.Column="1" Text="{Binding Url, UpdateSourceTrigger=PropertyChanged}" Margin="8,0" AutomationProperties.Name="Request URL" />
-                        <Button Grid.Column="2" Content="Send" Command="{Binding SendCommand}" AutomationProperties.AutomationId="SendRequest" />
+                        <Button Grid.Column="2" Content="_Send" Command="{Binding SendCommand}" AutomationProperties.AutomationId="SendRequest" />
                         <Button Grid.Column="3" Content="Cancel" Command="{Binding SendCancelCommand}" Margin="8,0,0,0" />
                     </Grid>
-                    <TextBlock Grid.Row="1" Text="Redirects are shown without following them. Response bodies stay on this machine." Margin="0,0,0,8" TextWrapping="Wrap" />
-                    <TabControl x:Name="RequestTabs" Grid.Row="2">
-                        <TabItem Header="Headers"><TextBox Text="{Binding RequestHeaders, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" FontFamily="Consolas" VerticalScrollBarVisibility="Auto" AutomationProperties.Name="Request headers" /></TabItem>
-                        <TabItem Header="JSON body"><editor:TextEditor x:Name="RequestBodyEditor" local:EditorBinding.Text="{Binding RequestBody}" ShowLineNumbers="True" FontFamily="Consolas" FontSize="14" AutomationProperties.Name="Request JSON body" /></TabItem>
+                    <TextBlock Grid.Row="2" Text="Redirects are preserved or followed per settings. Response bodies stay on this machine." Margin="0,0,0,8" TextWrapping="Wrap" />
+                    <TabControl x:Name="RequestTabs" Grid.Row="3">
+                        <TabItem Header="Headers"><TextBox Text="{Binding RequestHeaders, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" FontFamily="Consolas" VerticalScrollBarVisibility="Auto" AutomationProperties.Name="Request headers" AutomationProperties.HelpText="Enter headers as Name: value per line. Repeated header names are supported." /></TabItem>
+                        <TabItem Header="Body">
+                            <Grid Margin="8">
+                                <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                                <DockPanel Margin="0,0,0,8">
+                                    <Label Content="Body _mode:" Target="{Binding ElementName=BodyModeCombo}" VerticalAlignment="Center" Padding="0" Margin="0,0,8,0" />
+                                    <ComboBox x:Name="BodyModeCombo" ItemsSource="{Binding BodyModes}" SelectedItem="{Binding BodyMode}" Width="140" AutomationProperties.Name="Request body mode" />
+                                    <Label Content="File _path:" Target="{Binding ElementName=BodyFilePathBox}" VerticalAlignment="Center" Padding="0" Margin="16,0,8,0" />
+                                    <TextBox x:Name="BodyFilePathBox" Text="{Binding BodyFilePath, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="File-backed body path" />
+                                </DockPanel>
+                                <editor:TextEditor Grid.Row="1" x:Name="RequestBodyEditor" local:EditorBinding.Text="{Binding RequestBody}" ShowLineNumbers="True" FontFamily="Consolas" FontSize="14" AutomationProperties.Name="Request text or JSON body" />
+                            </Grid>
+                        </TabItem>
+                        <TabItem Header="Query params"><TextBox Text="{Binding RequestQuery, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" FontFamily="Consolas" VerticalScrollBarVisibility="Auto" AutomationProperties.Name="Request query parameters" AutomationProperties.HelpText="Enter query parameters as name=value per line. Repeated parameter names are supported." /></TabItem>
+                        <TabItem Header="Transport settings">
+                            <StackPanel Margin="12">
+                                <CheckBox Content="Follow redirects automatically (cross-origin auth is stripped)" IsChecked="{Binding FollowRedirects}" Margin="0,0,0,12" AutomationProperties.Name="Follow redirects" />
+                                <CheckBox Content="Dangerous: ignore TLS certificate errors (override default TLS validation)" IsChecked="{Binding DangerousIgnoreTlsErrors}" Margin="0,0,0,4" AutomationProperties.Name="Ignore TLS errors" />
+                                <TextBlock Text="Warning: TLS verification is strictly enabled by default. Ignoring errors exposes traffic to interception." Foreground="DarkRed" Margin="24,0,0,0" />
+                            </StackPanel>
+                        </TabItem>
                     </TabControl>
-                    <GridSplitter Grid.Row="3" Height="6" HorizontalAlignment="Stretch" />
-                    <TabControl Grid.Row="4">
+                    <GridSplitter Grid.Row="4" Height="6" HorizontalAlignment="Stretch" />
+                    <TabControl Grid.Row="5">
                         <TabItem Header="Response body"><editor:TextEditor local:EditorBinding.Text="{Binding ResponseBody, Mode=OneWay}" IsReadOnly="True" ShowLineNumbers="True" FontFamily="Consolas" FontSize="14" AutomationProperties.Name="Response body" /></TabItem>
                         <TabItem Header="Response headers"><TextBox Text="{Binding ResponseHeaders, Mode=OneWay}" IsReadOnly="True" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" FontFamily="Consolas" AutomationProperties.Name="Response headers" /></TabItem>
+                        <TabItem Header="Cookies"><TextBox Text="{Binding ResponseCookies, Mode=OneWay}" IsReadOnly="True" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" FontFamily="Consolas" AutomationProperties.Name="Response cookies" /></TabItem>
                         <TabItem Header="Local artifact"><TextBox Text="{Binding ArtifactPath, Mode=OneWay}" IsReadOnly="True" TextWrapping="Wrap" AutomationProperties.Name="Local response body path" /></TabItem>
                     </TabControl>
                 </Grid>
