@@ -2532,19 +2532,17 @@ Do not begin distributed infrastructure before these decisions are settled.
 
 **Implementation checkpoint (2026-11-07):** Phase 1 project discovery, versioned schemas, canonical assets, journaled persistence, watcher/recovery behavior, snapshots, local settings, and a desktop asset editor are implemented in PR #57. The five Phase 1 exit checks pass locally. After the Linux writer-lease fix, hosted Windows and Linux headless jobs each passed 30 tests with zero skipped; desktop build, format, and publish passed. ADR-0002 defines version 1 as the first supported format. P1.1-P1.3 are In review; P1.4 manual project-editor accessibility acceptance is In progress. The phase epic remains In progress until review, acceptance, and merge. See docs/implementation-status.md and docs/phase-1-exit-review.md.
 
-#### Restart bookmark (updated 2026-11-07 21:55 IST)
+#### Restart bookmark (updated 2026-11-07 22:00 IST)
 
-Verified: P2.4 (Issue #54: Type-aware structured editors, viewers, and font preferences) implemented and verified on branch `phase2-structured-editors`.
-- `StructuredTextEngine.cs` provides headless format auto-detection, beautification, and parse diagnostics for JSON, XML, YAML, GraphQL, and CSV without mutating raw content or semantic values.
-- Enforces large content threshold (5 MiB preview limit) without attempting pretty-printing above threshold.
-- `EditorBinding.cs` attaches dynamic syntax highlighting to AvalonEdit.
-- `LocalSettingsStore.cs` persists editor font preferences with Segoe UI 12 pt (16 px) default.
-- `MainViewModel.cs` and `MainWindow.xaml` expose font family/size selectors, request body "Format body" command, structured vs. raw response view toggle, and diagnostic banners.
+Verified: Phase 2 (HTTP testing workbench) is complete.
+- Sub-issues P2.1 (#12), P2.2 (#13), P2.3 (#14), and P2.4 (#54) implemented, verified, and merged into `main`.
+- All 5 Phase 2 specification exit criteria pass; see `docs/phase-2-exit-review.md`.
+- Epic #11 and all 4 child issues are verified and closed.
 - Consolidated batched verification: Release solution build passed with 0 warnings/errors; `dotnet test` passed 76 tests (0 failed, 4 skipped Node tests); desktop smoke passed (`Test-Desktop.ps1`); `dotnet format --verify-no-changes` passed.
 
-Next: create PR for P2.4, link issue #54, merge into `main`, mark P2.4 Done in Project 4, and proceed directly to P2.5 (issue #55: HTTP request tree, tabs, and persistence lifecycle).
+Next: Phase 3 (Collections and assertions, parent epic #15). P3.1 (#16: Collection/folder hierarchy and ordered execution engine).
 
-Handoff: working tree ready for commit and push on `phase2-structured-editors`.
+Handoff: working tree clean on `main`, Phase 2 fully landed.
 
 During active work, publish a 2-3 line status at least every 10 minutes, refresh this bookmark at least every 30 minutes and at handoff, and synchronize GitHub issues at material checkpoints. Run builds or tests only for a concrete risk or required gate and batch related checks.
 ### Phase 2 — HTTP testing workbench
