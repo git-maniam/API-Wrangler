@@ -92,8 +92,13 @@ internal static class ProjectSnapshots
     {
         var start = new ProcessStartInfo("git")
         {
-            WorkingDirectory = root, CreateNoWindow = true, UseShellExecute = false,
-            RedirectStandardOutput = true, RedirectStandardError = true, StandardOutputEncoding = Encoding.UTF8, StandardErrorEncoding = Encoding.UTF8
+            WorkingDirectory = root,
+            CreateNoWindow = true,
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            StandardOutputEncoding = Encoding.UTF8,
+            StandardErrorEncoding = Encoding.UTF8
         };
         start.ArgumentList.Add("-c");
         start.ArgumentList.Add("core.fsmonitor=false");

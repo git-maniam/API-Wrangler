@@ -9,6 +9,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../ApiWrangler.Execution/ApiWrangler.Execution.csproj" />
+    <ProjectReference Include="../ApiWrangler.Storage/ApiWrangler.Storage.csproj" />
     <PackageReference Include="CommunityToolkit.Mvvm" />
     <PackageReference Include="AvalonEdit" />
     <PackageReference Include="Microsoft.Extensions.Hosting" />

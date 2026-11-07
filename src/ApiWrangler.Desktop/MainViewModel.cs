@@ -5,8 +5,9 @@ using CommunityToolkit.Mvvm.Input;
 
 namespace ApiWrangler.Desktop;
 
-public partial class MainViewModel(HttpRequestService requests) : ObservableObject
+public partial class MainViewModel(HttpRequestService requests, ProjectEditorViewModel projectEditor) : ObservableObject
 {
+    public ProjectEditorViewModel ProjectEditor { get; } = projectEditor;
     [ObservableProperty] private string method = "GET";
     [ObservableProperty] private string url = "http://localhost:5057/echo";
     [ObservableProperty] private string requestBody = "";

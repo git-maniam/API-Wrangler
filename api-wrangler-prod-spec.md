@@ -184,6 +184,21 @@ Prefer a native text editor component such as AvalonEdit, subject to maintenance
 
 Do not build a custom code editor from scratch.
 
+### 3.2.1 Structured text display and typography
+
+- Format and syntax-highlight structured content according to its detected or selected type wherever it is displayed for editing or inspection, including request and response bodies, dataset source previews, and GraphQL documents.
+- Provide readable, type-specific presentation for JSON, YAML, GraphQL, CSV, and other supported structured formats. JSON and YAML use appropriate indentation and token colors; GraphQL highlights its operations, types, fields, arguments, and values; CSV uses a readable table or aligned preview with distinct colors for headers, delimiters, quoted fields, and invalid cells while preserving delimiters and quoting in the raw view.
+- Offer a beautified view and the exact raw source. Beautification is a presentation action and must not silently rewrite saved content, alter semantic values, change CSV quoting, or hide parse errors. Show a useful diagnostic when content cannot be formatted.
+- Apply syntax colors in light, dark, and high-contrast themes with readable contrast; meaning must remain available without color alone.
+- Use Segoe UI at 12 pt as the default text font. Let users select their preferred font family and size for editor and structured-content views, and persist that preference locally.
+
+### 3.2.2 Application icon
+
+- Use the repository-root `App-Icon.png` as the canonical API Wrangler application icon artwork.
+- Derive the Windows icon resources and required sizes from this asset for the executable, application windows, taskbar and Alt-Tab, Start menu entries, and installer-created shortcuts. Keep these surfaces visually consistent.
+- Preserve the artwork's proportions, colors, and transparency when generating size variants; do not stretch or crop it. Check that the icon remains recognizable at small sizes and on light, dark, and high-DPI Windows desktops.
+- Package the generated icon resources with desktop releases so a fresh installation shows the correct icon without depending on the source PNG being present beside the executable.
+
 ### 3.3 Headless engine
 
 The engine must be independent of WPF.
@@ -2344,6 +2359,14 @@ Do not resume a mutating API request automatically after a crash.
 
 ## 31. Testing and verification strategy
 
+### 31.0 Necessity, batching, and run cadence
+
+Run builds and tests only when absolutely necessary: to resolve a concrete implementation risk, diagnose a failure, or satisfy a required acceptance, CI, or release gate. For documentation-only changes, do not run them unless an explicit gate requires it. Before running, identify the behavior or gate being verified and choose the smallest meaningful verification set.
+
+Batch all compatible test parameters (projects, filters, frameworks, configurations, and fixture setup) into one invocation or scripted run where practical. Batch compatible build parameters (solution or projects, configuration, target framework or runtime, and properties) into one invocation where practical. Plan the changed work and parameters up front so each run covers the required cases together; do not split checks into repeated runs by parameter. Use the fewest executions that establish the required evidence, and reuse valid results while relevant inputs remain unchanged.
+
+Keep routine command output concise to reduce token use and execution time, while preserving diagnostics needed to understand failures. After a failure, inspect the evidence, fix the cause, and rerun only the affected check; perform one consolidated verification afterward only when a required gate calls for it. Batch related changes before pushing to avoid repeated CI matrices for intermediate updates. Report exact commands, outcomes, and skipped cases; never count skipped tests as passed.
+
 ### 31.1 Unit tests
 
 Focus on meaningful logic:
@@ -2497,12 +2520,17 @@ Do not begin distributed infrastructure before these decisions are settled.
 - Interrupted write does not destroy the previous valid file.
 - External edits are detected.
 
-**Implementation checkpoint (2026-11-07):** Project initialization/discovery, schema validation, canonical JSON, writer ownership, transaction journals, watching, snapshots, and local settings are implemented in the phase-1 foundation. Windows x64 integration checks cover newer-schema read-only inspection, nested repository discovery and file-and-field diagnostics for missing required properties, extension-field preservation, no-diff repeated saves, interrupted multi-file recovery, second-writer read-only access, external-edit conflicts, and snapshot metadata. Latest full Release build passed with zero warnings/errors; latest integration run: 26 passed and four optional Node tests skipped because the worker is not configured. Local settings persistence, dirty-draft preservation through external changes, debounced watcher notification, and recovery conflict preservation have integration checks; P1.1-P1.3 remain In progress. Remaining: define supported legacy migration inputs and backup behavior; wire dirty-editor conflict decisions into the desktop; review phase exit criteria. Branch/cache invalidation is deferred until a project cache exists. Dirty-draft conflict, watcher overflow full-rescan signaling, and in-process transaction rollback, idempotent recovery, and third-party edit preservation are verified. Resume with those remaining cases before Phase 2. See docs/implementation-status.md and GitHub issues 8-10.\n\n#### Restart bookmark (2026-11-07)
+**Implementation checkpoint (2026-11-07):** Phase 1 project discovery, versioned schemas, canonical assets, journaled persistence, watcher/recovery behavior, snapshots, local settings, and a desktop asset editor are implemented in PR #57. The five Phase 1 exit checks pass locally. After the Linux writer-lease fix, hosted Windows and Linux headless jobs each passed 30 tests with zero skipped; desktop build, format, and publish passed. ADR-0002 defines version 1 as the first supported format. P1.1-P1.3 are In review; P1.4 manual project-editor accessibility acceptance is In progress. The phase epic remains In progress until review, acceptance, and merge. See docs/implementation-status.md and docs/phase-1-exit-review.md.
 
-Resume with migration/backup scope, then desktop dirty-editor conflict wiring, then phase exit review. Keep Phase 1 tickets In Progress until all criteria pass and work is merged.
+#### Restart bookmark (updated 2026-11-07 16:28 IST)
 
-Approximate remaining effort: 3-5 focused development days (about 1-2 weeks part-time), assuming migration scope is agreed promptly. Phase 0 private HTTPS/SSH and accessibility validation remains separate.
+Verified: PR #57 remains open, non-draft, mergeable, and has no review; hosted desktop and Windows/Linux headless checks pass. P1.4 (#58) is In progress. Its current Release build and project smoke pass for programmatic UI Automation; manual keyboard focus, Narrator, high-contrast, and 150% DPI acceptance still needs an interactive Windows session. The user requested stricter validation cadence; section 31.0 now requires builds/tests only when absolutely necessary, compatible parameters batched into as few runs as practical, concise output, and targeted reruns after failures.
 
+GitHub Project 4: P1.1-P1.3 are In review; P1.4 accessibility review (#58) is In progress; P0.5 private Git authentication (#6) is Ready; the Phase 1 epic remains In progress. Snapshot execution (#59), branch/cache invalidation (#23), and future schema migration (#60) are Backlog. No issue or epic is Done.
+
+Next: complete the interactive accessibility review in #58; address PR #57 review and merge, then reassess Phase 1 acceptance. Phase 0 private HTTPS/SSH acceptance remains separate. Keep statuses tied to executed evidence.
+
+During active work, publish a 2-3 line status at least every 10 minutes, refresh this bookmark at least every 30 minutes and at handoff, and synchronize GitHub issues at material checkpoints. Run builds or tests only for a concrete risk or required gate and batch related checks.
 ### Phase 2 — HTTP testing workbench
 
 **Build:**
@@ -2747,6 +2775,7 @@ Approximate remaining effort: 3-5 focused development days (about 1-2 weeks part
 - SDK generator integration.
 - Optional AI provider adapter.
 - Installer.
+- Application icon resources derived from `App-Icon.png`.
 - Upgrade path.
 - Performance tuning.
 - Operational manuals.
@@ -2757,6 +2786,7 @@ Approximate remaining effort: 3-5 focused development days (about 1-2 weeks part
 - Full targeted developer-capability matrix is reviewed.
 - No critical placeholder remains in shipped functionality.
 - Fresh-machine installation succeeds.
+- Executable, window, taskbar, Start menu, and installer shortcuts display the specified application icon.
 - CLI and unattended deployment succeed.
 - Performance targets are measured.
 - AI is not required.
