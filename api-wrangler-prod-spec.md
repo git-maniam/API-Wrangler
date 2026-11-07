@@ -2528,15 +2528,15 @@ Do not begin distributed infrastructure before these decisions are settled.
 
 **Implementation checkpoint (2026-11-07):** Phase 1 project discovery, versioned schemas, canonical assets, journaled persistence, watcher/recovery behavior, snapshots, local settings, and a desktop asset editor are implemented in PR #57. The five Phase 1 exit checks pass locally. After the Linux writer-lease fix, hosted Windows and Linux headless jobs each passed 30 tests with zero skipped; desktop build, format, and publish passed. ADR-0002 defines version 1 as the first supported format. P1.1-P1.3 are In review; P1.4 manual project-editor accessibility acceptance is In progress. The phase epic remains In progress until review, acceptance, and merge. See docs/implementation-status.md and docs/phase-1-exit-review.md.
 
-#### Restart bookmark (updated 2026-11-07 19:54 IST)
+#### Restart bookmark (updated 2026-11-07 20:37 IST)
 
-Verified at 19:24 IST: PR #57 is open, non-draft, mergeable, and has no reviews or comments. Latest hosted desktop and Windows/Linux headless checks pass. P1.4 (#58) is open and remains In progress per the last project sync; its current Release build and project smoke passed programmatic UI Automation. Manual keyboard focus, Narrator, high-contrast, and 150% DPI acceptance still needs an interactive Windows session.
+Verified: two parallel agents reviewed Phase 1 code and acceptance evidence, then independently reviewed fixes for save/cleanup typing races, immutable-ID error handling, and unseen disk revisions during Use draft. One Release desktop build passed with zero warnings/errors; one --project-smoke run passed existing workflows and deterministic regressions; changed-file format verification passed. Local evidence and synthetic screenshot: artifacts/phase1-review-smoke/run-20261107-203638 (ignored). No full local integration rerun was needed for these desktop-only changes.
 
-GitHub Project 4 (last synced): P1.1-P1.3 are In review; P1.4 (#58) is In progress; P0.5 (#6) is Ready; Phase 1 remains In progress. #23, #59, and #60 remain Backlog. No issue or epic is Done.
+PR #57 remains open. Hosted checks at pre-fix commit 18dc2b6 passed; check CI for the pushed review fixes before merge. P1.1-P1.3 are In review after the checkpoint sync; P1.4 (#58) and Phase 1 remain In progress. Manual accessibility is pending at the user's explicit request. ARM64 remains deferred; Docker Desktop and its pulled dockurr/windows-arm image are recorded in section 31.0.
 
-Next: complete the interactive accessibility review in #58 with a person able to use the Windows desktop and Narrator; this session has no desktop interaction or Narrator access. Record results and fix defects, then address PR #57 review and merge before reassessing Phase 1 acceptance. Validation policy is in section 31.0 and step 6 of section 34.1: run builds/tests only when necessary, batch compatible parameters, minimize executions and output, and reuse valid results. No build or tests were run for this documentation update.
+Next: inspect CI/review feedback for the fix checkpoint; complete manual keyboard, Narrator, high-contrast, and 150% DPI review when the user is available, and attach a project-editor screenshot to PR #57. Resolve findings before merge and reassess Phase 1 acceptance. Do not mark Phase 1 complete or begin Phase 2 implementation before the gate is resolved. Keep tests/builds necessary-only and batch compatible parameters under section 31.0.
 
-Handoff: bookmark and docs/implementation-status.md have uncommitted documentation updates. User requests concise, efficient work, batched checks, and reuse of valid results.
+Handoff: code, regression diagnostics, and status documentation are prepared as one review-fix checkpoint for commit/push. No manual accessibility acceptance is claimed.
 
 During active work, publish a 2-3 line status at least every 10 minutes, refresh this bookmark at least every 30 minutes and at handoff, and synchronize GitHub issues at material checkpoints. Run builds or tests only for a concrete risk or required gate and batch related checks.
 ### Phase 2 — HTTP testing workbench

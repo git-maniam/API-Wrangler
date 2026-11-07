@@ -20,6 +20,7 @@ internal static class DesktopDiagnostics
     public static async Task TestProjectAsync(MainWindow window, MainViewModel model, string directory)
     {
         Directory.CreateDirectory(directory);
+        await ProjectEditorRegressions.RunAsync(directory);
         var project = Path.Combine(directory, "project-" + Guid.NewGuid().ToString("N"));
         await using (var initialized = await new ProjectRepository(Path.Combine(directory, "init-state")).InitializeAsync(project, "Desktop smoke")) { }
         var editor = model.ProjectEditor;
@@ -63,6 +64,7 @@ internal static class DesktopDiagnostics
         }
         window.MainTabs.SelectedIndex = 0;
         await window.Dispatcher.InvokeAsync(() => window.UpdateLayout(), DispatcherPriority.ApplicationIdle);
+        Capture(window, Path.Combine(directory, "project-editor.png"));
         foreach (var control in new FrameworkElement[] { window.ProjectPathBox, window.ProjectAssetSelector,
             window.ProjectDraftEditor, window.ProjectDiskEditor, window.ProjectStatusText })
         {

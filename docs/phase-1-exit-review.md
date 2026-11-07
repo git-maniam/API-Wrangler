@@ -23,3 +23,5 @@ Ticket review: P1.1-P1.3 have local evidence for their current Phase 1 criteria.
 Remaining for Phase 1 acceptance: complete manual accessibility review in #58 and merge reviewed changes. The reviewable PR does not make the GitHub tickets Done.
 
 Manual desktop review on Windows 11 x64: use only the keyboard to open a project and select an asset; move between the draft and disk panes; trigger Save, Use disk, and Use draft by access key; and verify focus and status announcements during an external-edit conflict with Narrator. Repeat with Windows high contrast and 150% display scaling, checking that text, buttons, and the status remain visible. Record the results before treating accessibility acceptance as verified.
+
+Parallel review follow-up (2026-11-07): independent review and a single desktop smoke run verified fixes for newer typing during save/recovery cleanup, semantic no-op saves of noncanonical JSON, immutable-ID diagnostics, and rejecting unseen disk revisions before explicit conflict confirmation. One Release desktop build and changed-file format verification passed. Manual accessibility and PR screenshot attachment remain pending.

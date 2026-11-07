@@ -12,7 +12,7 @@ This is a working foundation increment, not completion of the full implementatio
 - Installed-Git status/fetch adapter, framed TypeScript/Node worker probe, and worker descendant-cancellation verification.
 - Local HTTP fixture, integration tests, architecture checks, desktop smoke/measurement scripts, and architecture decisions.
 
-## Verified on the current Windows x64 host
+## Historical Phase 0 verification on Windows x64
 
 - Release build: no warnings or errors.
 - Seventeen automated tests passed on Windows x64 and Linux x64, including all four explicitly enabled Node-dependent tests; none skipped in those runs.
@@ -48,3 +48,9 @@ The GitHub project tracks the full plan in phase epics and implementation ticket
 ## Next implementation slice
 
 Phase 1 continuation (2026-11-07): ADR-0002 defines version 1 as the first supported format; no pre-v1 migration input exists. The first version transition's preview/backups/idempotence are tracked in deferred ticket #60. The desktop edits project assets, compares disk content, reloads clean editors, and requires an explicit Use disk/Use draft conflict decision. Project and HTTP desktop smoke checks pass, including invalid-text recovery and second-writer read-only behavior. The five specification exit checks pass locally; see `docs/phase-1-exit-review.md`. The editor has access keys, a live status region, and programmatically checked UI Automation names and values. Manual Narrator, keyboard-only, high-contrast, and DPI review are tracked in In progress ticket #58. Branch/cache invalidation is tracked in #23, and execution from immutable snapshots in #59. PR #57 is open; P1.1-P1.3 are In review while Phase 1 remains In progress.
+
+## Parallel review checkpoint (2026-11-07 20:37 IST)
+
+Two agents reviewed code and acceptance evidence, with independent review of the fixes. The editor now preserves newer typing and recovery through save/cleanup awaits, reports immutable-ID errors, and requires another comparison when disk content changes before Use draft. Conflicting commands are blocked during operations and watcher refreshes are deferred.
+
+Validation: one Release desktop build passed with zero warnings/errors; one --project-smoke run passed existing workflows and deterministic save/cleanup, noncanonical no-op, immutable-ID, and unseen-disk-revision regressions. Changed-file format verification passed. Local evidence and a synthetic editor screenshot are in ignored artifacts/phase1-review-smoke/run-20261107-203638. The screenshot is not manual accessibility evidence; PR screenshot attachment remains pending. Hosted checks for pre-fix commit 18dc2b6 passed; the pushed fix requires its own CI result. P1.3 returns to In review with PR #57; #58 and Phase 1 remain In progress. Manual accessibility is deferred at the user's request.
