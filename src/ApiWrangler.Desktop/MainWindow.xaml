@@ -12,6 +12,39 @@
             <TextBlock Text="Local HTTP workbench · foundation preview" VerticalAlignment="Center" Margin="24,0,0,0" />
         </DockPanel>
         <TabControl x:Name="MainTabs" Grid.Row="1">
+            <TabItem Header="Project assets">
+                <Grid Margin="12" DataContext="{Binding ProjectEditor}">
+                    <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                    <DockPanel Margin="0,0,0,8">
+                        <Button DockPanel.Dock="Right" Content="_Open project" Command="{Binding OpenProjectCommand}" Margin="8,0,0,0" />
+                        <Label DockPanel.Dock="Left" Content="_Project path" Target="{Binding ElementName=ProjectPathBox}" VerticalAlignment="Center" Padding="0" Margin="0,0,8,0" />
+                        <TextBox x:Name="ProjectPathBox" Text="{Binding ProjectPath, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Project directory or manifest path" />
+                    </DockPanel>
+                    <Label Grid.Row="1" Content="Project _asset" Target="{Binding ElementName=ProjectAssetSelector}" Padding="0" Margin="0,0,0,4" />
+                    <ComboBox x:Name="ProjectAssetSelector" Grid.Row="2" ItemsSource="{Binding Assets}" SelectedItem="{Binding SelectedAsset}" DisplayMemberPath="Path" Margin="0,0,0,8" AutomationProperties.Name="Project asset" />
+                    <Grid Grid.Row="3">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="8" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                        <DockPanel>
+                            <TextBlock DockPanel.Dock="Top" Text="Editor draft" Margin="0,0,0,4" />
+                            <editor:TextEditor x:Name="ProjectDraftEditor" local:EditorBinding.Text="{Binding EditorText}" IsReadOnly="{Binding IsEditorReadOnly}" ShowLineNumbers="True" FontFamily="Consolas" AutomationProperties.Name="Project asset draft" AutomationProperties.HelpText="Edit the selected JSON asset. Compare with the disk version on the right before choosing a conflict action." />
+                        </DockPanel>
+                        <GridSplitter Grid.Column="1" Width="8" HorizontalAlignment="Stretch" />
+                        <DockPanel Grid.Column="2">
+                            <TextBlock DockPanel.Dock="Top" Text="Current disk version" Margin="0,0,0,4" />
+                            <editor:TextEditor x:Name="ProjectDiskEditor" local:EditorBinding.Text="{Binding DiskText, Mode=OneWay}" IsReadOnly="True" ShowLineNumbers="True" FontFamily="Consolas" AutomationProperties.Name="Project asset disk version" />
+                        </DockPanel>
+                    </Grid>
+                    <Grid Grid.Row="4" Margin="0,8,0,0">
+                        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                        <TextBlock x:Name="ProjectStatusText" Text="{Binding ProjectStatus}" TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite" />
+                        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
+                            <Button Content="_Save" Command="{Binding SaveAssetCommand}" IsEnabled="{Binding CanEdit}" Margin="8,0,0,0" />
+                            <Button Content="Use _disk" Command="{Binding UseDiskCommand}" IsEnabled="{Binding CanUseDisk}" Margin="8,0,0,0" AutomationProperties.HelpText="Discard the local draft and load the disk version." />
+                            <Button Content="Use d_raft" Command="{Binding UseDraftCommand}" IsEnabled="{Binding CanUseDraft}" Margin="8,0,0,0" AutomationProperties.HelpText="Keep the local draft; saving it will replace the disk version." />
+                        </StackPanel>
+                    </Grid>
+                </Grid>
+            </TabItem>
             <TabItem Header="HTTP request">
                 <Grid Margin="12">
                     <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="2*" /><RowDefinition Height="6" /><RowDefinition Height="3*" /></Grid.RowDefinitions>

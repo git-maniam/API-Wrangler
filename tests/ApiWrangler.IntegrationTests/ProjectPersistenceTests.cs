@@ -310,6 +310,10 @@ public sealed class ProjectPersistenceTests
             local["name"] = "Local edit";
 
             await Assert.ThrowsAsync<ProjectConflictException>(() => writer.SaveAsync([new(asset.Path, local, asset.Hash)]));
+
+            await writer.DisposeAsync();
+            await using var replacement = await repository.OpenAsync(projectRoot);
+            Assert.False(replacement.IsReadOnly);
         }
         finally
         {

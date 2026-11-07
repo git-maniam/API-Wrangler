@@ -1,4 +1,4 @@
-# API Wrangler ó Product and Implementation Specification
+# API Wrangler ‚Äî Product and Implementation Specification
 
 **Specification version:** 1.0  
 **Date:** 2026-11-06  
@@ -160,7 +160,7 @@ Rationale:
 - Shared .NET code with CLI and services.
 - Windows 11 appearance without building an Electron application.
 
-ìBlazing fastî must be demonstrated with benchmarks, not inferred from the framework.
+‚ÄúBlazing fast‚Äù must be demonstrated with benchmarks, not inferred from the framework.
 
 Use the latest supported stable .NET 10 servicing release at implementation time. Pin the SDK in `global.json`.
 
@@ -183,6 +183,21 @@ Do not upgrade the major runtime automatically during implementation.
 Prefer a native text editor component such as AvalonEdit, subject to maintenance and license review.
 
 Do not build a custom code editor from scratch.
+
+### 3.2.1 Structured text display and typography
+
+- Format and syntax-highlight structured content according to its detected or selected type wherever it is displayed for editing or inspection, including request and response bodies, dataset source previews, and GraphQL documents.
+- Provide readable, type-specific presentation for JSON, YAML, GraphQL, CSV, and other supported structured formats. JSON and YAML use appropriate indentation and token colors; GraphQL highlights its operations, types, fields, arguments, and values; CSV uses a readable table or aligned preview with distinct colors for headers, delimiters, quoted fields, and invalid cells while preserving delimiters and quoting in the raw view.
+- Offer a beautified view and the exact raw source. Beautification is a presentation action and must not silently rewrite saved content, alter semantic values, change CSV quoting, or hide parse errors. Show a useful diagnostic when content cannot be formatted.
+- Apply syntax colors in light, dark, and high-contrast themes with readable contrast; meaning must remain available without color alone.
+- Use Segoe UI at 12 pt as the default text font. Let users select their preferred font family and size for editor and structured-content views, and persist that preference locally.
+
+### 3.2.2 Application icon
+
+- Use the repository-root `App-Icon.png` as the canonical API Wrangler application icon artwork.
+- Derive the Windows icon resources and required sizes from this asset for the executable, application windows, taskbar and Alt-Tab, Start menu entries, and installer-created shortcuts. Keep these surfaces visually consistent.
+- Preserve the artwork's proportions, colors, and transparency when generating size variants; do not stretch or crop it. Check that the icon remains recognizable at small sizes and on light, dark, and high-DPI Windows desktops.
+- Package the generated icon resources with desktop releases so a fresh installation shows the correct icon without depending on the source PNG being present beside the executable.
 
 ### 3.3 Headless engine
 
@@ -559,7 +574,7 @@ Use process argument arrays. Do not construct shell command strings from user in
 For HTTPS:
 
 - Let Git use its configured credential helper, including Git Credential Manager.
-- Support the helperís normal browser or interactive authentication flow.
+- Support the helper‚Äôs normal browser or interactive authentication flow.
 - Do not read credential databases.
 - Do not copy tokens into application settings.
 - Do not place tokens in command-line arguments.
@@ -642,7 +657,7 @@ Never use `git add .`.
 
 If unrelated changes are already staged, the initial implementation must block the scoped commit and explain how to continue without changing that index.
 
-A later isolated-index implementation may handle this more conveniently, but must preserve the userís real index exactly.
+A later isolated-index implementation may handle this more conveniently, but must preserve the user‚Äôs real index exactly.
 
 ### 6.7 Synchronization state machine
 
@@ -1261,7 +1276,7 @@ Do not claim this worker is a security sandbox.
 - The first script run presents the trusted-code implication.
 - Record local trust by repository identity.
 - Changes to scripts or package manifests are visible before execution.
-- Scheduled execution uses snapshots explicitly admitted by the runnerís trust policy.
+- Scheduled execution uses snapshots explicitly admitted by the runner‚Äôs trust policy.
 - Background monitors do not silently begin executing newly fetched scripts.
 
 ### 12.3 Worker management
@@ -1811,7 +1826,7 @@ Do not include plaintext long-lived credentials in the job document.
 
 A runner checks out an exact commit in an isolated execution directory.
 
-It must not run ìwhatever is currently on mainî after job creation.
+It must not run ‚Äúwhatever is currently on main‚Äù after job creation.
 
 Dependency installation follows committed lockfiles.
 
@@ -1956,7 +1971,7 @@ Do not match only by a fragile display name.
 - Browser caching affects observable traffic.
 - Service workers and streaming require dedicated support.
 - WebSocket capture is a separate capability.
-- HTTPS interception is not required for Playwrightís own supported network APIs.
+- HTTPS interception is not required for Playwright‚Äôs own supported network APIs.
 
 Captured credentials and cookies must be redacted before reporting.
 
@@ -2318,7 +2333,7 @@ Multi-file operations use a journal so interrupted imports can be recovered.
 - One application writer per project by default.
 - Second instance offers read-only mode or a separate worktree.
 - Serialize application-initiated Git mutations.
-- Respect Gitís own lock failures.
+- Respect Git‚Äôs own lock failures.
 - Never delete `.git/index.lock` automatically.
 
 ### 30.3 Crash recovery
@@ -2343,6 +2358,24 @@ Do not resume a mutating API request automatically after a crash.
 - Any optional telemetry is explicit and documented.
 
 ## 31. Testing and verification strategy
+
+### 31.0 Necessity, batching, and run cadence
+
+**Core Policy: Minimal, Batched Verification**
+- **Run tests only when absolutely necessary**: Never run tests casually, speculatively, or repeatedly for minor/trivial edits. Only execute tests when resolving a concrete failure, verifying a specific technical risk, or satisfying an explicit required gate (acceptance, PR check, or release gate). Documentation and non-code updates do not require test execution.
+- **Batch all test parameters**: All test parameters (target projects, filter queries, frameworks, environments, fixture configurations) must be batched together into a single, comprehensive invocation rather than executing multiple individual test runs. This minimizes token consumption and ensures significantly faster overall execution.
+- **Builds follow the exact same rule**: Never run intermediate, piecemeal, or unbatched builds. Batch solution/project targets, build configurations, and parameters into a single execution, and build only when an explicit gate or concrete compilation risk requires it.
+- **Batch changes before verifying**: Accumulate related modifications and verify once across the entire batched set rather than testing after each single-file touch.
+
+Local test environment: the user runs Docker Desktop and authorizes its use for container-based testing when useful. Use it for suitable headless checks or test fixtures, subject to the necessity and batching policy above. Windows WPF and manual desktop accessibility checks still require Windows desktop validation.
+
+ARM64 test resource: the user reports that the `dockurr/windows-arm` image has been pulled into Docker Desktop and is available if ARM64 testing is needed. ARM64 remains deferred; image availability alone does not establish a working ARM64 test environment or acceptance evidence. Verify runtime compatibility before using it for required ARM64 checks.
+
+Run builds and tests only when absolutely necessary: to resolve a concrete implementation risk, diagnose a failure, or satisfy a required acceptance, CI, or release gate. For documentation-only changes, do not run them unless an explicit gate requires it. Before running, identify the behavior or gate being verified and choose the smallest meaningful verification set.
+
+Batch all compatible test parameters (projects, filters, frameworks, configurations, and fixture setup) into one invocation or scripted run where practical. Batch compatible build parameters (solution or projects, configuration, target framework or runtime, and properties) into one invocation where practical. Plan the changed work and parameters up front so each run covers the required cases together; do not split checks into repeated runs by parameter. Use the fewest executions that establish the required evidence, and reuse valid results while relevant inputs remain unchanged.
+
+Keep routine command output concise to reduce token use and execution time, while preserving diagnostics needed to understand failures. After a failure, inspect the evidence, fix the cause, and rerun only the affected check; perform one consolidated verification afterward only when a required gate calls for it. Batch related changes before pushing to avoid repeated CI matrices for intermediate updates. Report exact commands, outcomes, and skipped cases; never count skipped tests as passed.
 
 ### 31.1 Unit tests
 
@@ -2441,7 +2474,7 @@ No fixed delivery dates are assigned. Estimates should follow the initial techni
 
 Each phase must produce a runnable increment, tests, documentation, and a concise completion report.
 
-### Phase 0 ó Architecture and feasibility
+### Phase 0 ‚Äî Architecture and feasibility
 
 **Build:**
 
@@ -2474,7 +2507,7 @@ Each phase must produce a runnable increment, tests, documentation, and a concis
 
 Do not begin distributed infrastructure before these decisions are settled.
 
-### Phase 1 ó Project format and persistence
+### Phase 1 ‚Äî Project format and persistence
 
 **Build:**
 
@@ -2497,13 +2530,20 @@ Do not begin distributed infrastructure before these decisions are settled.
 - Interrupted write does not destroy the previous valid file.
 - External edits are detected.
 
-**Implementation checkpoint (2026-11-07):** Project initialization/discovery, schema validation, canonical JSON, writer ownership, transaction journals, watching, snapshots, and local settings are implemented in the phase-1 foundation. Windows x64 integration checks cover newer-schema read-only inspection, nested repository discovery and file-and-field diagnostics for missing required properties, extension-field preservation, no-diff repeated saves, interrupted multi-file recovery, second-writer read-only access, external-edit conflicts, and snapshot metadata. Latest full Release build passed with zero warnings/errors; latest integration run: 26 passed and four optional Node tests skipped because the worker is not configured. Local settings persistence, dirty-draft preservation through external changes, debounced watcher notification, and recovery conflict preservation have integration checks; P1.1-P1.3 remain In progress. Remaining: define supported legacy migration inputs and backup behavior; wire dirty-editor conflict decisions into the desktop; review phase exit criteria. Branch/cache invalidation is deferred until a project cache exists. Dirty-draft conflict, watcher overflow full-rescan signaling, and in-process transaction rollback, idempotent recovery, and third-party edit preservation are verified. Resume with those remaining cases before Phase 2. See docs/implementation-status.md and GitHub issues 8-10.\n\n#### Restart bookmark (2026-11-07)
+**Implementation checkpoint (2026-11-07):** Phase 1 project discovery, versioned schemas, canonical assets, journaled persistence, watcher/recovery behavior, snapshots, local settings, and a desktop asset editor are implemented in PR #57. The five Phase 1 exit checks pass locally. After the Linux writer-lease fix, hosted Windows and Linux headless jobs each passed 30 tests with zero skipped; desktop build, format, and publish passed. ADR-0002 defines version 1 as the first supported format. P1.1-P1.3 are In review; P1.4 manual project-editor accessibility acceptance is In progress. The phase epic remains In progress until review, acceptance, and merge. See docs/implementation-status.md and docs/phase-1-exit-review.md.
 
-Resume with migration/backup scope, then desktop dirty-editor conflict wiring, then phase exit review. Keep Phase 1 tickets In Progress until all criteria pass and work is merged.
+#### Restart bookmark (updated 2026-11-07 20:57 IST)
 
-Approximate remaining effort: 3-5 focused development days (about 1-2 weeks part-time), assuming migration scope is agreed promptly. Phase 0 private HTTPS/SSH and accessibility validation remains separate.
+Verified: commit `e8edb4c` on branch `phase1-project-editor-acceptance` passed all hosted GitHub Actions CI checks (headless Windows, headless Linux, desktop). Local verification confirmed clean test pass (26 passed, 0 failed, 4 skipped Node tests pending environment) and zero format violations. Specification section 31.0 and AGENTS.md updated to strictly enforce running tests and builds only when absolutely necessary and batching all parameters into minimal executions to save tokens and minimize latency.
 
-### Phase 2 ó HTTP testing workbench
+PR #57 remains open and mergeable with all CI green. P1.1-P1.3 are In review; P1.4 (#58) and Phase 1 remain In progress pending manual accessibility acceptance. ARM64 remains deferred.
+
+Next: merge PR #57 or proceed with Phase 2 implementation per user direction; continue adhering strictly to batched and necessary-only test/build runs.
+
+Handoff: specification and AGENTS.md updated with test/build batching policies; working tree ready for commit.
+
+During active work, publish a 2-3 line status at least every 10 minutes, refresh this bookmark at least every 30 minutes and at handoff, and synchronize GitHub issues at material checkpoints. Run builds or tests only for a concrete risk or required gate and batch related checks.
+### Phase 2 ‚Äî HTTP testing workbench
 
 **Build:**
 
@@ -2525,7 +2565,7 @@ Approximate remaining effort: 3-5 focused development days (about 1-2 weeks part
 - TLS verification is enforced by default.
 - No secrets appear in standard logs.
 
-### Phase 3 ó Collections and assertions
+### Phase 3 ‚Äî Collections and assertions
 
 **Build:**
 
@@ -2547,7 +2587,7 @@ Approximate remaining effort: 3-5 focused development days (about 1-2 weeks part
 - Cancellation propagates through the run.
 - Desktop and CLI produce equivalent outcomes.
 
-### Phase 4 ó Datasets and clipboard
+### Phase 4 ‚Äî Datasets and clipboard
 
 **Build:**
 
@@ -2569,7 +2609,7 @@ Approximate remaining effort: 3-5 focused development days (about 1-2 weeks part
 - Every failed iteration identifies its case.
 - Import errors do not partially overwrite assets.
 
-### Phase 5 ó Git collaboration
+### Phase 5 ‚Äî Git collaboration
 
 **Build:**
 
@@ -2596,7 +2636,7 @@ Approximate remaining effort: 3-5 focused development days (about 1-2 weeks part
 
 **Milestone A:** usable team HTTP regression-testing product.
 
-### Phase 6 ó Scripting, packages, and Postman migration
+### Phase 6 ‚Äî Scripting, packages, and Postman migration
 
 **Build:**
 
@@ -2619,7 +2659,7 @@ Approximate remaining effort: 3-5 focused development days (about 1-2 weeks part
 - Dependency installation is explicit.
 - Private registry credentials never enter project files.
 
-### Phase 7 ó GraphQL, gRPC, and streaming
+### Phase 7 ‚Äî GraphQL, gRPC, and streaming
 
 **Build:**
 
@@ -2636,7 +2676,7 @@ Approximate remaining effort: 3-5 focused development days (about 1-2 weeks part
 - Reports retain correct protocol semantics.
 - Unsupported export conversions are disclosed.
 
-### Phase 8 ó Mocks and webhook debugging
+### Phase 8 ‚Äî Mocks and webhook debugging
 
 **Build:**
 
@@ -2657,7 +2697,7 @@ Approximate remaining effort: 3-5 focused development days (about 1-2 weeks part
 - Local mock binds to loopback by default.
 - Gateway has limits, authentication, and retention.
 
-### Phase 9 ó Local performance testing
+### Phase 9 ‚Äî Local performance testing
 
 **Build:**
 
@@ -2677,7 +2717,7 @@ Approximate remaining effort: 3-5 focused development days (about 1-2 weeks part
 - Stop/cancel does not leave orphaned workers.
 - Functional and performance outcomes are distinguishable.
 
-### Phase 10 ó Self-hosted execution and monitoring
+### Phase 10 ‚Äî Self-hosted execution and monitoring
 
 **Build:**
 
@@ -2700,7 +2740,7 @@ Approximate remaining effort: 3-5 focused development days (about 1-2 weeks part
 - Schedule overlap policy works.
 - Multiple desktop clients do not duplicate schedules.
 
-### Phase 11 ó Distributed load and hosted mocks
+### Phase 11 ‚Äî Distributed load and hosted mocks
 
 **Build:**
 
@@ -2718,7 +2758,7 @@ Approximate remaining effort: 3-5 focused development days (about 1-2 weeks part
 - Runs do not silently continue against different snapshots.
 - Hosted mocks use the same definitions as local mocks.
 
-### Phase 12 ó Playwright and visual workflows
+### Phase 12 ‚Äî Playwright and visual workflows
 
 **Build:**
 
@@ -2737,7 +2777,7 @@ Approximate remaining effort: 3-5 focused development days (about 1-2 weeks part
 - Ambiguous matching is reported.
 - Flow and collection execution share reusable engine primitives.
 
-### Phase 13 ó Documentation, optional AI, and release hardening
+### Phase 13 ‚Äî Documentation, optional AI, and release hardening
 
 **Build:**
 
@@ -2747,6 +2787,7 @@ Approximate remaining effort: 3-5 focused development days (about 1-2 weeks part
 - SDK generator integration.
 - Optional AI provider adapter.
 - Installer.
+- Application icon resources derived from `App-Icon.png`.
 - Upgrade path.
 - Performance tuning.
 - Operational manuals.
@@ -2757,6 +2798,7 @@ Approximate remaining effort: 3-5 focused development days (about 1-2 weeks part
 - Full targeted developer-capability matrix is reviewed.
 - No critical placeholder remains in shipped functionality.
 - Fresh-machine installation succeeds.
+- Executable, window, taskbar, Start menu, and installer shortcuts display the specified application icon.
 - CLI and unattended deployment succeed.
 - Performance targets are measured.
 - AI is not required.
@@ -2794,10 +2836,10 @@ For each phase:
 
 1. Read this specification.
 2. Inspect repository instructions.
-3. Identify the phaseís requirements.
+3. Identify the phase‚Äôs requirements.
 4. Implement the smallest complete vertical slice.
 5. Add meaningful tests for behavior and failure cases.
-6. Run relevant checks.
+6. Run tests and builds only when absolutely necessary under section 31.0; batch all compatible parameters and related changes into the fewest executions to reduce token usage and execution time.
 7. Update documentation.
 8. Record deviations and decisions.
 9. Produce a completion report.
@@ -2816,6 +2858,8 @@ For each phase:
 - Do not report a test as passed when it did not execute.
 - Do not silently ignore unsupported imports.
 - Do not replace unresolved functionality with success-returning stubs.
+- Do not execute unbatched, piecemeal, or unnecessary test runs; batch all test parameters into minimal executions to conserve tokens and reduce run times.
+- Do not run unnecessary builds; apply the exact same batching and necessity restrictions to builds.
 - Do not create an Electron or browser-shell application without an approved architecture change.
 - Do not change runtime major versions casually.
 
