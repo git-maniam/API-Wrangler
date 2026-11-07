@@ -96,7 +96,7 @@ foreach ($ticket in $plan.tickets) {
         [IO.File]::WriteAllText($bodyPath, (Get-Body $ticket), $encoding)
         $arguments = @('issue', 'create', '--repo', $plan.repository, '--title', $ticket.title, '--body-file', $bodyPath,
             '--label', ('type:' + $ticket.kind), '--milestone', $ticket.milestone)
-        if ($ticket.key -eq 'LATER-ARM64') { $arguments += @('--label', 'deferred') }
+        if ($ticket.phase -eq 'Later') { $arguments += @('--label', 'deferred') }
         $url = Invoke-Gh $arguments
         $issue = Invoke-Gh @('issue', 'view', $url.Trim(), '--repo', $plan.repository, '--json', 'id,number,title,url,state') | ConvertFrom-Json
         $existing = @($existing) + @($issue)

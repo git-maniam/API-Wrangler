@@ -1,6 +1,6 @@
 # Phase 1 exit review (2026-11-07)
 
-Status: the five specification exit checks pass locally on Windows x64. PR #57 is open for review. Phase 1 remains In progress because manual Narrator/keyboard/high-contrast review, ticket acceptance gaps, and merge are still open.
+Status: the five specification exit checks pass locally on Windows x64. PR #57 is open with passing hosted checks. P1.1-P1.3 are In review; Phase 1 remains In progress because project editor accessibility ticket #58, review, and merge are open.
 
 | Specification exit check | Evidence |
 |---|---|
@@ -16,10 +16,10 @@ ADR-0002 defines version 1 as the first supported project format. There is no su
 
 Project editor accessibility checkpoint: path and asset selectors have access-key labels; Open, Save, Use disk, and Use draft have access keys. The project status is a polite UI Automation live region and raises a change event. The desktop smoke checks accessible names and confirms that both AvalonEdit panes expose their current text through the UI Automation Value pattern, with the disk pane read-only. This is programmatic evidence, not a manual Narrator, keyboard-only, high-contrast, or DPI assessment.
 
-Hosted CI checkpoint: PR #57's first Linux headless run exposed a second-writer lease failure. The lease now combines an in-process owner registry with an OS file lock, and the existing writer-ownership test also checks reacquisition after disposal. The focused Windows Release test passes (one passed, zero skipped); a hosted Linux rerun is required to confirm the fix. The desktop CI job passed before this change.
+Hosted CI checkpoint: PR #57's first Linux headless run exposed a second-writer lease failure. The lease now combines an in-process owner registry with an OS file lock, and the existing writer-ownership test also checks reacquisition after disposal. After the fix, hosted Windows and Linux headless jobs each passed 30 tests with zero skipped; desktop build, format, and publish passed.
 
-Ticket review: P1.1's three criteria have local evidence. P1.2's write/recovery and writer-ownership criteria have local evidence; migration preview/backup execution remains scoped to the first actual schema transition by ADR-0002. P1.3's clean reload, dirty conflict, and snapshot criteria have local evidence. Watcher overflow full-rescan signaling is verified; branch/cache invalidation waits for a project cache. Snapshot tests verify captured project bytes and hashed metadata without secret values; run execution does not yet consume snapshots.
+Ticket review: P1.1-P1.3 have local evidence for their current Phase 1 criteria. Migration preview/backup execution is tracked by deferred ticket #60 for the first actual schema transition under ADR-0002. Branch/cache invalidation is already a criterion on #23. Snapshot tests verify captured project bytes and hashed metadata without secret values; Phase 3 ticket #59 tracks execution from an immutable snapshot, including dirty drafts.
 
-Remaining for Phase 1 acceptance: complete manual accessibility review, reconcile the scoped P1.2/P1.3 criteria with ticket acceptance, and merge reviewed changes. The reviewable PR does not make the GitHub tickets Done.
+Remaining for Phase 1 acceptance: complete manual accessibility review in #58 and merge reviewed changes. The reviewable PR does not make the GitHub tickets Done.
 
 Manual desktop review on Windows 11 x64: use only the keyboard to open a project and select an asset; move between the draft and disk panes; trigger Save, Use disk, and Use draft by access key; and verify focus and status announcements during an external-edit conflict with Narrator. Repeat with Windows high contrast and 150% display scaling, checking that text, buttons, and the status remain visible. Record the results before treating accessibility acceptance as verified.

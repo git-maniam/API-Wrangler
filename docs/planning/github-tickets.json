@@ -155,6 +155,7 @@
         "Complete P1.1: Versioned schemas, project discovery, and canonical assets.",
         "Complete P1.2: Atomic saves, writer ownership, and recovery journals.",
         "Complete P1.3: File watching, local settings, and execution snapshots.",
+        "Complete P1.4: Project editor accessibility acceptance.",
         "Attach meaningful executed verification, update living documentation, and review phase exit criteria.",
         "Do not close this epic until all required sub-issues are verified and merged."
       ]
@@ -198,7 +199,7 @@
       "acceptance": [
         "Interrupted writes retain the prior valid asset; failed imports roll back or recover deterministically.",
         "Second instances offer read-only access; never remove Git locks automatically.",
-        "Migration preview/backups, idempotence, and recovery scenarios have tests."
+        "Version 1 is the first supported format; invalid or newer versions cannot be silently migrated or edited. The first real schema transition is tracked separately."
       ]
     },
     {
@@ -215,11 +216,32 @@
       "dependsOn": [
         "P0"
       ],
-      "description": "Implement debounced watching/rescan, dirty-editor conflict handling, host-local settings, and immutable run snapshots.",
+      "description": "Implement debounced watching/rescan, dirty-editor conflict handling, host-local settings, and immutable project snapshots.",
       "acceptance": [
-        "Watcher overflow rescans and branch changes invalidate caches.",
+        "Watcher overflow requests a full rescan; branch/cache invalidation is tracked with Phase 5 Git workflows.",
         "Clean editors reload; dirty buffers are preserved and require conflict decisions.",
-        "Dirty runs snapshot exact inputs; record hashes without exposing secret values in shared metadata."
+        "Immutable snapshots capture exact saved project files and hashes without exposing secret values in shared metadata; consuming snapshots during runs is tracked with Phase 3 execution."
+      ]
+    },
+    {
+      "key": "P1.4",
+      "title": "[P1.4] Project editor accessibility acceptance",
+      "kind": "task",
+      "parent": "P1",
+      "phase": 1,
+      "milestone": "Milestone A — Team HTTP regression",
+      "status": "Ready",
+      "priority": "P0",
+      "size": "S",
+      "spec": "3.2, 26, 31.6, 32 Phase 1",
+      "dependsOn": [
+        "P1.3"
+      ],
+      "description": "Complete the manual Windows 11 x64 accessibility review of the project asset editor introduced in PR #57.",
+      "acceptance": [
+        "Keyboard-only navigation and access keys reach project path, asset selection, draft and disk panes, Save, Use disk, and Use draft with visible focus.",
+        "Narrator announces control names, current project status, dirty-draft conflict, and read-only state in the editor workflow.",
+        "High contrast and 150% display scaling preserve readable content and reachable actions; record evidence and fix discovered defects before Phase 1 acceptance."
       ]
     },
     {
@@ -348,6 +370,7 @@
         "Complete P3.1: Collection lifecycle, isolated iterations, and bounded flow control.",
         "Complete P3.2: Typed assertions, result aggregation, and evidence browser.",
         "Complete P3.3: Project CLI contract and CI examples.",
+        "Complete P3.4: Exact immutable snapshot execution.",
         "Attach meaningful executed verification, update living documentation, and review phase exit criteria.",
         "Do not close this epic until all required sub-issues are verified and merged."
       ]
@@ -413,6 +436,28 @@
         "Documented commands execute real behavior without desktop installation.",
         "Noninteractive CI resolves host secrets, preserves failure artifacts, and never automatically pushes.",
         "Invalid config, missing dependency, infrastructure error, cancellation, assertion failure, and success have tested exit codes."
+      ]
+    },
+    {
+      "key": "P3.4",
+      "title": "[P3.4] Exact immutable snapshot execution",
+      "kind": "task",
+      "parent": "P3",
+      "phase": 3,
+      "milestone": "Milestone A — Team HTTP regression",
+      "status": "Backlog",
+      "priority": "P1",
+      "size": "M",
+      "spec": "5, 11, 14, 28–29",
+      "dependsOn": [
+        "P1.3",
+        "P3.1"
+      ],
+      "description": "Connect the Phase 1 immutable project snapshot store to desktop and CLI collection execution, including explicitly chosen dirty drafts.",
+      "acceptance": [
+        "Each run executes only the selected immutable snapshot, records its file hashes and source revision, and does not change when project files are edited during execution.",
+        "A dirty draft can be explicitly included in an isolated run snapshot without overwriting the saved asset; the captured bytes are recoverable for result inspection.",
+        "Shared run metadata omits secret values, and tests distinguish the exact captured inputs from later project edits."
       ]
     },
     {
@@ -1179,6 +1224,26 @@
         "Installer-created Start menu and desktop shortcuts use the App-Icon.png-derived icon, verified on a fresh Windows installation.",
         "All specified performance, accessibility, offline, security, reliability, compatibility, and recovery gates have evidence.",
         "No critical placeholder ships; full capability matrix is reviewed before Milestone B closes."
+      ]
+    },
+    {
+      "key": "LATER-SCHEMA-MIGRATION",
+      "title": "[Deferred] First supported schema-version migration",
+      "kind": "task",
+      "phase": "Later",
+      "milestone": "Later — Deferred roadmap",
+      "status": "Backlog",
+      "priority": "P2",
+      "size": "M",
+      "spec": "4–5, 14.2, 30; ADR-0002",
+      "dependsOn": [
+        "P1.2"
+      ],
+      "description": "Implement a migration only when a concrete source and destination project schema version is defined. Version 1 is the first supported format and has no legacy input.",
+      "acceptance": [
+        "Name exact source/destination versions and changed fields; show a file-by-file preview before any write.",
+        "Require explicit application, preserve immutable host-local original-file backups with hashes, and keep backups on failure without putting secrets in shared metadata.",
+        "Validate the complete result and use the journaled transaction; repeat migration is idempotent and recovery scenarios have tests."
       ]
     },
     {
