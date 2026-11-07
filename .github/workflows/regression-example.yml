@@ -1,0 +1,38 @@
+name: API Wrangler CI Example
+
+on:
+  workflow_dispatch:
+
+jobs:
+  run-regression:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Build CLI
+        run: dotnet build src/ApiWrangler.Cli -c Release
+
+      - name: Validate Project
+        run: dotnet run --project src/ApiWrangler.Cli -c Release -- validate --project ./api-wrangler
+
+      - name: Run Collection
+        run: |
+          dotnet run --project src/ApiWrangler.Cli -c Release -- run \
+            --project ./api-wrangler \
+            --collection "Getting Started" \
+            --reporters console,junit,json,html \
+            --report-dir ./ci-artifacts/reports \
+            --output ./ci-artifacts/runs
+
+      - name: Archive Test Evidence
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: regression-evidence
+          path: ./ci-artifacts/

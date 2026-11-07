@@ -2532,21 +2532,18 @@ Do not begin distributed infrastructure before these decisions are settled.
 
 **Implementation checkpoint (2026-11-07):** Phase 1 project discovery, versioned schemas, canonical assets, journaled persistence, watcher/recovery behavior, snapshots, local settings, and a desktop asset editor are implemented in PR #57. The five Phase 1 exit checks pass locally. After the Linux writer-lease fix, hosted Windows and Linux headless jobs each passed 30 tests with zero skipped; desktop build, format, and publish passed. ADR-0002 defines version 1 as the first supported format. P1.1-P1.3 are In review; P1.4 manual project-editor accessibility acceptance is In progress. The phase epic remains In progress until review, acceptance, and merge. See docs/implementation-status.md and docs/phase-1-exit-review.md.
 
-#### Restart bookmark (updated 2026-11-07 22:20 IST)
+#### Restart bookmark (updated 2026-11-07 22:30 IST)
 
-Verified: P3.2 (Issue #17: Typed assertions, result aggregation, and evidence browser) implemented and verified on branch `phase3-assertions-and-reporters`.
-- `AssertionModels.cs` defines `RequestAssertionDefinition` and `AssertionResult`.
-- `AssertionEngine.cs` provides evaluation for all typed assertion types (`status`, `header`, `cookie`, `bodyContains`, `jsonPath`, `responseTime`, `responseSize`, `regex`) and operators (`equals`, `notEquals`, `contains`, `notContains`, `greaterThan`, `lessThan`, `exists`, `notExists`, `matches`).
-- `CollectionRunner.cs` evaluates assertions on setup, iteration, and teardown requests; correctly distinguishes failed assertions (`ExecutionOutcome.Failed`) from transport errors (`ExecutionOutcome.Error`); preserves teardown failures in the aggregate collection status (`RunStatus.Error` / `RunStatus.Failed`).
-- `BaselineEngine.cs` implements baseline snapshot comparison across status, headers, JSON and plain text with support for `IgnoredPaths`.
-- `Reporters.cs` provides `ConsoleReporter`, Section 14 `JsonReporter`, CI `JUnitReporter`, `MarkdownReporter`, `HtmlReporter`, and `EvidenceSanitizer` redacting sensitive headers (`Authorization`, `Cookie`, `X-Api-Key`) and secret tokens.
-- `Program.cs` (`api-wrangler run`) wires `--reporters` and `--report-dir` and returns standard exit codes (0 for passed, 1 for failed assertions/validations, 3 for transport errors, 4 for cancellation).
-- `MainViewModel.cs` exposes `LatestCollectionReport`.
-- Consolidated batched verification: Release solution build passed with 0 warnings/errors; `dotnet test` passed 86 tests (0 failed, 4 skipped Node tests); desktop smoke passed (`Test-Desktop.ps1`); `dotnet format --verify-no-changes` passed.
+Verified: P3.3 (Issue #18: Project CLI contract and CI examples) implemented and verified on branch `phase3-project-cli-and-ci`.
+- `Program.cs` (`api-wrangler` CLI) adds `init` (canonical project scaffolding with `ProjectRepository.InitializeAsync`), `validate` (schema and reference integrity check), and enhanced `run` command with deterministic exit codes (0 for pass, 1 for failed assertions, 2 for invalid configuration/project, 3 for infrastructure/transport errors, 4 for cancellation, 5 for missing dependencies).
+- `VariableResolver.cs` supports host environment variable secret resolution (`API_WRANGLER_SECRET_<KEY>` or `<KEY>`), enabling noninteractive CI runs without interactive DPAPI keys.
+- CI integration documentation and example workflows added under `docs/ci/` (`README.md`, `github-actions.md`, `generic-shell.md`, `windows-runner.md`, `linux-runner.md`) and `.github/workflows/regression-example.yml` with failure artifact retention (`if: always()`) and security best practices (no untrusted pull-request secret exposure, no `pull_request_target`).
+- `CliContractTests.cs` integration test suite validates `init`, `validate`, `run` with reporters, exit code precedence, and host environment secret resolution.
+- Consolidated batched verification: Release solution build passed with 0 warnings/errors; `dotnet test` passed 90 tests (0 failed, 4 skipped Node tests); desktop smoke passed (`Test-Desktop.ps1`); `dotnet format --verify-no-changes` passed.
 
-Next: commit and push branch `phase3-assertions-and-reporters`, create PR #66, squash-merge into `main`, mark P3.2 Done in Project 4, and proceed directly to P3.3 (Issue #18: Project CLI contract and CI examples).
+Next: commit and push branch `phase3-project-cli-and-ci`, create PR #67, squash-merge into `main`, mark P3.3 Done in Project 4, and proceed directly to P3.4 / Phase 3 exit review.
 
-Handoff: working tree ready for commit and push on `phase3-assertions-and-reporters`.
+Handoff: working tree ready for commit and push on `phase3-project-cli-and-ci`.
 
 During active work, publish a 2-3 line status at least every 10 minutes, refresh this bookmark at least every 30 minutes and at handoff, and synchronize GitHub issues at material checkpoints. Run builds or tests only for a concrete risk or required gate and batch related checks.
 ### Phase 2 — HTTP testing workbench
