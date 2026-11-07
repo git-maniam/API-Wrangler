@@ -2532,18 +2532,21 @@ Do not begin distributed infrastructure before these decisions are settled.
 
 **Implementation checkpoint (2026-11-07):** Phase 1 project discovery, versioned schemas, canonical assets, journaled persistence, watcher/recovery behavior, snapshots, local settings, and a desktop asset editor are implemented in PR #57. The five Phase 1 exit checks pass locally. After the Linux writer-lease fix, hosted Windows and Linux headless jobs each passed 30 tests with zero skipped; desktop build, format, and publish passed. ADR-0002 defines version 1 as the first supported format. P1.1-P1.3 are In review; P1.4 manual project-editor accessibility acceptance is In progress. The phase epic remains In progress until review, acceptance, and merge. See docs/implementation-status.md and docs/phase-1-exit-review.md.
 
-#### Restart bookmark (updated 2026-11-07 22:40 IST)
+#### Restart bookmark (updated 2026-11-07 22:42 IST)
 
-Verified: P3.4 (Issue #59: Exact immutable snapshot execution) implemented and verified on branch `phase3-immutable-snapshot-execution`.
-- `ProjectSnapshots.CreateAsync` and `IProjectSession.SnapshotAsync` extended to support explicit dirty drafts (`EditorDraft`), writing draft contents to the immutable snapshot without mutating saved project files on disk.
-- Desktop (`MainViewModel.cs`) and CLI (`Program.cs`) collection execution execute against the captured immutable snapshot directory, preventing subsequent file modifications on disk from altering run results.
-- `CollectionRunner.cs` captures snapshot metadata (`SnapshotHash`, `GitCommit`, `IsDirty`) in `CollectionExecutionReport` and reporters while omitting secret values.
-- `SnapshotExecutionTests.cs` validates that concurrent project edits on disk do not affect running collections and that in-memory dirty drafts execute cleanly without overwriting disk files.
-- Consolidated batched verification: Release solution build passed with 0 warnings/errors; `dotnet test` passed 92 tests (0 failed, 4 skipped Node tests); desktop smoke passed (`Test-Desktop.ps1`); `dotnet format --verify-no-changes` passed.
+Verified: Phase 3 (Collections, Assertions, CLI, and Snapshot Execution) is 100% complete, fully verified, and merged into `main`.
+- All Phase 3 sub-issues are complete and marked Done in Project 4:
+  - P3.1 (Issue #16, PR #65, commit `efb21ec`): Collection lifecycle, isolated iterations, loop budget (50 ceiling), setup/teardown policy (`Always`, `OnFailure`, `OnSuccess`), CLI `run` and desktop collection execution.
+  - P3.2 (Issue #17, PR #66, commit `ad1dbc6`): Typed assertions (`status`, `header`, `cookie`, `bodyContains`, `jsonPath`, `responseTime`, `responseSize`, `regex`), transport error vs failed assertion separation, teardown error preservation, baseline comparisons (`BaselineEngine.cs`), reporters (`console`, `json`, `junit`, `markdown`, `html`), and secret redaction (`EvidenceSanitizer`).
+  - P3.3 (Issue #18, PR #67, commit `8e733a1`): Headless CLI contract (`init`, `validate`, `run`), exit codes (0=Passed, 1=Assertion failure, 2=Config/project error, 3=Infrastructure/transport error, 4=Cancelled, 5=Missing dependency), host environment variable secrets (`API_WRANGLER_SECRET_<KEY>` or `<KEY>`), and CI guides/workflows (`docs/ci/` and `.github/workflows/regression-example.yml`).
+  - P3.4 (Issue #59, PR #68, commit `6b76049`): Exact immutable snapshot execution against content-addressed store, support for in-memory dirty drafts without mutating disk files, and snapshot metadata preservation in reports.
+- Phase 3 exit review completed and documented in `docs/phase-3-exit-review.md`. All five Phase 3 exit criteria passed.
+- Parent epic #15 closed and marked Done in Project 4.
+- Consolidated verification on `main`: Release solution build passed with 0 warnings/errors; `dotnet test` passed 92 tests (0 failed, 4 skipped Node tests); desktop smoke passed (`Test-Desktop.ps1`); `dotnet format --verify-no-changes` passed.
 
-Next: commit and push branch `phase3-immutable-snapshot-execution`, create PR #68, squash-merge into `main`, mark P3.4 Done in Project 4, and perform Phase 3 parent epic (#15) exit review.
+Next: Begin Phase 4 (Datasets, Data-driven runs, and Clipboard operations) starting with P4.1 (Issue #20: Delimited dataset parsing, preview, and column mapping).
 
-Handoff: working tree ready for commit and push on `phase3-immutable-snapshot-execution`.
+Handoff: System ready for clean restart. Working tree clean on `main` branch.
 
 During active work, publish a 2-3 line status at least every 10 minutes, refresh this bookmark at least every 30 minutes and at handoff, and synchronize GitHub issues at material checkpoints. Run builds or tests only for a concrete risk or required gate and batch related checks.
 ### Phase 2 — HTTP testing workbench
