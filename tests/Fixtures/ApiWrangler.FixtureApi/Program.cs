@@ -4,7 +4,10 @@ var app = builder.Build();
 app.MapMethods("/echo", ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"], async (HttpRequest request) =>
 {
     using var reader = new StreamReader(request.Body);
-    return Results.Json(new { request.Method, path = request.Path.Value, body = await reader.ReadToEndAsync(), status = "ready" });
+    var body = await reader.ReadToEndAsync();
+    var headers = request.Headers.ToDictionary(h => h.Key, h => h.Value.ToArray());
+    var query = request.Query.ToDictionary(q => q.Key, q => q.Value.ToArray());
+    return Results.Json(new { request.Method, path = request.Path.Value, query, headers, body, status = "ready" });
 });
 app.MapGet("/delay", async (HttpContext context) =>
 {

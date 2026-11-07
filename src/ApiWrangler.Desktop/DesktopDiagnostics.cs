@@ -136,11 +136,21 @@ internal static class DesktopDiagnostics
         if (model.RequestBody != body) throw new InvalidOperationException("Editor two-way binding did not update the request.");
         model.Method = "POST";
         model.Url = "http://127.0.0.1:5057/echo";
+        model.RequestQuery = "testKey=alpha\ntestKey=beta";
         await model.SendCommand.ExecuteAsync(null);
         if (!model.Status.StartsWith("Passed", StringComparison.Ordinal)) throw new InvalidOperationException("Desktop HTTP request failed.");
         using var response = JsonDocument.Parse(model.ResponseBody);
         if (response.RootElement.GetProperty("body").GetString() != body) throw new InvalidOperationException("HTTP body did not round trip.");
         Capture(window, Path.Combine(directory, "http-response.png"));
+
+        // Verify workbench Close and New commands
+        model.CloseRequestCommand.Execute(null);
+        if (!string.IsNullOrEmpty(model.Url) || !string.IsNullOrEmpty(model.RequestBody))
+            throw new InvalidOperationException("CloseRequest did not reset workbench state.");
+        model.NewRequestCommand.Execute(null);
+        if (model.Method != "GET" || model.RequestName != "New request")
+            throw new InvalidOperationException("NewRequest did not initialize a fresh request.");
+
         var ticks = 0;
         var timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(20) };
         timer.Tick += (_, _) => ticks++;
