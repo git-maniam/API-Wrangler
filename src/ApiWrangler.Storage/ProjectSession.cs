@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
@@ -11,8 +12,11 @@ namespace ApiWrangler.Storage;
 internal sealed class ProjectSession : IProjectSession
 {
     private const int MaxDefinitionBytes = 16 * 1024 * 1024;
+    private static readonly ConcurrentDictionary<string, byte> ActiveWriters = new(
+        OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
     private readonly string stateDirectory;
     private readonly FileStream? lease;
+    private readonly string? writerLockPath;
     private readonly FileSystemWatcher watcher;
     private readonly Channel<bool> changes = Channel.CreateBounded<bool>(new BoundedChannelOptions(1) { FullMode = BoundedChannelFullMode.DropOldest });
     private readonly SemaphoreSlim gate = new(1, 1);
@@ -35,18 +39,44 @@ internal sealed class ProjectSession : IProjectSession
             {
                 var lockPath = ProjectPaths.Resolve(Root, ".local/writer.lock");
                 Directory.CreateDirectory(Path.GetDirectoryName(lockPath)!);
-                lease = new FileStream(lockPath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read);
+                if (ActiveWriters.TryAdd(lockPath, 0))
+                {
+                    FileStream? acquired = null;
+                    try
+                    {
+                        acquired = new FileStream(lockPath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read);
+                        if (OperatingSystem.IsMacOS()) throw new IOException("Project writing requires file locking on this platform.");
+                        acquired.Lock(0, 1);
+                        lease = acquired;
+                        writerLockPath = lockPath;
+                    }
+                    catch
+                    {
+                        acquired?.Dispose();
+                        ActiveWriters.TryRemove(lockPath, out _);
+                        throw;
+                    }
+                }
             }
-            catch (IOException) { /* Another writer, unsafe path, or read-only volume: offer read-only access. */ }
+            catch (IOException) { /* Another writer or read-only volume: offer read-only access. */ }
             catch (UnauthorizedAccessException) { }
         }
-        watcher = new FileSystemWatcher(Root) { IncludeSubdirectories = true, NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.LastWrite | NotifyFilters.Size };
-        watcher.Changed += OnChange;
-        watcher.Created += OnChange;
-        watcher.Deleted += OnChange;
-        watcher.Renamed += OnChange;
-        watcher.Error += OnWatcherError;
-        watcher.EnableRaisingEvents = true;
+        try
+        {
+            watcher = new FileSystemWatcher(Root) { IncludeSubdirectories = true, NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.LastWrite | NotifyFilters.Size };
+            watcher.Changed += OnChange;
+            watcher.Created += OnChange;
+            watcher.Deleted += OnChange;
+            watcher.Renamed += OnChange;
+            watcher.Error += OnWatcherError;
+            watcher.EnableRaisingEvents = true;
+        }
+        catch
+        {
+            lease?.Dispose();
+            if (writerLockPath is not null) ActiveWriters.TryRemove(writerLockPath, out _);
+            throw;
+        }
     }
 
     internal void OnWatcherError(object? sender, ErrorEventArgs args) => changes.Writer.TryWrite(true);
@@ -277,7 +307,8 @@ internal sealed class ProjectSession : IProjectSession
             disposed = true;
             watcher.Dispose();
             changes.Writer.TryComplete();
-            if (lease is not null) await lease.DisposeAsync().ConfigureAwait(false);
+            try { if (lease is not null) await lease.DisposeAsync().ConfigureAwait(false); }
+            finally { if (writerLockPath is not null) ActiveWriters.TryRemove(writerLockPath, out _); }
         }
         finally { gate.Release(); }
     }

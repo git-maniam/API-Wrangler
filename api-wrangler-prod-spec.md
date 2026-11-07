@@ -2359,6 +2359,12 @@ Do not resume a mutating API request automatically after a crash.
 
 ## 31. Testing and verification strategy
 
+### 31.0 Build and test cadence
+
+Run a build or test only when it is necessary to resolve a concrete implementation risk, diagnose a failure, or satisfy a required acceptance, CI, or release gate. Before running it, identify the changed behavior and select the smallest meaningful verification set. Batch related test cases, target frameworks, configurations, and build parameters into as few executions as practical; reuse valid results when the relevant inputs have not changed.
+
+Do not repeat a full build or suite after documentation-only changes or for reassurance. On failure, inspect the evidence, fix the cause, run the narrow affected check, then perform one consolidated verification if the gate requires it. Batch related edits before pushing so CI does not repeat the same build and test matrix for intermediate commits. Report the exact commands, results, and skipped cases; never count skipped tests as passed.
+
 ### 31.1 Unit tests
 
 Focus on meaningful logic:
@@ -2514,15 +2520,15 @@ Do not begin distributed infrastructure before these decisions are settled.
 
 **Implementation checkpoint (2026-11-07):** Phase 1 project discovery, versioned schemas, canonical assets, journaled persistence, watcher/recovery behavior, snapshots, local settings, and a desktop asset editor are implemented locally. The five Phase 1 exit checks pass on Windows x64. The latest full Release build had zero warnings/errors; 26 integration tests passed and four optional Node tests were skipped because the worker was not configured. Desktop project and HTTP smoke checks and repository-wide formatting pass. ADR-0002 defines version 1 as the first supported format. Manual accessibility review, scoped P1.2 migration and P1.3 branch/cache ticket criteria, and review/merge remain. P1.1 is In review; P1.2-P1.3 and the phase epic remain In progress. See docs/implementation-status.md and docs/phase-1-exit-review.md.
 
-#### Restart bookmark (updated 2026-11-07 14:04 IST)
+#### Restart bookmark (updated 2026-11-07 14:37 IST)
 
 Verified: the five Phase 1 exit checks pass locally; the Release build, 26 configured integration tests, desktop project/HTTP smoke, and repository-wide formatting passed at the last implementation checkpoint. Four optional Node tests were skipped. ADR-0002 defines version 1 as the first supported format. The desktop project editor preserves drafts, handles external-edit decisions, and offers read-only inspection.
 
-Last check at 14:04 IST: project editor access keys, a polite live status region, and UI Automation value checks were added. Release desktop build passes with zero warnings/errors; project smoke and repository-wide format verification pass. Manual Narrator, keyboard-only, high-contrast, and DPI review remain. PR #57 is open for review.
+Last check at 14:37 IST: PR #57 is open. Hosted desktop CI passed; headless CI exposed a Linux writer-ownership failure. The lease now uses an in-process registry and OS file lock. The focused Windows Release writer test passes; hosted Linux confirmation is pending. Build/test cadence is specified in section 31.0. Manual Narrator, keyboard-only, high-contrast, and DPI review remain.
 
 Current worktree: Phase 1 changes are on branch phase1-project-editor-acceptance and PR #57. GitHub Project 4 has P1.1 In review; P1.2, P1.3, and the Phase 1 epic remain In progress. Ticket criteria and evidence were synchronized at 14:04 IST. The structured-display tickets #54-#56 are Backlog. The spec now requires type-aware formatting, Segoe UI 12 pt with user font selection, and App-Icon.png as the application icon; those new requirements are not implemented yet.
 
-Next: complete manual accessibility review, reconcile ticket-level P1.2 migration and P1.3 branch/cache acceptance scope, and address PR #57 review. Keep Phase 1 In progress until acceptance and merge. Phase 0 private HTTPS/SSH and accessibility validation remain separate open work. See docs/implementation-status.md and docs/phase-1-exit-review.md.
+Next: push the batched writer fix and spec update, confirm the required hosted Linux/Windows checks, then complete manual accessibility review and reconcile P1.2/P1.3 acceptance scope. Address PR #57 review. Keep Phase 1 In progress until acceptance and merge. Phase 0 private HTTPS/SSH and accessibility validation remain separate open work. See docs/implementation-status.md and docs/phase-1-exit-review.md.
 
 During active work, publish a 2-3 line status at least every 10 minutes, refresh this bookmark at least every 30 minutes and at handoff, and synchronize GitHub issues at material checkpoints. Batch verification; rerun tests only for a concrete failure or new risk.
 
