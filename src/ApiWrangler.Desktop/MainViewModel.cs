@@ -36,6 +36,8 @@ public partial class MainViewModel(
     [ObservableProperty] private string artifactPath = "";
     [ObservableProperty] private ProjectAsset? selectedProjectRequest;
     [ObservableProperty] private ProjectAsset? selectedEnvironment;
+    [ObservableProperty] private ProjectAsset? selectedCollection;
+    [ObservableProperty] private string collectionExecutionStatus = "";
     [ObservableProperty] private string variablesInspectionText = "";
     [ObservableProperty] private string authType = "none";
     [ObservableProperty] private string authUsername = "";
@@ -79,6 +81,41 @@ public partial class MainViewModel(
 
     public IEnumerable<ProjectAsset> ProjectEnvironments =>
         ProjectEditor.Assets.Where(a => a.Kind == AssetKind.Environment);
+
+    public IEnumerable<ProjectAsset> ProjectCollections =>
+        ProjectEditor.Assets.Where(a => a.Kind == AssetKind.Collection);
+
+    [RelayCommand]
+    private async Task RunCollectionAsync(CancellationToken token)
+    {
+        var target = SelectedCollection;
+        var session = ProjectEditor.CurrentSession;
+        if (target is null || session is null || !Guid.TryParse(target.Id, out var collectionId))
+        {
+            Status = "Select a collection from an open project to run.";
+            return;
+        }
+
+        try
+        {
+            Status = $"Running collection {target.Name}…";
+            var view = await session.ReadAsync(token);
+            var runner = new CollectionRunner(requests);
+            var varContext = BuildVariableContext();
+
+            var report = await runner.ExecuteCollectionAsync(view, collectionId, baseContext: varContext, cancellationToken: token);
+            CollectionExecutionStatus = $"{report.Status}: {report.PassedRequests}/{report.TotalRequestsRun} requests passed ({report.Duration.TotalMilliseconds:F0} ms).";
+            Status = $"Collection run {report.Status}: {report.PassedRequests}/{report.TotalRequestsRun} passed.";
+        }
+        catch (OperationCanceledException)
+        {
+            Status = "Collection run cancelled.";
+        }
+        catch (Exception ex)
+        {
+            Status = $"Collection run failed: {ex.Message}";
+        }
+    }
 
     partial void OnRequestBodyDiagnosticChanged(string value) =>
         OnPropertyChanged(nameof(RequestBodyDiagnosticVisibility));

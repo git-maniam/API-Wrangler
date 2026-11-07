@@ -65,3 +65,7 @@ Validation: one Release desktop build passed with zero warnings/errors; one --pr
 ## Phase 2 Complete (2026-11-07 22:00 IST)
 
 Phase 2 (HTTP testing workbench) is complete. All 4 sub-issues (#12, #13, #14, #54) have been implemented, verified, and merged to `main`. All five Phase 2 specification exit criteria pass locally; see `docs/phase-2-exit-review.md`. Epic #11 closed and marked Done in GitHub Project 4. Advancing to Phase 3 (Collections and assertions).
+
+## Phase 3 Progress (2026-11-07 22:05 IST)
+
+- **P3.1 (Issue #16):** Collection lifecycle, isolated iterations, and bounded flow control. Implemented `ExecutionModels.cs` and headless `CollectionRunner.cs` supporting explicit request ordering, collection setup/teardown with configurable policy (`Always`, `OnFailure`, `OnSuccess`), concurrency control, iteration isolation (deep-cloned variable scopes preventing cross-iteration mutable leakage), loop budgets (enforcing a maximum of 50 iterations per loop to prevent infinite loops), request selections, and graceful/forced cancellation. Integrated `run` command into `api-wrangler` CLI (`Program.cs`) and collection execution in `MainViewModel.cs`. 80 tests passed (0 failed, 4 skipped Node tests); Release desktop smoke passed; format verified. Ready for PR and merge into `main`.

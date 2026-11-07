@@ -2,6 +2,7 @@
   <PropertyGroup><OutputType>Exe</OutputType><AssemblyName>api-wrangler</AssemblyName></PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../ApiWrangler.Execution/ApiWrangler.Execution.csproj" />
+    <ProjectReference Include="../ApiWrangler.Storage/ApiWrangler.Storage.csproj" />
     <PackageReference Include="System.CommandLine" />
   </ItemGroup>
 </Project>
