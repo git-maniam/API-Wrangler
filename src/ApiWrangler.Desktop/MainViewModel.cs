@@ -100,11 +100,14 @@ public partial class MainViewModel(
         try
         {
             Status = $"Running collection {target.Name}…";
-            var view = await session.ReadAsync(token);
             var runner = new CollectionRunner(requests);
             var varContext = BuildVariableContext();
 
-            var report = await runner.ExecuteCollectionAsync(view, collectionId, baseContext: varContext, cancellationToken: token);
+            var snapshot = await session.SnapshotAsync(token);
+            await using var snapSession = await ProjectEditor.Repository.OpenAsync(snapshot.Directory, writable: false, token: token);
+            var snapView = await snapSession.ReadAsync(token);
+
+            var report = await runner.ExecuteCollectionAsync(snapView, collectionId, baseContext: varContext, snapshot: snapshot, cancellationToken: token);
             LatestCollectionReport = report;
             CollectionExecutionStatus = $"{report.Status}: {report.PassedRequests}/{report.TotalRequestsRun} requests passed ({report.Duration.TotalMilliseconds:F0} ms).";
             Status = $"Collection run {report.Status}: {report.PassedRequests}/{report.TotalRequestsRun} passed.";

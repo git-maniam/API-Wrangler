@@ -10,6 +10,7 @@ namespace ApiWrangler.Desktop;
 
 public partial class ProjectEditorViewModel(IProjectRepository repository) : ObservableObject, IAsyncDisposable
 {
+    public IProjectRepository Repository => repository;
     private IProjectSession? session;
     private CancellationTokenSource? watchCancellation;
     private readonly SemaphoreSlim draftGate = new(1, 1);

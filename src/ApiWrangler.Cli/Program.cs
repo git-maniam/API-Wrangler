@@ -135,10 +135,13 @@ run.SetAction(async (parse, token) =>
 
         var repo = new ProjectRepository();
         await using var session = await repo.OpenAsync(projDir, writable: false, token: token);
-        var view = await session.ReadAsync(token);
+        var snapshot = await session.SnapshotAsync(token);
+
+        await using var snapSession = await repo.OpenAsync(snapshot.Directory, writable: false, token: token);
+        var view = await snapSession.ReadAsync(token);
         if (!view.IsValid)
         {
-            Console.Error.WriteLine("Project validation failed.");
+            Console.Error.WriteLine("Project validation failed in snapshot.");
             foreach (var diag in view.Diagnostics)
                 Console.Error.WriteLine($" - {diag.File}: {diag.Message}");
             return 2;
@@ -187,7 +190,7 @@ run.SetAction(async (parse, token) =>
         var httpService = new HttpRequestService(transport);
         var runner = new CollectionRunner(httpService);
 
-        var report = await runner.ExecuteCollectionAsync(view, collectionId, options, baseContext, token);
+        var report = await runner.ExecuteCollectionAsync(view, collectionId, options, baseContext, snapshot, token);
 
         var reportersList = (parse.GetValue(runReporters) ?? "console")
             .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
