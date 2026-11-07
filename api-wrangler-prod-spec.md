@@ -2532,18 +2532,20 @@ Do not begin distributed infrastructure before these decisions are settled.
 
 **Implementation checkpoint (2026-11-07):** Phase 1 project discovery, versioned schemas, canonical assets, journaled persistence, watcher/recovery behavior, snapshots, local settings, and a desktop asset editor are implemented in PR #57. The five Phase 1 exit checks pass locally. After the Linux writer-lease fix, hosted Windows and Linux headless jobs each passed 30 tests with zero skipped; desktop build, format, and publish passed. ADR-0002 defines version 1 as the first supported format. P1.1-P1.3 are In review; P1.4 manual project-editor accessibility acceptance is In progress. The phase epic remains In progress until review, acceptance, and merge. See docs/implementation-status.md and docs/phase-1-exit-review.md.
 
-#### Restart bookmark (updated 2026-11-07 21:12 IST)
+#### Restart bookmark (updated 2026-11-07 21:29 IST)
 
-Verified: PR #57 merged into main (commit `ed823c6`). Phase 1 sub-issues P1.1 (#8), P1.2 (#9), and P1.3 (#10) are verified and marked Done on GitHub Project 4. P1.4 (#58) and Phase 1 remain open pending manual accessibility acceptance. Phase 2 (`P2`, #11) and `P2.1` (#12) are In progress on branch `phase2-request-workbench`.
-P2.1 implementation verified:
-- `RequestAssetSerializer` converts `HttpRequestDefinition` to/from canonical v1 JSON and validates against `schemas/request.schema.json`.
-- `HttpTransport` supports repeated headers and query parameters, multipart form-data, urlencoded bodies, file-backed streaming bodies, automatic gzip decompression, cookie parsing, explicit TLS override option, cross-origin redirect authorization stripping, and non-idempotent retry protection.
-- `MainViewModel` and `MainWindow.xaml` provide complete request workbench controls: create, send, save to project, close, reopen from project, and rerun.
-- Consolidated batched verification: Release solution build passed with zero warnings/errors; `dotnet test` passed 36 integration tests (0 failed, 4 skipped Node tests); `scripts/Test-Desktop.ps1` HTTP desktop smoke passed with cancellation and responsiveness; `dotnet format --verify-no-changes` passed.
+Verified: P2.2 (Issue #13: Variable scopes, local secrets, and deterministic data helpers) implemented and verified on branch `phase2-variables-and-secrets`.
+- `VariableModels.cs` defines `VariableSource`, `VariableEntry`, `DynamicValueContext`, and `VariableResolutionException`.
+- `VariableResolver` resolves documented precedence (RequestLocal > Dataset > RunOverride > LocalEnvironment > Environment > Collection > ProjectDefault), enforces bounded nesting ($\le 10$), detects circular references with cycle trace, and resolves explicit `{{secret:...}}` namespace without shadowing from datasets.
+- Deterministic dynamic helpers implemented (`{{$uuid}}`, `{{$guid}}`, `{{$timestamp}}`, `{{$isoTimestamp}}`, `{{$randomInt}}`, `{{$randomString}}`, `{{$runId}}`, `{{$iteration}}`) with recorded seed and timestamp.
+- `LocalSecretStore` provides Windows DPAPI storage (`CryptProtectData`/`CryptUnprotectData`) with cross-platform fallback.
+- `RedactionEngine` redacts secrets from strings, headers, and execution results.
+- `HttpRequestService` and `MainViewModel` integrate variable resolution, environment selection, and variable inspection into workbench.
+- Consolidated batched verification: Release solution build passed with 0 warnings/errors; `dotnet test` passed 44 tests (0 failed, 4 skipped Node tests); desktop smoke passed; `dotnet format --verify-no-changes` passed.
 
-Next: create PR for P2.1, link issue #12, update project ticket to In review, and proceed to P2.2 (variables and environments).
+Next: create PR for P2.2, link issue #13, update project ticket to In review, and proceed to P2.3 (authentication).
 
-Handoff: working tree clean with P2.1 changes and consolidated passing checks ready for commit and push.
+Handoff: working tree clean with P2.2 changes ready for commit and push.
 
 During active work, publish a 2-3 line status at least every 10 minutes, refresh this bookmark at least every 30 minutes and at handoff, and synchronize GitHub issues at material checkpoints. Run builds or tests only for a concrete risk or required gate and batch related checks.
 ### Phase 2 — HTTP testing workbench

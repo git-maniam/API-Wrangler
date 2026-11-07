@@ -50,10 +50,12 @@
                     <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="2*" /><RowDefinition Height="6" /><RowDefinition Height="3*" /></Grid.RowDefinitions>
                     <DockPanel Margin="0,0,0,8">
                         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                            <Label Content="Env:" Padding="0" VerticalAlignment="Center" Margin="8,0,4,0" />
+                            <ComboBox ItemsSource="{Binding ProjectEnvironments}" SelectedItem="{Binding SelectedEnvironment}" DisplayMemberPath="Name" Width="130" Margin="0,0,8,0" AutomationProperties.Name="Selected environment" />
                             <Button Content="_New" Command="{Binding NewRequestCommand}" Margin="4,0" AutomationProperties.Name="New request" />
                             <Button Content="_Save request" Command="{Binding SaveRequestCommand}" Margin="4,0" AutomationProperties.Name="Save request" />
                             <Button Content="_Close" Command="{Binding CloseRequestCommand}" Margin="4,0" AutomationProperties.Name="Close request" />
-                            <ComboBox ItemsSource="{Binding ProjectRequests}" SelectedItem="{Binding SelectedProjectRequest}" DisplayMemberPath="Path" Width="180" Margin="8,0,0,0" AutomationProperties.Name="Saved project requests" />
+                            <ComboBox ItemsSource="{Binding ProjectRequests}" SelectedItem="{Binding SelectedProjectRequest}" DisplayMemberPath="Path" Width="160" Margin="8,0,0,0" AutomationProperties.Name="Saved project requests" />
                             <Button Content="_Open" Command="{Binding LoadRequestCommand}" Margin="4,0,0,0" AutomationProperties.Name="Open selected request" />
                         </StackPanel>
                         <Label Content="Request _name:" Target="{Binding ElementName=RequestNameBox}" Padding="0" VerticalAlignment="Center" Margin="0,0,8,0" />
@@ -88,6 +90,12 @@
                                 <CheckBox Content="Dangerous: ignore TLS certificate errors (override default TLS validation)" IsChecked="{Binding DangerousIgnoreTlsErrors}" Margin="0,0,0,4" AutomationProperties.Name="Ignore TLS errors" />
                                 <TextBlock Text="Warning: TLS verification is strictly enabled by default. Ignoring errors exposes traffic to interception." Foreground="DarkRed" Margin="24,0,0,0" />
                             </StackPanel>
+                        </TabItem>
+                        <TabItem Header="Variables">
+                            <DockPanel Margin="8">
+                                <Button DockPanel.Dock="Top" Content="_Inspect variables" Command="{Binding InspectVariablesCommand}" HorizontalAlignment="Left" Margin="0,0,0,8" AutomationProperties.Name="Inspect active variables" />
+                                <TextBox Text="{Binding VariablesInspectionText, Mode=OneWay}" IsReadOnly="True" AcceptsReturn="True" FontFamily="Consolas" VerticalScrollBarVisibility="Auto" AutomationProperties.Name="Variable inspection results" />
+                            </DockPanel>
                         </TabItem>
                     </TabControl>
                     <GridSplitter Grid.Row="4" Height="6" HorizontalAlignment="Stretch" />
