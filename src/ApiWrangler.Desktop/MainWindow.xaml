@@ -97,6 +97,27 @@
                                 <TextBox Text="{Binding VariablesInspectionText, Mode=OneWay}" IsReadOnly="True" AcceptsReturn="True" FontFamily="Consolas" VerticalScrollBarVisibility="Auto" AutomationProperties.Name="Variable inspection results" />
                             </DockPanel>
                         </TabItem>
+                        <TabItem Header="Auth">
+                            <StackPanel Margin="12">
+                                <DockPanel Margin="0,0,0,12">
+                                    <Label Content="Auth _type:" Target="{Binding ElementName=AuthTypeCombo}" VerticalAlignment="Center" Padding="0" Margin="0,0,8,0" />
+                                    <ComboBox x:Name="AuthTypeCombo" ItemsSource="{Binding AuthTypes}" SelectedItem="{Binding AuthType}" Width="160" HorizontalAlignment="Left" AutomationProperties.Name="Authentication type" />
+                                </DockPanel>
+                                <StackPanel Margin="0,4,0,0">
+                                    <Grid Margin="0,0,0,8">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="120" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                        <Label Content="User / Key:" VerticalAlignment="Center" Padding="0" />
+                                        <TextBox Grid.Column="1" Text="{Binding AuthUsername, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Auth user or API key name" />
+                                    </Grid>
+                                    <Grid Margin="0,0,0,8">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="120" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                        <Label Content="Secret / Token:" VerticalAlignment="Center" Padding="0" />
+                                        <TextBox Grid.Column="1" Text="{Binding AuthPassword, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Auth password, secret or token" />
+                                    </Grid>
+                                    <TextBlock Text="Values support variable substitution (e.g. {{secret:myToken}}). Secrets are redacted from previews and logs." Foreground="Gray" Margin="0,4,0,0" />
+                                </StackPanel>
+                            </StackPanel>
+                        </TabItem>
                     </TabControl>
                     <GridSplitter Grid.Row="4" Height="6" HorizontalAlignment="Stretch" />
                     <TabControl Grid.Row="5">

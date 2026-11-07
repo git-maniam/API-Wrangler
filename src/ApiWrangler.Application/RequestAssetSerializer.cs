@@ -49,7 +49,38 @@ public static class RequestAssetSerializer
         }
         obj["query"] = queryArray;
 
-        obj["auth"] = new JsonObject { ["type"] = "none" };
+        var authObj = new JsonObject
+        {
+            ["type"] = string.IsNullOrWhiteSpace(request.Auth.Type) ? "none" : request.Auth.Type
+        };
+        if (!string.IsNullOrEmpty(request.Auth.Username)) authObj["username"] = request.Auth.Username;
+        if (!string.IsNullOrEmpty(request.Auth.Password)) authObj["password"] = request.Auth.Password;
+        if (!string.IsNullOrEmpty(request.Auth.Token)) authObj["token"] = request.Auth.Token;
+        if (!string.IsNullOrEmpty(request.Auth.ApiKeyName)) authObj["apiKeyName"] = request.Auth.ApiKeyName;
+        if (!string.IsNullOrEmpty(request.Auth.ApiKeyValue)) authObj["apiKeyValue"] = request.Auth.ApiKeyValue;
+        if (!string.IsNullOrEmpty(request.Auth.ApiKeyLocation)) authObj["apiKeyLocation"] = request.Auth.ApiKeyLocation;
+
+        if (!string.IsNullOrEmpty(request.Auth.OAuthGrantType)) authObj["oauthGrantType"] = request.Auth.OAuthGrantType;
+        if (!string.IsNullOrEmpty(request.Auth.OAuthTokenUrl)) authObj["oauthTokenUrl"] = request.Auth.OAuthTokenUrl;
+        if (!string.IsNullOrEmpty(request.Auth.OAuthClientId)) authObj["oauthClientId"] = request.Auth.OAuthClientId;
+        if (!string.IsNullOrEmpty(request.Auth.OAuthClientSecret)) authObj["oauthClientSecret"] = request.Auth.OAuthClientSecret;
+        if (!string.IsNullOrEmpty(request.Auth.OAuthScope)) authObj["oauthScope"] = request.Auth.OAuthScope;
+        if (!string.IsNullOrEmpty(request.Auth.OAuthRefreshToken)) authObj["oauthRefreshToken"] = request.Auth.OAuthRefreshToken;
+        if (!string.IsNullOrEmpty(request.Auth.OAuthAccessToken)) authObj["oauthAccessToken"] = request.Auth.OAuthAccessToken;
+        if (request.Auth.OAuthExpiresAt.HasValue) authObj["oauthExpiresAt"] = request.Auth.OAuthExpiresAt.Value.ToString("o");
+        if (request.Auth.OAuthUsePkce) authObj["oauthUsePkce"] = true;
+        if (!string.IsNullOrEmpty(request.Auth.OAuthCode)) authObj["oauthCode"] = request.Auth.OAuthCode;
+        if (!string.IsNullOrEmpty(request.Auth.OAuthRedirectUri)) authObj["oauthRedirectUri"] = request.Auth.OAuthRedirectUri;
+        if (!string.IsNullOrEmpty(request.Auth.OAuthCodeVerifier)) authObj["oauthCodeVerifier"] = request.Auth.OAuthCodeVerifier;
+
+        if (!request.Auth.UseDefaultWindowsCredentials) authObj["useDefaultWindowsCredentials"] = false;
+        if (!string.IsNullOrEmpty(request.Auth.WindowsDomain)) authObj["windowsDomain"] = request.Auth.WindowsDomain;
+        if (!string.IsNullOrEmpty(request.Auth.WindowsUsername)) authObj["windowsUsername"] = request.Auth.WindowsUsername;
+        if (!string.IsNullOrEmpty(request.Auth.WindowsPassword)) authObj["windowsPassword"] = request.Auth.WindowsPassword;
+
+        if (!string.IsNullOrEmpty(request.Auth.ClientCertificatePath)) authObj["clientCertificatePath"] = request.Auth.ClientCertificatePath;
+        if (!string.IsNullOrEmpty(request.Auth.ClientCertificatePassword)) authObj["clientCertificatePassword"] = request.Auth.ClientCertificatePassword;
+        obj["auth"] = authObj;
 
         if (request.BodyDefinition is not null)
         {
@@ -119,6 +150,44 @@ public static class RequestAssetSerializer
             };
         }
 
+        RequestAuthDefinition authDef = new();
+        if (json["auth"] is JsonObject aObj)
+        {
+            var type = aObj["type"]?.GetValue<string>() ?? "none";
+            DateTimeOffset? expiresAt = null;
+            if (DateTimeOffset.TryParse(aObj["oauthExpiresAt"]?.GetValue<string>(), out var dt))
+                expiresAt = dt;
+
+            authDef = new RequestAuthDefinition
+            {
+                Type = type,
+                Username = aObj["username"]?.GetValue<string>(),
+                Password = aObj["password"]?.GetValue<string>(),
+                Token = aObj["token"]?.GetValue<string>(),
+                ApiKeyName = aObj["apiKeyName"]?.GetValue<string>(),
+                ApiKeyValue = aObj["apiKeyValue"]?.GetValue<string>(),
+                ApiKeyLocation = aObj["apiKeyLocation"]?.GetValue<string>() ?? "header",
+                OAuthGrantType = aObj["oauthGrantType"]?.GetValue<string>() ?? "client_credentials",
+                OAuthTokenUrl = aObj["oauthTokenUrl"]?.GetValue<string>(),
+                OAuthClientId = aObj["oauthClientId"]?.GetValue<string>(),
+                OAuthClientSecret = aObj["oauthClientSecret"]?.GetValue<string>(),
+                OAuthScope = aObj["oauthScope"]?.GetValue<string>(),
+                OAuthRefreshToken = aObj["oauthRefreshToken"]?.GetValue<string>(),
+                OAuthAccessToken = aObj["oauthAccessToken"]?.GetValue<string>(),
+                OAuthExpiresAt = expiresAt,
+                OAuthUsePkce = aObj["oauthUsePkce"] is JsonValue pkVal && pkVal.TryGetValue<bool>(out var pk) && pk,
+                OAuthCode = aObj["oauthCode"]?.GetValue<string>(),
+                OAuthRedirectUri = aObj["oauthRedirectUri"]?.GetValue<string>(),
+                OAuthCodeVerifier = aObj["oauthCodeVerifier"]?.GetValue<string>(),
+                UseDefaultWindowsCredentials = !(aObj["useDefaultWindowsCredentials"] is JsonValue wVal && wVal.TryGetValue<bool>(out var wb) && !wb),
+                WindowsDomain = aObj["windowsDomain"]?.GetValue<string>(),
+                WindowsUsername = aObj["windowsUsername"]?.GetValue<string>(),
+                WindowsPassword = aObj["windowsPassword"]?.GetValue<string>(),
+                ClientCertificatePath = aObj["clientCertificatePath"]?.GetValue<string>(),
+                ClientCertificatePassword = aObj["clientCertificatePassword"]?.GetValue<string>()
+            };
+        }
+
         return new HttpRequestDefinition
         {
             Id = id,
@@ -132,7 +201,8 @@ public static class RequestAssetSerializer
             TimeoutMs = timeoutMs,
             Headers = headers,
             Query = query,
-            BodyDefinition = bodyDef
+            BodyDefinition = bodyDef,
+            Auth = authDef
         };
     }
 }

@@ -78,9 +78,17 @@ public sealed class HttpRequestService(IHttpTransport transport)
                 BodyDefinition = resolvedBody,
                 ContentType = request.ContentType,
                 TimeoutMs = request.TimeoutMs,
-                TransportOptions = request.TransportOptions
+                TransportOptions = request.TransportOptions,
+                Auth = request.Auth
             };
         }
+        else
+        {
+            redaction = new RedactionEngine();
+        }
+
+        var (authAppliedRequest, _) = await AuthApplier.ApplyAsync(activeRequest, variableContext, redaction, cancellationToken: cancellationToken).ConfigureAwait(false);
+        activeRequest = authAppliedRequest;
 
         if (!Uri.TryCreate(activeRequest.Url, UriKind.Absolute, out var uri) ||
             (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps) || !string.IsNullOrEmpty(uri.UserInfo))
