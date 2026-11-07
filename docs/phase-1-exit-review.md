@@ -1,6 +1,6 @@
 # Phase 1 exit review (2026-11-07)
 
-Status: the five specification exit checks pass locally on Windows x64. PR #57 is open with passing hosted checks. P1.1-P1.3 are In review; Phase 1 remains In progress because project editor accessibility ticket #58, review, and merge are open.
+Status: the five specification exit checks pass locally on Windows x64. PR #57 is open with passing hosted checks. P1.1-P1.3 are In review; Phase 1 remains In progress because project editor accessibility ticket #58, review, and merge are open. Accessibility review started on 2026-11-07; automated UI Automation checks pass after a current Release rebuild, while manual keyboard, Narrator, high-contrast, and 150% DPI acceptance remains pending. See [phase-1-accessibility-review.md](phase-1-accessibility-review.md).
 
 | Specification exit check | Evidence |
 |---|---|

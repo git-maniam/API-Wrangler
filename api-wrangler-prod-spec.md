@@ -2359,11 +2359,13 @@ Do not resume a mutating API request automatically after a crash.
 
 ## 31. Testing and verification strategy
 
-### 31.0 Build and test cadence
+### 31.0 Necessity, batching, and run cadence
 
-Run a build or test only when it is necessary to resolve a concrete implementation risk, diagnose a failure, or satisfy a required acceptance, CI, or release gate. Before running it, identify the changed behavior and select the smallest meaningful verification set. Batch related test cases, target frameworks, configurations, and build parameters into as few executions as practical; reuse valid results when the relevant inputs have not changed.
+Run builds and tests only when absolutely necessary: to resolve a concrete implementation risk, diagnose a failure, or satisfy a required acceptance, CI, or release gate. For documentation-only changes, do not run them unless an explicit gate requires it. Before running, identify the behavior or gate being verified and choose the smallest meaningful verification set.
 
-Do not repeat a full build or suite after documentation-only changes or for reassurance. On failure, inspect the evidence, fix the cause, run the narrow affected check, then perform one consolidated verification if the gate requires it. Batch related edits before pushing so CI does not repeat the same build and test matrix for intermediate commits. Report the exact commands, results, and skipped cases; never count skipped tests as passed.
+Batch all compatible test parameters (projects, filters, frameworks, configurations, and fixture setup) into one invocation or scripted run where practical. Batch compatible build parameters (solution or projects, configuration, target framework or runtime, and properties) into one invocation where practical. Plan the changed work and parameters up front so each run covers the required cases together; do not split checks into repeated runs by parameter. Use the fewest executions that establish the required evidence, and reuse valid results while relevant inputs remain unchanged.
+
+Keep routine command output concise to reduce token use and execution time, while preserving diagnostics needed to understand failures. After a failure, inspect the evidence, fix the cause, and rerun only the affected check; perform one consolidated verification afterward only when a required gate calls for it. Batch related changes before pushing to avoid repeated CI matrices for intermediate updates. Report exact commands, outcomes, and skipped cases; never count skipped tests as passed.
 
 ### 31.1 Unit tests
 
@@ -2518,15 +2520,15 @@ Do not begin distributed infrastructure before these decisions are settled.
 - Interrupted write does not destroy the previous valid file.
 - External edits are detected.
 
-**Implementation checkpoint (2026-11-07):** Phase 1 project discovery, versioned schemas, canonical assets, journaled persistence, watcher/recovery behavior, snapshots, local settings, and a desktop asset editor are implemented in PR #57. The five Phase 1 exit checks pass locally. After the Linux writer-lease fix, hosted Windows and Linux headless jobs each passed 30 tests with zero skipped; desktop build, format, and publish passed. ADR-0002 defines version 1 as the first supported format. P1.1-P1.3 are In review; P1.4 manual project-editor accessibility acceptance is Ready. The phase epic remains In progress until review, acceptance, and merge. See docs/implementation-status.md and docs/phase-1-exit-review.md.
+**Implementation checkpoint (2026-11-07):** Phase 1 project discovery, versioned schemas, canonical assets, journaled persistence, watcher/recovery behavior, snapshots, local settings, and a desktop asset editor are implemented in PR #57. The five Phase 1 exit checks pass locally. After the Linux writer-lease fix, hosted Windows and Linux headless jobs each passed 30 tests with zero skipped; desktop build, format, and publish passed. ADR-0002 defines version 1 as the first supported format. P1.1-P1.3 are In review; P1.4 manual project-editor accessibility acceptance is In progress. The phase epic remains In progress until review, acceptance, and merge. See docs/implementation-status.md and docs/phase-1-exit-review.md.
 
-#### Restart bookmark (updated 2026-11-07 15:59 IST)
+#### Restart bookmark (updated 2026-11-07 16:28 IST)
 
-Verified: PR #57 is open, non-draft, mergeable, and has no review yet. Its last completed hosted desktop and Windows/Linux headless checks passed. The README now records current capabilities, the overall phase plan, and the immediate Phase 1 gate. No local build or test was run for this documentation cleanup; pushing this batch starts fresh CI.
+Verified: PR #57 remains open, non-draft, mergeable, and has no review; hosted desktop and Windows/Linux headless checks pass. P1.4 (#58) is In progress. Its current Release build and project smoke pass for programmatic UI Automation; manual keyboard focus, Narrator, high-contrast, and 150% DPI acceptance still needs an interactive Windows session. The user requested stricter validation cadence; section 31.0 now requires builds/tests only when absolutely necessary, compatible parameters batched into as few runs as practical, concise output, and targeted reruns after failures.
 
-GitHub Project 4: P1.1-P1.3 are In review; P1.4 accessibility review (#58) and P0.5 private Git authentication (#6) are Ready; the Phase 1 epic remains In progress. Snapshot execution (#59), branch/cache invalidation (#23), and future schema migration (#60) are Backlog. No issue or epic is Done.
+GitHub Project 4: P1.1-P1.3 are In review; P1.4 accessibility review (#58) is In progress; P0.5 private Git authentication (#6) is Ready; the Phase 1 epic remains In progress. Snapshot execution (#59), branch/cache invalidation (#23), and future schema migration (#60) are Backlog. No issue or epic is Done.
 
-Next: complete Windows 11 keyboard, Narrator, high-contrast, and 150% DPI review in #58; address PR #57 review, merge, and reassess Phase 1 acceptance. Phase 0 private HTTPS/SSH acceptance remains separate. Keep statuses tied to executed evidence.
+Next: complete the interactive accessibility review in #58; address PR #57 review and merge, then reassess Phase 1 acceptance. Phase 0 private HTTPS/SSH acceptance remains separate. Keep statuses tied to executed evidence.
 
 During active work, publish a 2-3 line status at least every 10 minutes, refresh this bookmark at least every 30 minutes and at handoff, and synchronize GitHub issues at material checkpoints. Run builds or tests only for a concrete risk or required gate and batch related checks.
 ### Phase 2 — HTTP testing workbench
