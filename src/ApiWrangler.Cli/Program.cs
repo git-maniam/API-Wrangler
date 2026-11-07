@@ -127,6 +127,12 @@ run.SetAction(async (parse, token) =>
     try
     {
         var projDir = parse.GetValue(runProj)!.FullName;
+        if (!Directory.Exists(projDir) || !File.Exists(Path.Combine(projDir, "wrangler.json")))
+        {
+            Console.Error.WriteLine($"Project manifest not found at '{projDir}'.");
+            return 2;
+        }
+
         var repo = new ProjectRepository();
         await using var session = await repo.OpenAsync(projDir, writable: false, token: token);
         var view = await session.ReadAsync(token);
@@ -220,8 +226,92 @@ run.SetAction(async (parse, token) =>
         };
     }
     catch (OperationCanceledException) { Console.Error.WriteLine("Run cancelled."); return 4; }
+    catch (IOException ex) { Console.Error.WriteLine($"Project/storage error: {ex.Message}"); return 2; }
     catch (Exception ex) { Console.Error.WriteLine($"Run error: {ex.Message}"); return 3; }
 });
 root.Subcommands.Add(run);
+
+var init = new Command("init", "Initialize a new canonical API Wrangler project.");
+var initProj = new Option<DirectoryInfo>("--project")
+{
+    DefaultValueFactory = _ => new DirectoryInfo(Directory.GetCurrentDirectory()),
+    Description = "Directory where the project will be initialized"
+};
+var initName = new Option<string>("--name")
+{
+    DefaultValueFactory = _ => "API Wrangler Project",
+    Description = "Human-readable project name"
+};
+init.Options.Add(initProj);
+init.Options.Add(initName);
+init.SetAction(async (parse, token) =>
+{
+    try
+    {
+        var targetDir = parse.GetValue(initProj)!.FullName;
+        var name = parse.GetValue(initName)!;
+
+        var repo = new ProjectRepository();
+        await using var session = await repo.InitializeAsync(targetDir, name, token);
+
+        Console.WriteLine(JsonSerializer.Serialize(new
+        {
+            initialized = true,
+            project = targetDir,
+            name
+        }, json));
+
+        return 0;
+    }
+    catch (IOException ex) when (ex.Message.Contains("already contains", StringComparison.OrdinalIgnoreCase))
+    {
+        Console.Error.WriteLine($"Project already exists at '{parse.GetValue(initProj)!.FullName}'.");
+        return 2;
+    }
+    catch (OperationCanceledException) { Console.Error.WriteLine("Cancelled."); return 4; }
+    catch (Exception ex) { Console.Error.WriteLine($"Init failed: {ex.Message}"); return 3; }
+});
+root.Subcommands.Add(init);
+
+var validate = new Command("validate", "Validate an API Wrangler project directory for schema and reference integrity.");
+var validateProj = new Option<DirectoryInfo>("--project")
+{
+    DefaultValueFactory = _ => new DirectoryInfo(Directory.GetCurrentDirectory()),
+    Description = "Project directory containing wrangler.json"
+};
+validate.Options.Add(validateProj);
+validate.SetAction(async (parse, token) =>
+{
+    try
+    {
+        var targetDir = parse.GetValue(validateProj)!.FullName;
+        if (!File.Exists(Path.Combine(targetDir, "wrangler.json")))
+        {
+            Console.Error.WriteLine($"No wrangler.json manifest found in '{targetDir}'.");
+            return 2;
+        }
+
+        var repo = new ProjectRepository();
+        await using var session = await repo.OpenAsync(targetDir, writable: false, token: token);
+        var view = await session.ReadAsync(token);
+
+        var resultObj = new
+        {
+            valid = view.IsValid,
+            project = targetDir,
+            totalAssets = view.Assets.Count,
+            collections = view.Assets.Count(a => a.Kind == AssetKind.Collection),
+            requests = view.Assets.Count(a => a.Kind == AssetKind.Request),
+            environments = view.Assets.Count(a => a.Kind == AssetKind.Environment),
+            diagnostics = view.Diagnostics.Select(d => new { file = d.File, message = d.Message }).ToList()
+        };
+
+        Console.WriteLine(JsonSerializer.Serialize(resultObj, json));
+        return view.IsValid ? 0 : 2;
+    }
+    catch (OperationCanceledException) { Console.Error.WriteLine("Cancelled."); return 4; }
+    catch (Exception ex) { Console.Error.WriteLine($"Validation failed: {ex.Message}"); return 3; }
+});
+root.Subcommands.Add(validate);
 
 return await root.Parse(args).InvokeAsync();

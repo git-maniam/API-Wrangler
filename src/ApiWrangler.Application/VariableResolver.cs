@@ -121,13 +121,18 @@ public sealed partial class VariableResolver
             if (context.DirectSecrets.TryGetValue(secretKey, out var directSec))
                 return (directSec, false);
 
+            var hostEnvVal = Environment.GetEnvironmentVariable($"API_WRANGLER_SECRET_{secretKey}") ??
+                             Environment.GetEnvironmentVariable(secretKey);
+            if (hostEnvVal is not null)
+                return (hostEnvVal, false);
+
             if (context.SecretStore is not null)
             {
                 var storeVal = await context.SecretStore.GetSecretAsync(secretKey, token).ConfigureAwait(false);
                 if (storeVal is not null) return (storeVal, false);
             }
 
-            throw new VariableResolutionException(expression, location, $"Secret '{secretKey}' not found in secret store.");
+            throw new VariableResolutionException(expression, location, $"Secret '{secretKey}' not found in secret store or host environment.");
         }
 
         // 2. Dynamic helpers: {{$uuid}}, {{$guid}}, {{$timestamp}}, {{$isoTimestamp}}, {{$randomInt}}, {{$randomString}}, {{$runId}}, {{$iteration}}
@@ -222,6 +227,8 @@ public sealed partial class VariableResolver
             {
                 var secretKey = expr["secret:".Length..].Trim();
                 bool exists = context.DirectSecrets.ContainsKey(secretKey) ||
+                              Environment.GetEnvironmentVariable($"API_WRANGLER_SECRET_{secretKey}") is not null ||
+                              Environment.GetEnvironmentVariable(secretKey) is not null ||
                               (context.SecretStore is not null && (await context.SecretStore.GetSecretAsync(secretKey, token).ConfigureAwait(false)) is not null);
 
                 result.Add(new ResolvedVariableInspection(
