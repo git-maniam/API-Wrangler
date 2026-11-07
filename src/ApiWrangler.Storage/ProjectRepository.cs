@@ -31,24 +31,42 @@ public sealed class ProjectRepository : IProjectRepository
             {
                 ["wrangler.json"] = CanonicalJson.Serialize(new JsonObject
                 {
-                    ["$schema"] = "./schemas/wrangler.schema.json", ["schemaVersion"] = 1,
-                    ["projectId"] = projectId.ToString(), ["name"] = name, ["defaultEnvironmentId"] = environmentId.ToString(),
+                    ["$schema"] = "./schemas/wrangler.schema.json",
+                    ["schemaVersion"] = 1,
+                    ["projectId"] = projectId.ToString(),
+                    ["name"] = name,
+                    ["defaultEnvironmentId"] = environmentId.ToString(),
                     ["paths"] = new JsonObject { ["collections"] = "collections", ["environments"] = "environments", ["datasets"] = "datasets", ["reports"] = "reports" },
                     ["execution"] = new JsonObject { ["requestTimeoutMs"] = 30_000, ["maxConcurrentRequests"] = 4, ["maxRedirects"] = 10, ["tlsVerification"] = true }
                 }),
                 ["collections/default/collection.json"] = CanonicalJson.Serialize(new JsonObject
                 {
-                    ["schemaVersion"] = 1, ["id"] = collectionId.ToString(), ["name"] = "Default collection", ["requestIds"] = new JsonArray(requestId.ToString())
+                    ["schemaVersion"] = 1,
+                    ["id"] = collectionId.ToString(),
+                    ["name"] = "Default collection",
+                    ["requestIds"] = new JsonArray(requestId.ToString())
                 }),
                 ["collections/default/requests/hello.request.json"] = CanonicalJson.Serialize(new JsonObject
                 {
-                    ["schemaVersion"] = 1, ["id"] = requestId.ToString(), ["collectionId"] = collectionId.ToString(), ["name"] = "Hello API",
-                    ["protocol"] = "http", ["method"] = "GET", ["url"] = "http://127.0.0.1:5057/echo", ["headers"] = new JsonArray(), ["query"] = new JsonArray(),
-                    ["auth"] = new JsonObject { ["type"] = "none" }, ["body"] = new JsonObject { ["mode"] = "none" }
+                    ["schemaVersion"] = 1,
+                    ["id"] = requestId.ToString(),
+                    ["collectionId"] = collectionId.ToString(),
+                    ["name"] = "Hello API",
+                    ["protocol"] = "http",
+                    ["method"] = "GET",
+                    ["url"] = "http://127.0.0.1:5057/echo",
+                    ["headers"] = new JsonArray(),
+                    ["query"] = new JsonArray(),
+                    ["auth"] = new JsonObject { ["type"] = "none" },
+                    ["body"] = new JsonObject { ["mode"] = "none" }
                 }),
                 ["environments/local.environment.json"] = CanonicalJson.Serialize(new JsonObject
                 {
-                    ["schemaVersion"] = 1, ["id"] = environmentId.ToString(), ["name"] = "Local", ["variables"] = new JsonObject(), ["secrets"] = new JsonObject()
+                    ["schemaVersion"] = 1,
+                    ["id"] = environmentId.ToString(),
+                    ["name"] = "Local",
+                    ["variables"] = new JsonObject(),
+                    ["secrets"] = new JsonObject()
                 })
             };
             foreach (var schema in AssetValidator.SchemaFiles) files["schemas/" + schema.Key] = schema.Value;

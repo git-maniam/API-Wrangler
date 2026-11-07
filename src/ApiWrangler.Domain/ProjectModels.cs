@@ -15,7 +15,7 @@ public sealed record ProjectView(string Root, IReadOnlyList<ProjectAsset> Assets
 }
 public sealed record AssetEdit(string Path, JsonObject Content, string? ExpectedHash);
 public sealed record SnapshotInfo(string Id, string Directory, int FileCount, string? Commit, bool? Dirty);
-public sealed record EditorDraft(string Path, string BaseHash, JsonObject Content);
+public sealed record EditorDraft(string Path, string BaseHash, JsonObject Content, string? Text = null);
 
 public sealed class ProjectValidationException(IReadOnlyList<ProjectDiagnostic> diagnostics)
     : Exception("Project validation failed. Inspect the file and field diagnostics.")

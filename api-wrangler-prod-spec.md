@@ -184,6 +184,21 @@ Prefer a native text editor component such as AvalonEdit, subject to maintenance
 
 Do not build a custom code editor from scratch.
 
+### 3.2.1 Structured text display and typography
+
+- Format and syntax-highlight structured content according to its detected or selected type wherever it is displayed for editing or inspection, including request and response bodies, dataset source previews, and GraphQL documents.
+- Provide readable, type-specific presentation for JSON, YAML, GraphQL, CSV, and other supported structured formats. JSON and YAML use appropriate indentation and token colors; GraphQL highlights its operations, types, fields, arguments, and values; CSV uses a readable table or aligned preview with distinct colors for headers, delimiters, quoted fields, and invalid cells while preserving delimiters and quoting in the raw view.
+- Offer a beautified view and the exact raw source. Beautification is a presentation action and must not silently rewrite saved content, alter semantic values, change CSV quoting, or hide parse errors. Show a useful diagnostic when content cannot be formatted.
+- Apply syntax colors in light, dark, and high-contrast themes with readable contrast; meaning must remain available without color alone.
+- Use Segoe UI at 12 pt as the default text font. Let users select their preferred font family and size for editor and structured-content views, and persist that preference locally.
+
+### 3.2.2 Application icon
+
+- Use the repository-root `App-Icon.png` as the canonical API Wrangler application icon artwork.
+- Derive the Windows icon resources and required sizes from this asset for the executable, application windows, taskbar and Alt-Tab, Start menu entries, and installer-created shortcuts. Keep these surfaces visually consistent.
+- Preserve the artwork's proportions, colors, and transparency when generating size variants; do not stretch or crop it. Check that the icon remains recognizable at small sizes and on light, dark, and high-DPI Windows desktops.
+- Package the generated icon resources with desktop releases so a fresh installation shows the correct icon without depending on the source PNG being present beside the executable.
+
 ### 3.3 Headless engine
 
 The engine must be independent of WPF.
@@ -2497,11 +2512,19 @@ Do not begin distributed infrastructure before these decisions are settled.
 - Interrupted write does not destroy the previous valid file.
 - External edits are detected.
 
-**Implementation checkpoint (2026-11-07):** Project initialization/discovery, schema validation, canonical JSON, writer ownership, transaction journals, watching, snapshots, and local settings are implemented in the phase-1 foundation. Windows x64 integration checks cover newer-schema read-only inspection, nested repository discovery and file-and-field diagnostics for missing required properties, extension-field preservation, no-diff repeated saves, interrupted multi-file recovery, second-writer read-only access, external-edit conflicts, and snapshot metadata. Latest full Release build passed with zero warnings/errors; latest integration run: 26 passed and four optional Node tests skipped because the worker is not configured. Local settings persistence, dirty-draft preservation through external changes, debounced watcher notification, and recovery conflict preservation have integration checks; P1.1-P1.3 remain In progress. Remaining: define supported legacy migration inputs and backup behavior; wire dirty-editor conflict decisions into the desktop; review phase exit criteria. Branch/cache invalidation is deferred until a project cache exists. Dirty-draft conflict, watcher overflow full-rescan signaling, and in-process transaction rollback, idempotent recovery, and third-party edit preservation are verified. Resume with those remaining cases before Phase 2. See docs/implementation-status.md and GitHub issues 8-10.\n\n#### Restart bookmark (2026-11-07)
+**Implementation checkpoint (2026-11-07):** Phase 1 project discovery, versioned schemas, canonical assets, journaled persistence, watcher/recovery behavior, snapshots, local settings, and a desktop asset editor are implemented locally. The five Phase 1 exit checks pass on Windows x64. The latest full Release build had zero warnings/errors; 26 integration tests passed and four optional Node tests were skipped because the worker was not configured. Desktop project and HTTP smoke checks and repository-wide formatting pass. ADR-0002 defines version 1 as the first supported format. Manual accessibility review, scoped P1.2 migration and P1.3 branch/cache ticket criteria, and review/merge remain. P1.1-P1.3 are In progress. See docs/implementation-status.md and docs/phase-1-exit-review.md.
 
-Resume with migration/backup scope, then desktop dirty-editor conflict wiring, then phase exit review. Keep Phase 1 tickets In Progress until all criteria pass and work is merged.
+#### Restart bookmark (updated 2026-11-07 14:00 IST)
 
-Approximate remaining effort: 3-5 focused development days (about 1-2 weeks part-time), assuming migration scope is agreed promptly. Phase 0 private HTTPS/SSH and accessibility validation remains separate.
+Verified: the five Phase 1 exit checks pass locally; the Release build, 26 configured integration tests, desktop project/HTTP smoke, and repository-wide formatting passed at the last implementation checkpoint. Four optional Node tests were skipped. ADR-0002 defines version 1 as the first supported format. The desktop project editor preserves drafts, handles external-edit decisions, and offers read-only inspection.
+
+Last check at 14:00 IST: project editor access keys, a polite live status region, and UI Automation value checks were added. Release desktop build passes with zero warnings/errors; project smoke and repository-wide format verification pass. Manual Narrator, keyboard-only, high-contrast, and DPI review remain. The latest local work is still uncommitted.
+
+Current worktree: Phase 1 changes are uncommitted. GitHub Project 4 has Phase 1 and P1.1-P1.3 In progress, with ticket criteria and evidence synchronized at 14:00 IST. The structured-display tickets #54-#56 are Backlog. The spec now requires type-aware formatting, Segoe UI 12 pt with user font selection, and App-Icon.png as the application icon; those new requirements are not implemented yet.
+
+Next: complete manual accessibility review, reconcile ticket-level P1.2 migration and P1.3 branch/cache acceptance scope, and prepare a reviewable PR. Keep Phase 1 In progress until acceptance and merge. Phase 0 private HTTPS/SSH and accessibility validation remain separate open work. See docs/implementation-status.md and docs/phase-1-exit-review.md.
+
+During active work, publish a 2-3 line status at least every 10 minutes, refresh this bookmark at least every 30 minutes and at handoff, and synchronize GitHub issues at material checkpoints. Batch verification; rerun tests only for a concrete failure or new risk.
 
 ### Phase 2 — HTTP testing workbench
 
@@ -2747,6 +2770,7 @@ Approximate remaining effort: 3-5 focused development days (about 1-2 weeks part
 - SDK generator integration.
 - Optional AI provider adapter.
 - Installer.
+- Application icon resources derived from `App-Icon.png`.
 - Upgrade path.
 - Performance tuning.
 - Operational manuals.
@@ -2757,6 +2781,7 @@ Approximate remaining effort: 3-5 focused development days (about 1-2 weeks part
 - Full targeted developer-capability matrix is reviewed.
 - No critical placeholder remains in shipped functionality.
 - Fresh-machine installation succeeds.
+- Executable, window, taskbar, Start menu, and installer shortcuts display the specified application icon.
 - CLI and unattended deployment succeed.
 - Performance targets are measured.
 - AI is not required.

@@ -210,7 +210,8 @@ internal sealed class ProjectSession : IProjectSession
     {
         EnsureWritable();
         token.ThrowIfCancellationRequested();
-        File.Delete(DraftPath(path));
+        var file = DraftPath(path);
+        if (File.Exists(file)) File.Delete(file);
         return Task.CompletedTask;
     }
 

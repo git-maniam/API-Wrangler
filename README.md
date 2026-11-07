@@ -24,14 +24,14 @@ dotnet run --project tests/Fixtures/ApiWrangler.FixtureApi -c Release
 dotnet run --project src/ApiWrangler.Desktop -c Release
 ```
 
-Send the default request, or edit its method, URL, headers, and JSON body. Ctrl+Enter sends; Cancel interrupts an active request. The dataset tab shows a read-only 100,000-case feasibility fixture.
+Send the default request, or edit its method, URL, headers, and JSON body. Ctrl+Enter sends; Cancel interrupts an active request. The dataset tab shows a read-only 100,000-case feasibility fixture. The Project assets tab opens an existing version-1 project by directory or manifest path. It edits JSON assets, preserves local drafts, reloads clean files after external edits, and shows both versions when a dirty draft conflicts with disk. Use disk discards the draft; Use draft explicitly allows replacing the disk version on the next save.
 
 ```powershell
 dotnet run --project src/ApiWrangler.Cli -c Release -- send --url http://127.0.0.1:5057/echo
 dotnet run --project src/ApiWrangler.Cli -c Release -- git-probe --repository .
 ```
 
-`git-probe --fetch` explicitly fetches origin without integrating files. `send` writes raw response bodies locally and prints metadata, not response contents. Redirects are returned without following them. HTTP status codes do not yet run assertions. Project saving, authentication flows, collections, secret management, and the final CLI commands remain unimplemented.
+`git-probe --fetch` explicitly fetches origin without integrating files. `send` writes raw response bodies locally and prints metadata, not response contents. Redirects are returned without following them. HTTP status codes do not yet run assertions. Project initialization in the desktop, authentication flows, collections, secret management, and the final CLI commands remain unimplemented.
 
 ## Optional Node feasibility tests
 
