@@ -9,12 +9,13 @@ namespace ApiWrangler.Storage;
 internal sealed record SnapshotFile(string Path, string Hash, long Length);
 internal static class ProjectSnapshots
 {
-    public static async Task<SnapshotInfo> CreateAsync(string root, string state, Func<IEnumerable<string>> enumerate, CancellationToken token)
+    public static async Task<SnapshotInfo> CreateAsync(string root, string state, Func<IEnumerable<string>> enumerate, CancellationToken token, IReadOnlyList<EditorDraft>? drafts = null)
     {
         var container = Path.Combine(state, "snapshots");
         Directory.CreateDirectory(container);
         var temporary = Path.Combine(container, Guid.NewGuid().ToString("N") + ".tmp");
         Directory.CreateDirectory(temporary);
+        var draftMap = drafts?.ToDictionary(d => d.Path.Replace('\\', '/'), StringComparer.Ordinal) ?? new();
         try
         {
             var beforeGit = await GitInfoAsync(root, token).ConfigureAwait(false);
@@ -25,26 +26,42 @@ internal static class ProjectSnapshots
                 var relative = Path.GetRelativePath(root, source).Replace('\\', '/');
                 var target = ProjectPaths.Resolve(temporary, relative);
                 Directory.CreateDirectory(Path.GetDirectoryName(target)!);
-                using var hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
-                await using var input = new FileStream(source, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete, 65536, FileOptions.Asynchronous);
-                await using var output = new FileStream(target, FileMode.CreateNew, FileAccess.Write, FileShare.None, 65536, FileOptions.Asynchronous);
-                var buffer = new byte[65536];
-                long length = 0;
-                int count;
-                while ((count = await input.ReadAsync(buffer, token).ConfigureAwait(false)) != 0)
+
+                if (draftMap.TryGetValue(relative, out var draft))
                 {
-                    hash.AppendData(buffer, 0, count);
-                    await output.WriteAsync(buffer.AsMemory(0, count), token).ConfigureAwait(false);
-                    length += count;
+                    var draftBytes = draft.Text is not null
+                        ? Encoding.UTF8.GetBytes(draft.Text)
+                        : CanonicalJson.Serialize(draft.Content);
+                    await FileTransactions.WriteDurableAsync(target, draftBytes, token).ConfigureAwait(false);
+                    var draftHash = Convert.ToHexStringLower(SHA256.HashData(draftBytes));
+                    entries.Add(new(relative, draftHash, draftBytes.Length));
                 }
-                await output.FlushAsync(token).ConfigureAwait(false);
-                output.Flush(flushToDisk: true);
-                entries.Add(new(relative, Convert.ToHexStringLower(hash.GetHashAndReset()), length));
+                else
+                {
+                    using var hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
+                    await using var input = new FileStream(source, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete, 65536, FileOptions.Asynchronous);
+                    await using var output = new FileStream(target, FileMode.CreateNew, FileAccess.Write, FileShare.None, 65536, FileOptions.Asynchronous);
+                    var buffer = new byte[65536];
+                    long length = 0;
+                    int count;
+                    while ((count = await input.ReadAsync(buffer, token).ConfigureAwait(false)) != 0)
+                    {
+                        hash.AppendData(buffer, 0, count);
+                        await output.WriteAsync(buffer.AsMemory(0, count), token).ConfigureAwait(false);
+                        length += count;
+                    }
+                    await output.FlushAsync(token).ConfigureAwait(false);
+                    output.Flush(flushToDisk: true);
+                    entries.Add(new(relative, Convert.ToHexStringLower(hash.GetHashAndReset()), length));
+                }
             }
             if (!files.SequenceEqual(enumerate().Order(StringComparer.Ordinal), StringComparer.Ordinal)) throw new ProjectConflictException("project file inventory");
             foreach (var entry in entries)
-                if (await FileTransactions.HashFileAsync(ProjectPaths.Resolve(root, entry.Path), token).ConfigureAwait(false) != entry.Hash)
+            {
+                var expectedDiskHash = draftMap.TryGetValue(entry.Path, out var draft) ? draft.BaseHash : entry.Hash;
+                if (await FileTransactions.HashFileAsync(ProjectPaths.Resolve(root, entry.Path), token).ConfigureAwait(false) != expectedDiskHash)
                     throw new ProjectConflictException(entry.Path);
+            }
             var afterGit = await GitInfoAsync(root, token).ConfigureAwait(false);
             if (beforeGit != afterGit) throw new ProjectConflictException("Git project state");
             var assets = new List<ProjectAsset>();
@@ -68,7 +85,8 @@ internal static class ProjectSnapshots
                 await FileTransactions.WriteDurableAsync(Path.Combine(temporary, "snapshot.json"), metadata, token).ConfigureAwait(false);
                 Directory.Move(temporary, final);
             }
-            return new(id, final, entries.Count, afterGit.Commit, afterGit.Dirty);
+            bool isDirty = (afterGit.Dirty ?? false) || draftMap.Count > 0;
+            return new(id, final, entries.Count, afterGit.Commit, isDirty);
         }
         finally { if (Directory.Exists(temporary)) Directory.Delete(temporary, recursive: true); }
     }

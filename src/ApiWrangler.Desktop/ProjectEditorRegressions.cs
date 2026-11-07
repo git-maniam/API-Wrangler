@@ -134,6 +134,7 @@ internal static class ProjectEditorRegressions
             await inner.SaveAsync(edits, token);
         }
         public Task<SnapshotInfo> SnapshotAsync(CancellationToken token = default) => inner.SnapshotAsync(token);
+        public Task<SnapshotInfo> SnapshotAsync(IReadOnlyList<EditorDraft>? drafts, CancellationToken token = default) => inner.SnapshotAsync(drafts, token);
         // Real file watcher timing must not determine these interleavings; normal smoke covers notifications.
         public IAsyncEnumerable<bool> WatchAsync(CancellationToken token = default) => changes.Reader.ReadAllAsync(token);
         public Task SaveDraftAsync(EditorDraft draft, CancellationToken token = default) => inner.SaveDraftAsync(draft, token);

@@ -166,7 +166,10 @@ internal sealed class ProjectSession : IProjectSession
         finally { gate.Release(); }
     }
 
-    public async Task<SnapshotInfo> SnapshotAsync(CancellationToken token = default)
+    public async Task<SnapshotInfo> SnapshotAsync(CancellationToken token = default) =>
+        await SnapshotAsync(null, token).ConfigureAwait(false);
+
+    public async Task<SnapshotInfo> SnapshotAsync(IReadOnlyList<EditorDraft>? drafts, CancellationToken token = default)
     {
         await gate.WaitAsync(token).ConfigureAwait(false);
         try
@@ -175,7 +178,7 @@ internal sealed class ProjectSession : IProjectSession
             EnsureNoGitIntegration();
             var view = await ReadAsync(token).ConfigureAwait(false);
             if (!view.IsValid) throw new ProjectValidationException(view.Diagnostics);
-            return await ProjectSnapshots.CreateAsync(Root, stateDirectory, EnumerateProjectFiles, token).ConfigureAwait(false);
+            return await ProjectSnapshots.CreateAsync(Root, stateDirectory, EnumerateProjectFiles, token, drafts).ConfigureAwait(false);
         }
         finally { gate.Release(); }
     }

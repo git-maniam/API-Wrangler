@@ -2532,18 +2532,18 @@ Do not begin distributed infrastructure before these decisions are settled.
 
 **Implementation checkpoint (2026-11-07):** Phase 1 project discovery, versioned schemas, canonical assets, journaled persistence, watcher/recovery behavior, snapshots, local settings, and a desktop asset editor are implemented in PR #57. The five Phase 1 exit checks pass locally. After the Linux writer-lease fix, hosted Windows and Linux headless jobs each passed 30 tests with zero skipped; desktop build, format, and publish passed. ADR-0002 defines version 1 as the first supported format. P1.1-P1.3 are In review; P1.4 manual project-editor accessibility acceptance is In progress. The phase epic remains In progress until review, acceptance, and merge. See docs/implementation-status.md and docs/phase-1-exit-review.md.
 
-#### Restart bookmark (updated 2026-11-07 22:30 IST)
+#### Restart bookmark (updated 2026-11-07 22:40 IST)
 
-Verified: P3.3 (Issue #18: Project CLI contract and CI examples) implemented and verified on branch `phase3-project-cli-and-ci`.
-- `Program.cs` (`api-wrangler` CLI) adds `init` (canonical project scaffolding with `ProjectRepository.InitializeAsync`), `validate` (schema and reference integrity check), and enhanced `run` command with deterministic exit codes (0 for pass, 1 for failed assertions, 2 for invalid configuration/project, 3 for infrastructure/transport errors, 4 for cancellation, 5 for missing dependencies).
-- `VariableResolver.cs` supports host environment variable secret resolution (`API_WRANGLER_SECRET_<KEY>` or `<KEY>`), enabling noninteractive CI runs without interactive DPAPI keys.
-- CI integration documentation and example workflows added under `docs/ci/` (`README.md`, `github-actions.md`, `generic-shell.md`, `windows-runner.md`, `linux-runner.md`) and `.github/workflows/regression-example.yml` with failure artifact retention (`if: always()`) and security best practices (no untrusted pull-request secret exposure, no `pull_request_target`).
-- `CliContractTests.cs` integration test suite validates `init`, `validate`, `run` with reporters, exit code precedence, and host environment secret resolution.
-- Consolidated batched verification: Release solution build passed with 0 warnings/errors; `dotnet test` passed 90 tests (0 failed, 4 skipped Node tests); desktop smoke passed (`Test-Desktop.ps1`); `dotnet format --verify-no-changes` passed.
+Verified: P3.4 (Issue #59: Exact immutable snapshot execution) implemented and verified on branch `phase3-immutable-snapshot-execution`.
+- `ProjectSnapshots.CreateAsync` and `IProjectSession.SnapshotAsync` extended to support explicit dirty drafts (`EditorDraft`), writing draft contents to the immutable snapshot without mutating saved project files on disk.
+- Desktop (`MainViewModel.cs`) and CLI (`Program.cs`) collection execution execute against the captured immutable snapshot directory, preventing subsequent file modifications on disk from altering run results.
+- `CollectionRunner.cs` captures snapshot metadata (`SnapshotHash`, `GitCommit`, `IsDirty`) in `CollectionExecutionReport` and reporters while omitting secret values.
+- `SnapshotExecutionTests.cs` validates that concurrent project edits on disk do not affect running collections and that in-memory dirty drafts execute cleanly without overwriting disk files.
+- Consolidated batched verification: Release solution build passed with 0 warnings/errors; `dotnet test` passed 92 tests (0 failed, 4 skipped Node tests); desktop smoke passed (`Test-Desktop.ps1`); `dotnet format --verify-no-changes` passed.
 
-Next: commit and push branch `phase3-project-cli-and-ci`, create PR #67, squash-merge into `main`, mark P3.3 Done in Project 4, and proceed directly to P3.4 / Phase 3 exit review.
+Next: commit and push branch `phase3-immutable-snapshot-execution`, create PR #68, squash-merge into `main`, mark P3.4 Done in Project 4, and perform Phase 3 parent epic (#15) exit review.
 
-Handoff: working tree ready for commit and push on `phase3-project-cli-and-ci`.
+Handoff: working tree ready for commit and push on `phase3-immutable-snapshot-execution`.
 
 During active work, publish a 2-3 line status at least every 10 minutes, refresh this bookmark at least every 30 minutes and at handoff, and synchronize GitHub issues at material checkpoints. Run builds or tests only for a concrete risk or required gate and batch related checks.
 ### Phase 2 — HTTP testing workbench

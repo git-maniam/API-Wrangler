@@ -11,6 +11,7 @@ public sealed class CollectionRunner(HttpRequestService httpService)
         Guid collectionId,
         CollectionExecutionOptions? options = null,
         VariableContext? baseContext = null,
+        SnapshotInfo? snapshot = null,
         CancellationToken cancellationToken = default)
     {
         var opts = options ?? new CollectionExecutionOptions();
@@ -287,6 +288,9 @@ public sealed class CollectionRunner(HttpRequestService httpService)
             passedRequests,
             failedRequests,
             failureError,
+            GitCommit: snapshot?.Commit,
+            IsDirty: snapshot?.Dirty ?? false,
+            SnapshotHash: snapshot?.Id,
             OsArchitecture: osArch);
     }
 
