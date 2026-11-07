@@ -15,6 +15,20 @@ public sealed class VariableContext
     public ISecretStore? SecretStore { get; init; }
     public Dictionary<string, string> DirectSecrets { get; init; } = new(StringComparer.OrdinalIgnoreCase);
     public DynamicValueContext DynamicContext { get; init; } = new();
+
+    public VariableContext Clone() => new()
+    {
+        RequestLocal = new(RequestLocal, StringComparer.Ordinal),
+        IterationData = new(IterationData, StringComparer.Ordinal),
+        RunOverrides = new(RunOverrides, StringComparer.Ordinal),
+        LocalEnvironment = new(LocalEnvironment, StringComparer.Ordinal),
+        Environment = new(Environment, StringComparer.Ordinal),
+        Collection = new(Collection, StringComparer.Ordinal),
+        ProjectDefaults = new(ProjectDefaults, StringComparer.Ordinal),
+        SecretStore = SecretStore,
+        DirectSecrets = new(DirectSecrets, StringComparer.OrdinalIgnoreCase),
+        DynamicContext = DynamicContext with { }
+    };
 }
 
 public sealed partial class VariableResolver

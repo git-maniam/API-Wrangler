@@ -2532,17 +2532,18 @@ Do not begin distributed infrastructure before these decisions are settled.
 
 **Implementation checkpoint (2026-11-07):** Phase 1 project discovery, versioned schemas, canonical assets, journaled persistence, watcher/recovery behavior, snapshots, local settings, and a desktop asset editor are implemented in PR #57. The five Phase 1 exit checks pass locally. After the Linux writer-lease fix, hosted Windows and Linux headless jobs each passed 30 tests with zero skipped; desktop build, format, and publish passed. ADR-0002 defines version 1 as the first supported format. P1.1-P1.3 are In review; P1.4 manual project-editor accessibility acceptance is In progress. The phase epic remains In progress until review, acceptance, and merge. See docs/implementation-status.md and docs/phase-1-exit-review.md.
 
-#### Restart bookmark (updated 2026-11-07 22:00 IST)
+#### Restart bookmark (updated 2026-11-07 22:07 IST)
 
-Verified: Phase 2 (HTTP testing workbench) is complete.
-- Sub-issues P2.1 (#12), P2.2 (#13), P2.3 (#14), and P2.4 (#54) implemented, verified, and merged into `main`.
-- All 5 Phase 2 specification exit criteria pass; see `docs/phase-2-exit-review.md`.
-- Epic #11 and all 4 child issues are verified and closed.
-- Consolidated batched verification: Release solution build passed with 0 warnings/errors; `dotnet test` passed 76 tests (0 failed, 4 skipped Node tests); desktop smoke passed (`Test-Desktop.ps1`); `dotnet format --verify-no-changes` passed.
+Verified: P3.1 (Issue #16: Collection lifecycle, isolated iterations, and bounded flow control) implemented and verified on branch `phase3-collections-and-flow-control`.
+- `ExecutionModels.cs` defines `RunStatus`, `TeardownPolicy`, `CollectionExecutionOptions`, `CollectionExecutionReport`, `IterationExecutionRecord`, and `RequestExecutionRecord`.
+- `CollectionRunner.cs` implements headless collection orchestration with setup/teardown lifecycle, configurable teardown policy (`Always`, `OnFailure`, `OnSuccess`), concurrency management, deep-cloned iteration scopes (`VariableContext.Clone()`), loop budget protection (50-iteration ceiling), request selection filtering, and graceful/forced cancellation.
+- `Program.cs` in `ApiWrangler.Cli` adds the `run` command supporting `--project`, `--collection`, `--environment`, `--iterations`, `--concurrency`, `--stop-on-failure`, `--delay-ms`, and `--teardown`.
+- `MainViewModel.cs` exposes collection execution in the desktop workbench.
+- Consolidated batched verification: Release solution build passed with 0 warnings/errors; `dotnet test` passed 80 tests (0 failed, 4 skipped Node tests); desktop smoke passed (`Test-Desktop.ps1`); `dotnet format --verify-no-changes` passed.
 
-Next: Phase 3 (Collections and assertions, parent epic #15). P3.1 (#16: Collection/folder hierarchy and ordered execution engine).
+Next: create PR for P3.1, link issue #16, merge into `main`, mark P3.1 Done in Project 4, and proceed directly to P3.2 (issue #17: Typed assertions, result aggregation, and evidence browser).
 
-Handoff: working tree clean on `main`, Phase 2 fully landed.
+Handoff: working tree ready for commit and push on `phase3-collections-and-flow-control`.
 
 During active work, publish a 2-3 line status at least every 10 minutes, refresh this bookmark at least every 30 minutes and at handoff, and synchronize GitHub issues at material checkpoints. Run builds or tests only for a concrete risk or required gate and batch related checks.
 ### Phase 2 — HTTP testing workbench

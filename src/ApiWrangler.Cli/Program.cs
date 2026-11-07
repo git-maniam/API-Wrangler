@@ -1,9 +1,11 @@
 using System.CommandLine;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using ApiWrangler.Application;
 using ApiWrangler.Domain;
 using ApiWrangler.Execution;
+using ApiWrangler.Storage;
 
 var json = new JsonSerializerOptions(JsonSerializerDefaults.Web) { WriteIndented = true };
 json.Converters.Add(new JsonStringEnumConverter());
@@ -99,5 +101,97 @@ node.SetAction(async (parse, token) =>
     { Console.Error.WriteLine("Worker failed its protocol or exited unexpectedly."); return 3; }
 });
 root.Subcommands.Add(node);
+
+var run = new Command("run", "Execute an API Wrangler test collection with lifecycle, isolated iterations, and flow control.");
+var runProj = new Option<DirectoryInfo>("--project") { DefaultValueFactory = _ => new DirectoryInfo(Directory.GetCurrentDirectory()), Description = "Project directory containing wrangler.json" };
+var runColl = new Option<string>("--collection") { Required = true, Description = "Collection name or ID to execute" };
+var runEnv = new Option<string?>("--environment") { Description = "Environment name or ID to apply" };
+var runIter = new Option<int>("--iterations") { DefaultValueFactory = _ => 1, Description = "Number of iterations to execute" };
+var runConcurrency = new Option<int>("--concurrency") { DefaultValueFactory = _ => 1, Description = "Maximum concurrent iterations" };
+var runStopOnFail = new Option<bool>("--stop-on-failure") { DefaultValueFactory = _ => false, Description = "Stop executing requests upon first failure" };
+var runDelay = new Option<int>("--delay-ms") { DefaultValueFactory = _ => 0, Description = "Delay in milliseconds between requests" };
+var runTeardown = new Option<string>("--teardown") { DefaultValueFactory = _ => "Always", Description = "Teardown policy: Always, OnFailure, OnSuccess" };
+var runArtifacts = new Option<DirectoryInfo>("--output")
+{
+    DefaultValueFactory = _ => new DirectoryInfo(Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ApiWrangler", "runs"))
+};
+
+foreach (var opt in new Option[] { runProj, runColl, runEnv, runIter, runConcurrency, runStopOnFail, runDelay, runTeardown, runArtifacts })
+    run.Options.Add(opt);
+
+run.SetAction(async (parse, token) =>
+{
+    try
+    {
+        var projDir = parse.GetValue(runProj)!.FullName;
+        var repo = new ProjectRepository();
+        await using var session = await repo.OpenAsync(projDir, writable: false, token: token);
+        var view = await session.ReadAsync(token);
+        if (!view.IsValid)
+        {
+            Console.Error.WriteLine("Project validation failed.");
+            foreach (var diag in view.Diagnostics)
+                Console.Error.WriteLine($" - {diag.File}: {diag.Message}");
+            return 2;
+        }
+
+        var collParam = parse.GetValue(runColl)!;
+        var collAsset = view.Assets.FirstOrDefault(a => a.Kind == AssetKind.Collection &&
+            (string.Equals(a.Name, collParam, StringComparison.OrdinalIgnoreCase) ||
+             string.Equals(a.Id, collParam, StringComparison.OrdinalIgnoreCase)));
+
+        if (collAsset is null || !Guid.TryParse(collAsset.Id, out var collectionId))
+        {
+            Console.Error.WriteLine($"Collection '{collParam}' not found in project.");
+            return 2;
+        }
+
+        var baseContext = new VariableContext();
+        var envParam = parse.GetValue(runEnv);
+        if (!string.IsNullOrEmpty(envParam))
+        {
+            var envAsset = view.Assets.FirstOrDefault(a => a.Kind == AssetKind.Environment &&
+                (string.Equals(a.Name, envParam, StringComparison.OrdinalIgnoreCase) ||
+                 string.Equals(a.Id, envParam, StringComparison.OrdinalIgnoreCase)));
+            if (envAsset?.Content["variables"] is JsonObject envVars)
+            {
+                foreach (var kvp in envVars)
+                {
+                    if (kvp.Value is JsonValue jv) baseContext.Environment[kvp.Key] = jv.ToString();
+                }
+            }
+        }
+
+        var teardownStr = parse.GetValue(runTeardown) ?? "Always";
+        var teardownPolicy = Enum.TryParse<TeardownPolicy>(teardownStr, true, out var tp) ? tp : TeardownPolicy.Always;
+
+        var options = new CollectionExecutionOptions
+        {
+            Iterations = parse.GetValue(runIter),
+            Concurrency = parse.GetValue(runConcurrency),
+            StopOnFailure = parse.GetValue(runStopOnFail),
+            DelayBetweenRequestsMs = parse.GetValue(runDelay),
+            TeardownPolicy = teardownPolicy
+        };
+
+        using var transport = new HttpTransport(parse.GetValue(runArtifacts)!.FullName);
+        var httpService = new HttpRequestService(transport);
+        var runner = new CollectionRunner(httpService);
+
+        var report = await runner.ExecuteCollectionAsync(view, collectionId, options, baseContext, token);
+        Console.WriteLine(JsonSerializer.Serialize(report, json));
+
+        return report.Status switch
+        {
+            RunStatus.Passed => 0,
+            RunStatus.Cancelled => 4,
+            _ => 3
+        };
+    }
+    catch (OperationCanceledException) { Console.Error.WriteLine("Run cancelled."); return 4; }
+    catch (Exception ex) { Console.Error.WriteLine($"Run error: {ex.Message}"); return 3; }
+});
+root.Subcommands.Add(run);
 
 return await root.Parse(args).InvokeAsync();
