@@ -1,6 +1,6 @@
 # Phase 1 exit review (2026-11-07)
 
-Status: the five specification exit checks pass locally on Windows x64. Phase 1 remains In progress because manual Narrator/keyboard/high-contrast review, ticket acceptance gaps, and review/merge are still open.
+Status: the five specification exit checks pass locally on Windows x64. PR #57 is open for review. Phase 1 remains In progress because manual Narrator/keyboard/high-contrast review, ticket acceptance gaps, and merge are still open.
 
 | Specification exit check | Evidence |
 |---|---|
@@ -18,6 +18,6 @@ Project editor accessibility checkpoint: path and asset selectors have access-ke
 
 Ticket review: P1.1's three criteria have local evidence. P1.2's write/recovery and writer-ownership criteria have local evidence; migration preview/backup execution remains scoped to the first actual schema transition by ADR-0002. P1.3's clean reload, dirty conflict, and snapshot criteria have local evidence. Watcher overflow full-rescan signaling is verified; branch/cache invalidation waits for a project cache. Snapshot tests verify captured project bytes and hashed metadata without secret values; run execution does not yet consume snapshots.
 
-Remaining for Phase 1 acceptance: complete manual accessibility review, reconcile the scoped P1.2/P1.3 criteria with ticket acceptance, and merge reviewed changes. Local uncommitted changes and this review do not make the GitHub tickets Done.
+Remaining for Phase 1 acceptance: complete manual accessibility review, reconcile the scoped P1.2/P1.3 criteria with ticket acceptance, and merge reviewed changes. The reviewable PR does not make the GitHub tickets Done.
 
 Manual desktop review on Windows 11 x64: use only the keyboard to open a project and select an asset; move between the draft and disk panes; trigger Save, Use disk, and Use draft by access key; and verify focus and status announcements during an external-edit conflict with Narrator. Repeat with Windows high contrast and 150% display scaling, checking that text, buttons, and the status remain visible. Record the results before treating accessibility acceptance as verified.
