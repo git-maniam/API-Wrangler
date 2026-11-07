@@ -1,13 +1,15 @@
 # API Wrangler
 
-A local-first Windows API testing workbench with a shared headless engine. The Phase 0 foundation is available, and the Phase 1 project-format and persistence work is in review. Neither product milestone has been reached. See [implementation status](docs/implementation-status.md) and the [product specification](api-wrangler-prod-spec.md).
+A local-first Windows API testing workbench with a shared headless engine. The Phase 0 foundation is available, Phase 1 core storage is merged into `main`, and Phase 2 HTTP workbench implementation is active. Neither product milestone has been reached. See [implementation status](docs/implementation-status.md) and the [product specification](api-wrangler-prod-spec.md).
 
 ## Current status
 
-- The WPF desktop shell can edit and send basic HTTP requests, inspect bounded responses, cancel an active request, and display a read-only 100,000-case grid. The CLI has `send`, `git-probe`, and `node-probe` feasibility commands.
-- Version-1 project schemas, discovery, canonical JSON, journaled saves, writer ownership, recovery, watching, local settings, immutable saved-file snapshots, and a desktop JSON asset editor are implemented in [PR #57](https://github.com/git-maniam/API-Wrangler/pull/57). The editor preserves drafts, reloads clean files, and requires a choice when a draft conflicts with disk.
-- The five Phase 1 specification exit checks pass locally. After the Linux writer-lease fix, hosted Windows and Linux headless jobs each passed 30 tests with zero skipped; desktop build, format, and publish passed. [Phase 1 exit review](docs/phase-1-exit-review.md) records the evidence and limits.
-- P1.1-P1.3 are **In review** on PR #57, with passing checks and no review yet. The Phase 1 epic remains **In progress**: manual Windows 11 keyboard, Narrator, high-contrast, and DPI review is [Ready in #58](https://github.com/git-maniam/API-Wrangler/issues/58). Separate Phase 0 private HTTPS/SSH acceptance is [Ready in #6](https://github.com/git-maniam/API-Wrangler/issues/6). No Phase 1 ticket is Done before review, acceptance, and merge.
+- The WPF desktop shell features a persistent HTTP request workbench, project asset editor with draft recovery and conflict decisions, variable resolution, and a read-only 100,000-case grid. The CLI has `send`, `git-probe`, and `node-probe` commands.
+- Phase 1 core storage (version-1 project schemas, discovery, canonical JSON, journaled saves, writer ownership, recovery, watching, local settings, immutable snapshots, and desktop asset editor) is verified and merged into `main` ([PR #57](https://github.com/git-maniam/API-Wrangler/pull/57)). P1.1–P1.3 are **Done**; manual accessibility acceptance remains open in [#58](https://github.com/git-maniam/API-Wrangler/issues/58).
+- Phase 2 HTTP workbench is **In progress**:
+  - **P2.1 (#12):** Persistent request workbench, repeated headers/query params, multipart/urlencoded/file bodies, compression, cookies, TLS override, and cross-origin redirect auth stripping $\rightarrow$ **Done** ([PR #61](https://github.com/git-maniam/API-Wrangler/pull/61)).
+  - **P2.2 (#13):** Variable scopes (hierarchy lookup), bounded nesting, cycle detection, explicit `{{secret:...}}` namespace, Windows DPAPI secret store, deterministic dynamic helpers, and redaction engine $\rightarrow$ **Done** ([PR #62](https://github.com/git-maniam/API-Wrangler/pull/62)).
+  - **P2.3 (#14):** Authentication flows and lifecycle $\rightarrow$ **In progress**.
 
 ## Overall plan
 
@@ -15,7 +17,7 @@ A local-first Windows API testing workbench with a shared headless engine. The P
 |---|---|---|
 | 0 | Shared engine, WPF shell, CLI and process probes, Windows x64 preview | Foundation implemented; private Git authentication, icon packaging, accessibility, and broader acceptance remain |
 | 1 | Versioned project format, safe persistence, watching, recovery, snapshots | [PR #57](https://github.com/git-maniam/API-Wrangler/pull/57) in review; [accessibility review #58](https://github.com/git-maniam/API-Wrangler/issues/58) ready |
-| 2-5 | Persistent HTTP workbench, variables/secrets/auth, collections/assertions/CLI, datasets, Git collaboration | Planned as **Milestone A**, a usable team HTTP regression product |
+| 2-5 | Persistent HTTP workbench, variables/secrets/auth, collections/assertions/CLI, datasets, Git collaboration | Phase 2 is **In progress with Gemini**; planned as **Milestone A**, a usable team HTTP regression product |
 | 6-9 | Trusted scripting/imports, GraphQL/gRPC/streaming, mocks/webhooks, local performance testing | Planned toward **Milestone B** |
 | 10-13 | Runners/control plane, distributed load, Playwright, contracts/docs, installer and release hardening | Complete **Milestone B**, the targeted developer-platform release |
 
