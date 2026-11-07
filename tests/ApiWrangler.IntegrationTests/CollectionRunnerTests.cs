@@ -167,6 +167,100 @@ public sealed class CollectionRunnerTests : IAsyncLifetime
         Assert.Equal(RunStatus.Cancelled, report.Status);
     }
 
+    [Fact]
+    public async Task Collection_WithFailedAssertion_ProducesFailedStatus()
+    {
+        var collId = Guid.NewGuid();
+        var reqId = Guid.NewGuid();
+
+        var reqDef = new HttpRequestDefinition
+        {
+            Id = reqId,
+            Name = "Get Items With Expectation",
+            Url = origin + "/api/items",
+            Method = "GET",
+            Assertions =
+            [
+                new RequestAssertionDefinition
+                {
+                    Type = "status",
+                    Operator = "equals",
+                    Expected = 201 // Expect 201 Created, but /api/items returns 200 OK
+                }
+            ]
+        };
+
+        var project = new ProjectView(directory,
+        [
+            new ProjectAsset($"requests/{reqId:N}.request.json", AssetKind.Request, RequestAssetSerializer.ToJsonObject(reqDef), "hash"),
+            new ProjectAsset("collections/test.collection.json", AssetKind.Collection, new JsonObject
+            {
+                ["schemaVersion"] = 1,
+                ["id"] = collId.ToString(),
+                ["name"] = "Assertion Failure Collection",
+                ["requestIds"] = new JsonArray { reqId.ToString() }
+            }, "hash")
+        ], []);
+
+        var runner = new CollectionRunner(service);
+        var report = await runner.ExecuteCollectionAsync(project, collId);
+
+        Assert.Equal(RunStatus.Failed, report.Status);
+        Assert.Equal(1, report.FailedRequests);
+        var reqRecord = report.Iterations[0].Requests[0];
+        Assert.Equal(ExecutionOutcome.Failed, reqRecord.Outcome);
+        Assert.Single(reqRecord.Assertions);
+        Assert.False(reqRecord.Assertions[0].Passed);
+    }
+
+    [Fact]
+    public async Task Collection_TeardownError_SurvivesAggregateCalculation()
+    {
+        var collId = Guid.NewGuid();
+        var reqId = Guid.NewGuid();
+        var tdId = Guid.NewGuid();
+
+        var passReq = new HttpRequestDefinition
+        {
+            Id = reqId,
+            Name = "Passing Request",
+            Url = origin + "/api/items",
+            Method = "GET"
+        };
+
+        var failingTdReq = new HttpRequestDefinition
+        {
+            Id = tdId,
+            Name = "Failing Teardown Request",
+            Url = origin + "/api/fail",
+            Method = "GET"
+        };
+
+        var project = new ProjectView(directory,
+        [
+            new ProjectAsset($"requests/{reqId:N}.request.json", AssetKind.Request, RequestAssetSerializer.ToJsonObject(passReq), "hash"),
+            new ProjectAsset($"requests/{tdId:N}.request.json", AssetKind.Request, RequestAssetSerializer.ToJsonObject(failingTdReq), "hash"),
+            new ProjectAsset("collections/test.collection.json", AssetKind.Collection, new JsonObject
+            {
+                ["schemaVersion"] = 1,
+                ["id"] = collId.ToString(),
+                ["name"] = "Teardown Error Collection",
+                ["requestIds"] = new JsonArray { reqId.ToString() },
+                ["teardownRequestIds"] = new JsonArray { tdId.ToString() }
+            }, "hash")
+        ], []);
+
+        var runner = new CollectionRunner(service);
+        var report = await runner.ExecuteCollectionAsync(project, collId);
+
+        // Even though the iteration passed, teardown failure must survive aggregate calculation!
+        Assert.Equal(RunStatus.Failed, report.Status);
+        Assert.Equal(1, report.PassedRequests);
+        Assert.Equal(1, report.FailedRequests);
+        Assert.Single(report.TeardownResults);
+        Assert.Equal(ExecutionOutcome.Failed, report.TeardownResults[0].Outcome);
+    }
+
     private ProjectView CreateTestProjectView(Guid collId, List<Guid> requestIds, List<Guid>? setupIds = null, List<Guid>? teardownIds = null)
     {
         var assets = new List<ProjectAsset>();

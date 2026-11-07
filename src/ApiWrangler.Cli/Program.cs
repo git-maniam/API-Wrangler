@@ -111,13 +111,15 @@ var runConcurrency = new Option<int>("--concurrency") { DefaultValueFactory = _ 
 var runStopOnFail = new Option<bool>("--stop-on-failure") { DefaultValueFactory = _ => false, Description = "Stop executing requests upon first failure" };
 var runDelay = new Option<int>("--delay-ms") { DefaultValueFactory = _ => 0, Description = "Delay in milliseconds between requests" };
 var runTeardown = new Option<string>("--teardown") { DefaultValueFactory = _ => "Always", Description = "Teardown policy: Always, OnFailure, OnSuccess" };
+var runReporters = new Option<string>("--reporters") { DefaultValueFactory = _ => "console", Description = "Comma-separated reporters: console, json, junit, markdown, html" };
+var runReportDir = new Option<DirectoryInfo?>("--report-dir") { Description = "Directory to save report artifacts (junit.xml, report.json, report.html, report.md)" };
 var runArtifacts = new Option<DirectoryInfo>("--output")
 {
     DefaultValueFactory = _ => new DirectoryInfo(Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ApiWrangler", "runs"))
 };
 
-foreach (var opt in new Option[] { runProj, runColl, runEnv, runIter, runConcurrency, runStopOnFail, runDelay, runTeardown, runArtifacts })
+foreach (var opt in new Option[] { runProj, runColl, runEnv, runIter, runConcurrency, runStopOnFail, runDelay, runTeardown, runReporters, runReportDir, runArtifacts })
     run.Options.Add(opt);
 
 run.SetAction(async (parse, token) =>
@@ -180,11 +182,39 @@ run.SetAction(async (parse, token) =>
         var runner = new CollectionRunner(httpService);
 
         var report = await runner.ExecuteCollectionAsync(view, collectionId, options, baseContext, token);
-        Console.WriteLine(JsonSerializer.Serialize(report, json));
+
+        var reportersList = (parse.GetValue(runReporters) ?? "console")
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(r => r.ToLowerInvariant())
+            .ToList();
+
+        var reportDir = parse.GetValue(runReportDir);
+        if (reportDir is not null)
+        {
+            reportDir.Create();
+            if (reportersList.Contains("json"))
+                await File.WriteAllTextAsync(Path.Combine(reportDir.FullName, "report.json"), new JsonReporter().GenerateReport(report), token);
+            if (reportersList.Contains("junit"))
+                await File.WriteAllTextAsync(Path.Combine(reportDir.FullName, "junit.xml"), new JUnitReporter().GenerateReport(report), token);
+            if (reportersList.Contains("html"))
+                await File.WriteAllTextAsync(Path.Combine(reportDir.FullName, "report.html"), new HtmlReporter().GenerateReport(report), token);
+            if (reportersList.Contains("markdown"))
+                await File.WriteAllTextAsync(Path.Combine(reportDir.FullName, "report.md"), new MarkdownReporter().GenerateReport(report), token);
+        }
+
+        if (reportersList.Contains("console"))
+        {
+            Console.WriteLine(new ConsoleReporter().GenerateReport(report));
+        }
+        else if (reportersList.Contains("json") && reportDir is null)
+        {
+            Console.WriteLine(new JsonReporter().GenerateReport(report));
+        }
 
         return report.Status switch
         {
             RunStatus.Passed => 0,
+            RunStatus.Failed => 1,
             RunStatus.Cancelled => 4,
             _ => 3
         };

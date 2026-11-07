@@ -38,6 +38,7 @@ public partial class MainViewModel(
     [ObservableProperty] private ProjectAsset? selectedEnvironment;
     [ObservableProperty] private ProjectAsset? selectedCollection;
     [ObservableProperty] private string collectionExecutionStatus = "";
+    [ObservableProperty] private CollectionExecutionReport? latestCollectionReport;
     [ObservableProperty] private string variablesInspectionText = "";
     [ObservableProperty] private string authType = "none";
     [ObservableProperty] private string authUsername = "";
@@ -104,6 +105,7 @@ public partial class MainViewModel(
             var varContext = BuildVariableContext();
 
             var report = await runner.ExecuteCollectionAsync(view, collectionId, baseContext: varContext, cancellationToken: token);
+            LatestCollectionReport = report;
             CollectionExecutionStatus = $"{report.Status}: {report.PassedRequests}/{report.TotalRequestsRun} requests passed ({report.Duration.TotalMilliseconds:F0} ms).";
             Status = $"Collection run {report.Status}: {report.PassedRequests}/{report.TotalRequestsRun} passed.";
         }

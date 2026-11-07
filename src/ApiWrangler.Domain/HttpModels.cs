@@ -47,6 +47,7 @@ public sealed record HttpRequestDefinition
     public int TimeoutMs { get; init; } = 30_000;
     public HttpTransportOptions TransportOptions { get; init; } = new();
     public RequestAuthDefinition Auth { get; init; } = new();
+    public IReadOnlyList<RequestAssertionDefinition> Assertions { get; init; } = [];
 }
 
 public sealed record ExecutionLimits
