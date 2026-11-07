@@ -2,7 +2,11 @@ using System.Text.Json;
 
 namespace ApiWrangler.Storage;
 
-public sealed record LocalSettings(string? LastProject = null);
+public sealed record LocalSettings(
+    string? LastProject = null,
+    string EditorFontFamily = "Segoe UI",
+    double EditorFontSize = 16.0);
+
 public sealed class LocalSettingsStore
 {
     private readonly string file;

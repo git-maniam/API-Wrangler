@@ -1,15 +1,21 @@
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Text.Json.Nodes;
+using System.Windows;
 using ApiWrangler.Application;
 using ApiWrangler.Domain;
+using ApiWrangler.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
 namespace ApiWrangler.Desktop;
 
-public partial class MainViewModel(HttpRequestService requests, ProjectEditorViewModel projectEditor) : ObservableObject
+public partial class MainViewModel(
+    HttpRequestService requests,
+    ProjectEditorViewModel projectEditor,
+    LocalSettingsStore? settingsStore = null) : ObservableObject
 {
+    private readonly LocalSettingsStore settingsStore = settingsStore ?? new LocalSettingsStore();
     public ProjectEditorViewModel ProjectEditor { get; } = projectEditor;
 
     [ObservableProperty] private string requestName = "Untitled request";
@@ -39,6 +45,26 @@ public partial class MainViewModel(HttpRequestService requests, ProjectEditorVie
     [ObservableProperty] private string authApiKeyValue = "";
     [ObservableProperty] private string authApiKeyLocation = "header";
 
+    // P2.4 Structured formatting and typography
+    [ObservableProperty] private string editorFontFamily = "Segoe UI";
+    [ObservableProperty] private double editorFontSize = 16.0;
+    [ObservableProperty] private string responseViewMode = "Pretty";
+    [ObservableProperty] private string responseDiagnostic = "";
+    [ObservableProperty] private string rawResponseBody = "";
+    [ObservableProperty] private string responseHighlighting = "Json";
+    [ObservableProperty] private string requestHighlighting = "Json";
+    [ObservableProperty] private string requestBodyDiagnostic = "";
+
+    public string[] AvailableFontFamilies { get; } = ["Segoe UI", "Cascadia Code", "Consolas", "Courier New", "Lucida Console", "Fira Code"];
+    public double[] AvailableFontSizes { get; } = [10, 11, 12, 13, 14, 15, 16, 18, 20, 24];
+    public string[] ResponseViewModes { get; } = ["Pretty", "Raw"];
+
+    public Visibility RequestBodyDiagnosticVisibility =>
+        string.IsNullOrEmpty(RequestBodyDiagnostic) ? Visibility.Collapsed : Visibility.Visible;
+
+    public Visibility ResponseDiagnosticVisibility =>
+        string.IsNullOrEmpty(ResponseDiagnostic) ? Visibility.Collapsed : Visibility.Visible;
+
     public PagedDataset Dataset { get; } = new();
     public string[] Methods { get; } = ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"];
     public string[] BodyModes { get; } = ["raw", "none", "urlencoded", "form-data", "file"];
@@ -54,11 +80,120 @@ public partial class MainViewModel(HttpRequestService requests, ProjectEditorVie
     public IEnumerable<ProjectAsset> ProjectEnvironments =>
         ProjectEditor.Assets.Where(a => a.Kind == AssetKind.Environment);
 
+    partial void OnRequestBodyDiagnosticChanged(string value) =>
+        OnPropertyChanged(nameof(RequestBodyDiagnosticVisibility));
+
+    partial void OnResponseDiagnosticChanged(string value) =>
+        OnPropertyChanged(nameof(ResponseDiagnosticVisibility));
+
+    partial void OnEditorFontFamilyChanged(string value) =>
+        _ = UpdateFontPreferencesAsync(value, EditorFontSize);
+
+    partial void OnEditorFontSizeChanged(double value) =>
+        _ = UpdateFontPreferencesAsync(EditorFontFamily, value);
+
+    partial void OnResponseViewModeChanged(string value) =>
+        ApplyResponseViewMode();
+
+    partial void OnRequestBodyChanged(string value)
+    {
+        var fmt = StructuredTextEngine.DetectFormat(value);
+        RequestHighlighting = fmt == StructuredFormat.Json ? "Json"
+            : fmt == StructuredFormat.Xml ? "XML" : "None";
+    }
+
+    public async Task InitializeSettingsAsync(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var settings = await settingsStore.ReadAsync(cancellationToken).ConfigureAwait(true);
+            if (!string.IsNullOrEmpty(settings.EditorFontFamily))
+                EditorFontFamily = settings.EditorFontFamily;
+            if (settings.EditorFontSize >= 8 && settings.EditorFontSize <= 72)
+                EditorFontSize = settings.EditorFontSize;
+        }
+        catch
+        {
+            // Fall back to default Segoe UI 12 pt (16 px)
+        }
+    }
+
+    public async Task UpdateFontPreferencesAsync(string family, double size, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var existing = await settingsStore.ReadAsync(cancellationToken).ConfigureAwait(false);
+            var updated = existing with { EditorFontFamily = family, EditorFontSize = size };
+            await settingsStore.SaveAsync(updated, cancellationToken).ConfigureAwait(false);
+        }
+        catch
+        {
+            // Settings persistence failure should not disrupt active editing
+        }
+    }
+
+    [RelayCommand]
+    private void FormatRequestBody()
+    {
+        if (string.IsNullOrWhiteSpace(RequestBody))
+        {
+            RequestBodyDiagnostic = "";
+            return;
+        }
+
+        var beautify = StructuredTextEngine.Beautify(RequestBody);
+        if (beautify.Success)
+        {
+            RequestBody = beautify.Text;
+            RequestBodyDiagnostic = "";
+            RequestHighlighting = beautify.Format == StructuredFormat.Json ? "Json"
+                : beautify.Format == StructuredFormat.Xml ? "XML" : "None";
+        }
+        else
+        {
+            RequestBodyDiagnostic = beautify.Diagnostic ?? "Cannot format content";
+        }
+    }
+
+    private void ApplyResponseViewMode()
+    {
+        if (string.IsNullOrEmpty(RawResponseBody))
+        {
+            ResponseBody = "";
+            ResponseDiagnostic = "";
+            return;
+        }
+
+        if (string.Equals(ResponseViewMode, "Raw", StringComparison.OrdinalIgnoreCase))
+        {
+            ResponseBody = RawResponseBody;
+            ResponseDiagnostic = "";
+            ResponseHighlighting = "None";
+            return;
+        }
+
+        var beautify = StructuredTextEngine.Beautify(RawResponseBody);
+        if (beautify.Success)
+        {
+            ResponseBody = beautify.Text;
+            ResponseDiagnostic = "";
+            ResponseHighlighting = beautify.Format == StructuredFormat.Json ? "Json"
+                : beautify.Format == StructuredFormat.Xml ? "XML" : "None";
+        }
+        else
+        {
+            ResponseBody = RawResponseBody;
+            ResponseDiagnostic = beautify.Diagnostic ?? "Parse error";
+            ResponseHighlighting = "None";
+        }
+    }
+
     [RelayCommand]
     private void NewRequest()
     {
         CurrentRequestId = Guid.NewGuid();
         CurrentRequestPath = null;
+        SelectedProjectRequest = null;
         RequestName = "New request";
         RequestDescription = "";
         Method = "GET";
@@ -75,9 +210,12 @@ public partial class MainViewModel(HttpRequestService requests, ProjectEditorVie
         AuthApiKeyName = "X-Api-Key";
         AuthApiKeyValue = "";
         AuthApiKeyLocation = "header";
+        RawResponseBody = "";
         ResponseBody = "";
         ResponseHeaders = "";
         ResponseCookies = "";
+        ResponseDiagnostic = "";
+        RequestBodyDiagnostic = "";
         Status = "New request created.";
     }
 
@@ -86,16 +224,26 @@ public partial class MainViewModel(HttpRequestService requests, ProjectEditorVie
     {
         CurrentRequestId = null;
         CurrentRequestPath = null;
+        SelectedProjectRequest = null;
         RequestName = "";
         RequestDescription = "";
+        Method = "GET";
         Url = "";
         RequestQuery = "";
         RequestHeaders = "";
         RequestBody = "";
+        RawResponseBody = "";
         ResponseBody = "";
         ResponseHeaders = "";
         ResponseCookies = "";
+        ResponseDiagnostic = "";
+        RequestBodyDiagnostic = "";
         Status = "Workbench closed.";
+    }
+
+    partial void OnSelectedProjectRequestChanged(ProjectAsset? value)
+    {
+        if (value is not null) _ = LoadRequestAsync(value);
     }
 
     [RelayCommand]
@@ -157,8 +305,8 @@ public partial class MainViewModel(HttpRequestService requests, ProjectEditorVie
             RequestDescription = req.Description ?? "";
             Method = req.Method;
             Url = req.Url;
-            RequestQuery = string.Join(Environment.NewLine, req.Query.Where(q => q.Enabled).Select(q => $"{q.Name}={q.Value}"));
-            RequestHeaders = string.Join(Environment.NewLine, req.Headers.Where(h => h.Enabled).Select(h => $"{h.Name}: {h.Value}"));
+            RequestHeaders = string.Join(Environment.NewLine, req.Headers.Select(h => $"{h.Name}: {h.Value}"));
+            RequestQuery = string.Join(Environment.NewLine, req.Query.Select(q => $"{q.Name}={q.Value}"));
             if (req.BodyDefinition is not null)
             {
                 BodyMode = req.BodyDefinition.Mode;
@@ -178,7 +326,7 @@ public partial class MainViewModel(HttpRequestService requests, ProjectEditorVie
             AuthApiKeyName = req.Auth?.ApiKeyName ?? "X-Api-Key";
             AuthApiKeyValue = req.Auth?.ApiKeyValue ?? "";
             AuthApiKeyLocation = req.Auth?.ApiKeyLocation ?? "header";
-            Status = $"Loaded request: {req.Name} ({target.Path})";
+            Status = $"Loaded request {target.Path}.";
         }
         catch (Exception ex)
         {
@@ -195,6 +343,7 @@ public partial class MainViewModel(HttpRequestService requests, ProjectEditorVie
             var context = BuildVariableContext();
             var target = $"{Url} {RequestHeaders} {RequestQuery} {RequestBody}";
             var inspections = await resolver.InspectAsync(target, context);
+
             if (inspections.Count == 0)
             {
                 VariablesInspectionText = "No variable expressions found in this request.";
@@ -221,11 +370,15 @@ public partial class MainViewModel(HttpRequestService requests, ProjectEditorVie
             var varContext = BuildVariableContext();
             Status = "Sending…";
             ArtifactPath = "";
-            // Even validation and synchronous transport setup stay off the dispatcher.
             var result = await Task.Run(() => requests.SendAsync(request, variableContext: varContext, cancellationToken: token), token);
             Status = $"{result.Outcome} · HTTP {result.StatusCode?.ToString() ?? "—"} · {result.Duration.TotalMilliseconds:F0} ms · {result.BytesReceived:N0} bytes";
-            ResponseBody = result.Error ?? result.Preview;
-            if (result.PreviewTruncated) Status += " · preview truncated";
+            RawResponseBody = result.Error ?? result.Preview;
+            ApplyResponseViewMode();
+            if (result.PreviewTruncated)
+            {
+                Status += " · preview truncated";
+                ResponseDiagnostic = "Response preview truncated at configured limit (5 MiB). Showing raw content.";
+            }
             ResponseHeaders = string.Join(Environment.NewLine, result.Headers.Select(h => $"{h.Name}: {h.Value}"));
             if (result.Cookies is { Count: > 0 })
             {
