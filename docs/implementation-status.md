@@ -1,5 +1,9 @@
 # Implementation status
 
+## Phase 4 continuation (2026-11-07 22:46 IST)
+
+P4 and P4.1 (#19/#20) are In progress. `DelimitedDatasetReader` streams raw CSV/TSV/custom-delimited records with quoted multiline fields, escaped quotes, BOM handling, leading-zero and empty-string preservation, duplicate/empty-header and record-width validation, cancellation, and per-record bounds. One necessary focused invocation (`dotnet test tests/ApiWrangler.IntegrationTests -c Release --no-restore --filter FullyQualifiedName~DelimitedDatasetTests --verbosity minimal`) compiled affected projects and passed 11 tests, none skipped. No separate build or broad suite run. JSON/JSONL, preview/mapping, explicit conversion/null policies, stable case IDs, and transactional import remain; no Phase 4 acceptance claim. Existing unrelated whitespace changes are preserved.
+
 This is a working foundation increment, not completion of the full implementation plan. Neither Milestone A nor Milestone B has been reached.
 
 ## Completed behavior

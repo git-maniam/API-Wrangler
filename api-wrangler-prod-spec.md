@@ -2532,7 +2532,11 @@ Do not begin distributed infrastructure before these decisions are settled.
 
 **Implementation checkpoint (2026-11-07):** Phase 1 project discovery, versioned schemas, canonical assets, journaled persistence, watcher/recovery behavior, snapshots, local settings, and a desktop asset editor are implemented in PR #57. The five Phase 1 exit checks pass locally. After the Linux writer-lease fix, hosted Windows and Linux headless jobs each passed 30 tests with zero skipped; desktop build, format, and publish passed. ADR-0002 defines version 1 as the first supported format. P1.1-P1.3 are In review; P1.4 manual project-editor accessibility acceptance is In progress. The phase epic remains In progress until review, acceptance, and merge. See docs/implementation-status.md and docs/phase-1-exit-review.md.
 
-#### Restart bookmark (updated 2026-11-07 22:42 IST)
+#### Restart bookmark (updated 2026-11-07 22:46 IST)
+
+Current continuation: Phase 4 and P4.1 (#19/#20) are In progress. The streaming delimited dataset parser is implemented; one focused Release test invocation passed all 11 cases (0 skipped), compiling affected projects without a separate build. It preserves quoted multiline values, escaped quotes, leading zeros, and empty strings; validates headers/record widths/quoting; supports explicit delimiters, BOM, cancellation, and record-size bounds. Next: JSON/JSONL, preview/mapping, explicit conversions, stable case IDs, and transactional import. Preserve the 14 pre-existing trailing-blank-line edits. Prior Phase 3 verification below is historical; the current working tree is not clean.
+
+Execution rules: Tests must run only when absolutely necessary to resolve a concrete failure or satisfy a required acceptance gate. Batch all relevant test parameters (projects, frameworks, filters, configurations) into as few invocations as possible for lower token usage and faster execution. Build only when necessary for a substantive compile risk or required gate; reuse existing build results when valid. After each completed implementation step, update this Restart bookmark and the affected GitHub Project tickets together, in parallel where independent. Record verified results, remaining work, blockers, and IST time; do not report historical tests as newly executed.
 
 Verified: Phase 3 (Collections, Assertions, CLI, and Snapshot Execution) is 100% complete, fully verified, and merged into `main`.
 - All Phase 3 sub-issues are complete and marked Done in Project 4:
@@ -2546,9 +2550,9 @@ Verified: Phase 3 (Collections, Assertions, CLI, and Snapshot Execution) is 100%
 
 Next: Begin Phase 4 (Datasets, Data-driven runs, and Clipboard operations) starting with P4.1 (Issue #20: Delimited dataset parsing, preview, and column mapping).
 
-Handoff: System ready for clean restart. Working tree clean on `main` branch.
+Previous handoff: Gemini recorded a clean `main`; the continuation state above supersedes that working-tree claim.
 
-During active work, publish a 2-3 line status at least every 10 minutes, refresh this bookmark at least every 30 minutes and at handoff, and synchronize GitHub issues at material checkpoints. Run builds or tests only for a concrete risk or required gate and batch related checks.
+During active work, publish concise progress updates and refresh this bookmark and affected GitHub Project tickets after each completed step, in parallel where independent, and at handoff. Run builds or tests only when absolutely necessary and batch related checks as specified above.
 ### Phase 2 — HTTP testing workbench
 
 **Build:**
