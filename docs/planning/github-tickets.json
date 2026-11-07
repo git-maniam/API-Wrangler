@@ -110,6 +110,7 @@
       "acceptance": [
         "Windows and Linux tests run with Node tests enabled and explicit pass/fail evidence.",
         "Self-contained x64 preview runs; package generation preserves locked restores.",
+        "Desktop executable and windows use App-Icon.png-derived icon resources; preview packaging shows the icon in taskbar and Alt-Tab at common sizes.",
         "Document all phase-0 evidence, unresolved gates, and requirement links; ARM64 is explicitly deferred."
       ],
       "progress": "Implemented in part and verified locally; changes are uncommitted. See local docs/implementation-status.md. Review, merge, and remaining acceptance checks are still pending."
@@ -239,6 +240,7 @@
         "Complete P2.1: Persistent request workbench and complete HTTP transport controls.",
         "Complete P2.2: Variable scopes, local secrets, and deterministic data helpers.",
         "Complete P2.3: Required authentication flows and lifecycle.",
+        "Complete P2.4: Type-aware structured editors, viewers, and font preferences.",
         "Attach meaningful executed verification, update living documentation, and review phase exit criteria.",
         "Do not close this epic until all required sub-issues are verified and merged."
       ]
@@ -304,6 +306,28 @@
         "Local fixtures verify success, expiry, refresh, rejection, and cancellation.",
         "Credentials stay host-local and out of Git/diagnostics.",
         "Imported unsupported authentication is rejected before execution."
+      ]
+    },
+    {
+      "key": "P2.4",
+      "title": "[P2.4] Type-aware structured editors, viewers, and font preferences",
+      "kind": "task",
+      "parent": "P2",
+      "phase": 2,
+      "milestone": "Milestone A — Team HTTP regression",
+      "status": "Backlog",
+      "priority": "P1",
+      "size": "L",
+      "spec": "3.2.1, 8.4–8.5, 26.2",
+      "dependsOn": [
+        "P1"
+      ],
+      "description": "Add shared type-aware formatting and syntax highlighting to project assets, request bodies, response views, and other structured-text surfaces; provide locally persisted editor font preferences.",
+      "acceptance": [
+        "JSON, YAML, and other supported structured formats have readable type-specific beautified and raw views; malformed content has a useful diagnostic.",
+        "Beautification never silently rewrites saved content or changes semantic values; large response limits remain enforced.",
+        "Light, dark, and high-contrast themes keep token meaning readable without color alone.",
+        "Segoe UI 12 pt is the default; users can select font family and size and the preference persists locally."
       ]
     },
     {
@@ -408,6 +432,7 @@
       "acceptance": [
         "Complete P4.1: Streaming imports and explicit type/null semantics.",
         "Complete P4.2: Editable virtualized grid, clipboard workflows, and export.",
+        "Complete P4.3: Color-highlighted CSV and JSON dataset previews.",
         "Attach meaningful executed verification, update living documentation, and review phase exit criteria.",
         "Do not close this epic until all required sub-issues are verified and merged."
       ]
@@ -452,6 +477,29 @@
         "100,000-row view remains responsive while editing/pasting.",
         "Sorting does not silently reorder source files; pasted commands never execute.",
         "Spreadsheet-safe export preserves native values; external results retain provenance and are not labeled as Wrangler executions."
+      ]
+    },
+    {
+      "key": "P4.3",
+      "title": "[P4.3] Color-highlighted CSV and JSON dataset previews",
+      "kind": "task",
+      "parent": "P4",
+      "phase": 4,
+      "milestone": "Milestone A — Team HTTP regression",
+      "status": "Backlog",
+      "priority": "P1",
+      "size": "M",
+      "spec": "3.2.1, 10",
+      "dependsOn": [
+        "P2.4",
+        "P4.1"
+      ],
+      "description": "Present CSV, TSV, JSON, and JSON Lines dataset sources with type-specific formatting and color cues in import, mapping, and source previews.",
+      "acceptance": [
+        "CSV/TSV previews clearly distinguish headers, delimiters, quoted fields, and invalid cells while preserving exact raw delimiters, quoting, and values.",
+        "JSON and JSON Lines previews use type-aware indentation and token colors, show parse locations, and retain exact raw source.",
+        "Large datasets remain bounded and virtualized; preview formatting never mutates imports or exports.",
+        "Preview typography follows the user's locally persisted editor font preference and remains readable in all supported themes."
       ]
     },
     {
@@ -641,6 +689,7 @@
       "acceptance": [
         "Complete P7.1: GraphQL and gRPC editors, adapters, and contracts.",
         "Complete P7.2: WebSocket and SSE sessions and bounded transcripts.",
+        "Complete P7.3: Formatted and syntax-highlighted GraphQL documents.",
         "Attach meaningful executed verification, update living documentation, and review phase exit criteria.",
         "Do not close this epic until all required sub-issues are verified and merged."
       ]
@@ -685,6 +734,28 @@
         "Large/continuous streams remain bounded and cancellable.",
         "Transcript completion/failure is explicit rather than faked as an HTTP response.",
         "Exports clearly disclose unsupported protocol conversions."
+      ]
+    },
+    {
+      "key": "P7.3",
+      "title": "[P7.3] Formatted and syntax-highlighted GraphQL documents",
+      "kind": "task",
+      "parent": "P7",
+      "phase": 7,
+      "milestone": "Milestone B — Complete required platform",
+      "status": "Backlog",
+      "priority": "P1",
+      "size": "M",
+      "spec": "3.2.1, 16.1, 26.2",
+      "dependsOn": [
+        "P2.4",
+        "P7.1"
+      ],
+      "description": "Format and syntax-highlight GraphQL operations, variables, and schema documents in editors and inspectors using the shared structured-text settings.",
+      "acceptance": [
+        "Queries, mutations, fragments, and SDL use readable formatting and distinct token colors for operations, types, fields, arguments, and values.",
+        "Raw GraphQL text remains available and formatting never silently changes saved or executed documents; syntax errors show useful locations.",
+        "Light, dark, and high-contrast presentation and user-selected font family/size follow the shared editor preference."
       ]
     },
     {
@@ -1105,6 +1176,7 @@
       "description": "Create per-user installer and portable ZIP, signing/checksums/SBOM/notices, upgrade/rollback, and validated operational manuals.",
       "acceptance": [
         "Fresh install/upgrade/uninstall preserves user data; Windows 11 x64 and Linux headless checks pass.",
+        "Installer-created Start menu and desktop shortcuts use the App-Icon.png-derived icon, verified on a fresh Windows installation.",
         "All specified performance, accessibility, offline, security, reliability, compatibility, and recovery gates have evidence.",
         "No critical placeholder ships; full capability matrix is reviewed before Milestone B closes."
       ]
