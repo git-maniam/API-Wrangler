@@ -151,6 +151,11 @@ internal static class DesktopDiagnostics
         if (model.Method != "GET" || model.RequestName != "New request")
             throw new InvalidOperationException("NewRequest did not initialize a fresh request.");
 
+        model.Url = "http://127.0.0.1:5057/echo/{{$guid}}";
+        await model.InspectVariablesCommand.ExecuteAsync(null);
+        if (!model.VariablesInspectionText.Contains("$guid", StringComparison.Ordinal))
+            throw new InvalidOperationException("Variable inspection failed to find dynamic helper.");
+
         var ticks = 0;
         var timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(20) };
         timer.Tick += (_, _) => ticks++;

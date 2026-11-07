@@ -29,6 +29,8 @@ public partial class MainViewModel(HttpRequestService requests, ProjectEditorVie
     [ObservableProperty] private string status = "Ready";
     [ObservableProperty] private string artifactPath = "";
     [ObservableProperty] private ProjectAsset? selectedProjectRequest;
+    [ObservableProperty] private ProjectAsset? selectedEnvironment;
+    [ObservableProperty] private string variablesInspectionText = "";
 
     public PagedDataset Dataset { get; } = new();
     public string[] Methods { get; } = ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"];
@@ -39,6 +41,9 @@ public partial class MainViewModel(HttpRequestService requests, ProjectEditorVie
 
     public IEnumerable<ProjectAsset> ProjectRequests =>
         ProjectEditor.Assets.Where(a => a.Kind == AssetKind.Request);
+
+    public IEnumerable<ProjectAsset> ProjectEnvironments =>
+        ProjectEditor.Assets.Where(a => a.Kind == AssetKind.Environment);
 
     [RelayCommand]
     private void NewRequest()
@@ -158,16 +163,43 @@ public partial class MainViewModel(HttpRequestService requests, ProjectEditorVie
         }
     }
 
+    [RelayCommand]
+    private async Task InspectVariablesAsync()
+    {
+        try
+        {
+            var resolver = new VariableResolver();
+            var context = BuildVariableContext();
+            var target = $"{Url} {RequestHeaders} {RequestQuery} {RequestBody}";
+            var inspections = await resolver.InspectAsync(target, context);
+            if (inspections.Count == 0)
+            {
+                VariablesInspectionText = "No variable expressions found in this request.";
+            }
+            else
+            {
+                VariablesInspectionText = string.Join(Environment.NewLine, inspections.Select(i =>
+                    $"{i.Name} -> {i.RedactedValue} (Source: {i.Source}{(i.IsSecret ? ", Secret" : "")})"));
+            }
+            Status = $"Inspected {inspections.Count} variable(s).";
+        }
+        catch (Exception ex)
+        {
+            VariablesInspectionText = $"Inspection error: {ex.Message}";
+        }
+    }
+
     [RelayCommand(IncludeCancelCommand = true)]
     private async Task SendAsync(CancellationToken token)
     {
         try
         {
             var request = BuildDefinition();
+            var varContext = BuildVariableContext();
             Status = "Sending…";
             ArtifactPath = "";
             // Even validation and synchronous transport setup stay off the dispatcher.
-            var result = await Task.Run(() => requests.SendAsync(request, cancellationToken: token), token);
+            var result = await Task.Run(() => requests.SendAsync(request, variableContext: varContext, cancellationToken: token), token);
             Status = $"{result.Outcome} · HTTP {result.StatusCode?.ToString() ?? "—"} · {result.Duration.TotalMilliseconds:F0} ms · {result.BytesReceived:N0} bytes";
             ResponseBody = result.Error ?? result.Preview;
             if (result.PreviewTruncated) Status += " · preview truncated";
@@ -182,9 +214,26 @@ public partial class MainViewModel(HttpRequestService requests, ProjectEditorVie
             }
             ArtifactPath = result.BodyPath ?? "";
         }
+        catch (VariableResolutionException exception) { Status = exception.Message; }
         catch (ArgumentException exception) { Status = exception.Message; }
         catch (OperationCanceledException) { Status = "Cancelled"; }
         catch (Exception) { Status = "Request could not complete. Check local artifact storage and request settings."; }
+    }
+
+    private VariableContext BuildVariableContext()
+    {
+        var context = new VariableContext();
+        if (SelectedEnvironment?.Content["variables"] is JsonObject envVars)
+        {
+            foreach (var kvp in envVars)
+            {
+                if (kvp.Value is JsonValue val)
+                {
+                    context.Environment[kvp.Key] = val.ToString();
+                }
+            }
+        }
+        return context;
     }
 
     private HttpRequestDefinition BuildDefinition()
