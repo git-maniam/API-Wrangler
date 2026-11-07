@@ -46,6 +46,7 @@ public sealed record HttpRequestDefinition
     public string ContentType { get; init; } = "application/json";
     public int TimeoutMs { get; init; } = 30_000;
     public HttpTransportOptions TransportOptions { get; init; } = new();
+    public RequestAuthDefinition Auth { get; init; } = new();
 }
 
 public sealed record ExecutionLimits

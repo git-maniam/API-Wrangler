@@ -31,10 +31,19 @@ public partial class MainViewModel(HttpRequestService requests, ProjectEditorVie
     [ObservableProperty] private ProjectAsset? selectedProjectRequest;
     [ObservableProperty] private ProjectAsset? selectedEnvironment;
     [ObservableProperty] private string variablesInspectionText = "";
+    [ObservableProperty] private string authType = "none";
+    [ObservableProperty] private string authUsername = "";
+    [ObservableProperty] private string authPassword = "";
+    [ObservableProperty] private string authToken = "";
+    [ObservableProperty] private string authApiKeyName = "X-Api-Key";
+    [ObservableProperty] private string authApiKeyValue = "";
+    [ObservableProperty] private string authApiKeyLocation = "header";
 
     public PagedDataset Dataset { get; } = new();
     public string[] Methods { get; } = ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"];
     public string[] BodyModes { get; } = ["raw", "none", "urlencoded", "form-data", "file"];
+    public string[] AuthTypes { get; } = ["none", "basic", "bearer", "apiKey", "oauth2", "windows", "certificate"];
+    public string[] ApiKeyLocations { get; } = ["header", "query"];
 
     public Guid? CurrentRequestId { get; private set; }
     public string? CurrentRequestPath { get; private set; }
@@ -59,6 +68,13 @@ public partial class MainViewModel(HttpRequestService requests, ProjectEditorVie
         RequestBody = "";
         BodyMode = "raw";
         BodyFilePath = "";
+        AuthType = "none";
+        AuthUsername = "";
+        AuthPassword = "";
+        AuthToken = "";
+        AuthApiKeyName = "X-Api-Key";
+        AuthApiKeyValue = "";
+        AuthApiKeyLocation = "header";
         ResponseBody = "";
         ResponseHeaders = "";
         ResponseCookies = "";
@@ -155,6 +171,13 @@ public partial class MainViewModel(HttpRequestService requests, ProjectEditorVie
                 RequestBody = "";
                 BodyFilePath = "";
             }
+            AuthType = req.Auth?.Type ?? "none";
+            AuthUsername = req.Auth?.Username ?? "";
+            AuthPassword = req.Auth?.Password ?? "";
+            AuthToken = req.Auth?.Token ?? "";
+            AuthApiKeyName = req.Auth?.ApiKeyName ?? "X-Api-Key";
+            AuthApiKeyValue = req.Auth?.ApiKeyValue ?? "";
+            AuthApiKeyLocation = req.Auth?.ApiKeyLocation ?? "header";
             Status = $"Loaded request: {req.Name} ({target.Path})";
         }
         catch (Exception ex)
@@ -272,6 +295,17 @@ public partial class MainViewModel(HttpRequestService requests, ProjectEditorVie
             };
         }
 
+        var authDef = new RequestAuthDefinition
+        {
+            Type = AuthType,
+            Username = AuthUsername,
+            Password = AuthPassword,
+            Token = AuthToken,
+            ApiKeyName = AuthApiKeyName,
+            ApiKeyValue = AuthApiKeyValue,
+            ApiKeyLocation = AuthApiKeyLocation
+        };
+
         return new HttpRequestDefinition
         {
             Id = CurrentRequestId ?? Guid.NewGuid(),
@@ -286,7 +320,8 @@ public partial class MainViewModel(HttpRequestService requests, ProjectEditorVie
             {
                 FollowRedirects = FollowRedirects,
                 DangerousIgnoreTlsErrors = DangerousIgnoreTlsErrors
-            }
+            },
+            Auth = authDef
         };
     }
 }

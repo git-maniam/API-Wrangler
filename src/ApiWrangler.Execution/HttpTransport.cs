@@ -64,7 +64,62 @@ public sealed class HttpTransport : IHttpTransport, IDisposable
         string currentMethod = definition.Method;
         var currentHeaders = definition.Headers.Where(h => h.Enabled).ToList();
         int redirectCount = 0;
-        var activeClient = definition.TransportOptions.DangerousIgnoreTlsErrors ? insecureClient : client;
+
+        HttpClient? customClient = null;
+        SocketsHttpHandler? customHandler = null;
+        HttpClient activeClient;
+        var auth = definition.Auth;
+
+        if (auth is not null && string.Equals(auth.Type, "windows", StringComparison.OrdinalIgnoreCase))
+        {
+            customHandler = new SocketsHttpHandler
+            {
+                AllowAutoRedirect = false,
+                AutomaticDecompression = DecompressionMethods.All,
+                UseCookies = false,
+                PooledConnectionLifetime = TimeSpan.FromMinutes(1),
+                Credentials = auth.UseDefaultWindowsCredentials
+                    ? CredentialCache.DefaultNetworkCredentials
+                    : new NetworkCredential(auth.WindowsUsername, auth.WindowsPassword, auth.WindowsDomain)
+            };
+            if (definition.TransportOptions.DangerousIgnoreTlsErrors)
+            {
+                customHandler.SslOptions = new System.Net.Security.SslClientAuthenticationOptions
+                {
+                    RemoteCertificateValidationCallback = delegate { return true; }
+                };
+            }
+            customClient = new HttpClient(customHandler) { Timeout = Timeout.InfiniteTimeSpan };
+            activeClient = customClient;
+        }
+        else if (auth is not null && string.Equals(auth.Type, "certificate", StringComparison.OrdinalIgnoreCase) &&
+                 !string.IsNullOrWhiteSpace(auth.ClientCertificatePath))
+        {
+            customHandler = new SocketsHttpHandler
+            {
+                AllowAutoRedirect = false,
+                AutomaticDecompression = DecompressionMethods.All,
+                UseCookies = false,
+                PooledConnectionLifetime = TimeSpan.FromMinutes(1)
+            };
+            var cert = string.IsNullOrEmpty(auth.ClientCertificatePassword)
+                ? (auth.ClientCertificatePath.EndsWith(".pfx", StringComparison.OrdinalIgnoreCase) || auth.ClientCertificatePath.EndsWith(".p12", StringComparison.OrdinalIgnoreCase)
+                    ? System.Security.Cryptography.X509Certificates.X509CertificateLoader.LoadPkcs12FromFile(auth.ClientCertificatePath, string.Empty)
+                    : System.Security.Cryptography.X509Certificates.X509CertificateLoader.LoadCertificateFromFile(auth.ClientCertificatePath))
+                : System.Security.Cryptography.X509Certificates.X509CertificateLoader.LoadPkcs12FromFile(auth.ClientCertificatePath, auth.ClientCertificatePassword);
+
+            customHandler.SslOptions = new System.Net.Security.SslClientAuthenticationOptions
+            {
+                ClientCertificates = [cert],
+                RemoteCertificateValidationCallback = definition.TransportOptions.DangerousIgnoreTlsErrors ? delegate { return true; } : null
+            };
+            customClient = new HttpClient(customHandler) { Timeout = Timeout.InfiniteTimeSpan };
+            activeClient = customClient;
+        }
+        else
+        {
+            activeClient = definition.TransportOptions.DangerousIgnoreTlsErrors ? insecureClient : client;
+        }
 
         try
         {
@@ -172,6 +227,11 @@ public sealed class HttpTransport : IHttpTransport, IDisposable
             return Result(ExecutionOutcome.Error, exception is ResponseLimitException
                 ? "Response exceeded the configured saved-body limit. Partial body removed."
                 : "Request failed. Check the URL, headers, connectivity, TLS configuration, and artifact storage.");
+        }
+        finally
+        {
+            customClient?.Dispose();
+            customHandler?.Dispose();
         }
 
         HttpExecutionResult Result(ExecutionOutcome outcome, string? error) => new(outcome, status, reason, headers,
