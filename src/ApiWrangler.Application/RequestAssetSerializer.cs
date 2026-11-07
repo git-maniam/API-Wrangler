@@ -91,6 +91,25 @@ public static class RequestAssetSerializer
             };
         }
 
+        if (request.Assertions.Count > 0)
+        {
+            var assertArr = new JsonArray();
+            foreach (var a in request.Assertions)
+            {
+                var aObj = new JsonObject
+                {
+                    ["id"] = a.Id.ToString(),
+                    ["type"] = a.Type,
+                    ["operator"] = a.Operator
+                };
+                if (!string.IsNullOrEmpty(a.Name)) aObj["name"] = a.Name;
+                if (!string.IsNullOrEmpty(a.Target)) aObj["target"] = a.Target;
+                if (a.Expected is not null) aObj["expected"] = a.Expected.DeepClone();
+                assertArr.Add(aObj);
+            }
+            obj["assertions"] = assertArr;
+        }
+
         return obj;
     }
 
@@ -188,6 +207,33 @@ public static class RequestAssetSerializer
             };
         }
 
+        var assertions = new List<RequestAssertionDefinition>();
+        if (json["assertions"] is JsonArray assertArr)
+        {
+            foreach (var node in assertArr)
+            {
+                if (node is JsonObject asObj)
+                {
+                    var aId = Guid.TryParse(asObj["id"]?.GetValue<string>(), out var pAId) ? pAId : Guid.NewGuid();
+                    var aType = asObj["type"]?.GetValue<string>() ?? "status";
+                    var aOp = asObj["operator"]?.GetValue<string>() ?? "equals";
+                    var aName = asObj["name"]?.GetValue<string>();
+                    var aTarget = asObj["target"]?.GetValue<string>();
+                    var aExpected = asObj["expected"]?.DeepClone();
+
+                    assertions.Add(new RequestAssertionDefinition
+                    {
+                        Id = aId,
+                        Name = aName,
+                        Type = aType,
+                        Operator = aOp,
+                        Target = aTarget,
+                        Expected = aExpected
+                    });
+                }
+            }
+        }
+
         return new HttpRequestDefinition
         {
             Id = id,
@@ -202,7 +248,8 @@ public static class RequestAssetSerializer
             Headers = headers,
             Query = query,
             BodyDefinition = bodyDef,
-            Auth = authDef
+            Auth = authDef,
+            Assertions = assertions
         };
     }
 }

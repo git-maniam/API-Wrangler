@@ -50,7 +50,11 @@ public sealed record RequestExecutionRecord(
     TimeSpan Duration,
     string? Error = null,
     string? ResponsePreview = null,
-    string? BodyPath = null);
+    string? BodyPath = null,
+    IReadOnlyList<AssertionResult>? Assertions = null)
+{
+    public IReadOnlyList<AssertionResult> Assertions { get; init; } = Assertions ?? [];
+}
 
 public sealed record IterationExecutionRecord(
     int IterationIndex,
@@ -74,4 +78,11 @@ public sealed record CollectionExecutionReport(
     int TotalRequestsRun,
     int PassedRequests,
     int FailedRequests,
-    string? Error = null);
+    string? Error = null,
+    string? GitCommit = null,
+    bool IsDirty = false,
+    string? SnapshotHash = null,
+    string? EnvironmentName = null,
+    int? Seed = null,
+    string EngineVersion = "1.0.0",
+    string? OsArchitecture = null);

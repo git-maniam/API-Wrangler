@@ -79,8 +79,31 @@ public sealed class CollectionRunner(HttpRequestService httpService)
                 var res = await httpService.SendAsync(reqDef, variableContext: context, cancellationToken: cancellationToken).ConfigureAwait(false);
                 reqWatch.Stop();
 
-                bool isFail = res.Outcome != ExecutionOutcome.Passed || (res.StatusCode.HasValue && res.StatusCode.Value >= 400);
-                var recordOutcome = isFail && res.Outcome == ExecutionOutcome.Passed ? ExecutionOutcome.Error : res.Outcome;
+                var assertions = AssertionEngine.EvaluateAll(reqDef.Assertions, res);
+                bool assertionFailed = assertions.Any(a => !a.Passed);
+
+                ExecutionOutcome recordOutcome;
+                if (res.Outcome != ExecutionOutcome.Passed)
+                {
+                    recordOutcome = res.Outcome;
+                }
+                else if (assertionFailed)
+                {
+                    recordOutcome = ExecutionOutcome.Failed;
+                }
+                else if (res.StatusCode.HasValue && res.StatusCode.Value >= 400 && reqDef.Assertions.Count == 0)
+                {
+                    recordOutcome = ExecutionOutcome.Failed;
+                }
+                else
+                {
+                    recordOutcome = ExecutionOutcome.Passed;
+                }
+
+                bool isFail = recordOutcome != ExecutionOutcome.Passed;
+                var failMsg = assertionFailed
+                    ? string.Join("; ", assertions.Where(a => !a.Passed).Select(a => $"{a.Name}: {a.Message}"))
+                    : res.Error ?? (isFail ? $"HTTP {res.StatusCode}" : null);
 
                 var record = new RequestExecutionRecord(
                     setupId,
@@ -90,15 +113,16 @@ public sealed class CollectionRunner(HttpRequestService httpService)
                     recordOutcome,
                     res.StatusCode,
                     reqWatch.Elapsed,
-                    res.Error ?? (isFail ? $"HTTP {res.StatusCode}" : null),
+                    failMsg,
                     res.Preview,
-                    res.BodyPath);
+                    res.BodyPath,
+                    assertions);
                 setupResults.Add(record);
 
                 if (isFail)
                 {
                     collectionFailed = true;
-                    failureError = $"Collection setup request '{reqDef.Name}' failed: HTTP {res.StatusCode} {res.Error}";
+                    failureError = $"Collection setup request '{reqDef.Name}' failed: {failMsg}";
                     if (opts.StopOnFailure) break;
                 }
             }
@@ -169,17 +193,32 @@ public sealed class CollectionRunner(HttpRequestService httpService)
                     {
                         var res = await httpService.SendAsync(tdDef, variableContext: context, cancellationToken: CancellationToken.None).ConfigureAwait(false);
                         tdWatch.Stop();
+
+                        var assertions = AssertionEngine.EvaluateAll(tdDef.Assertions, res);
+                        bool assertionFailed = assertions.Any(a => !a.Passed);
+
+                        ExecutionOutcome recordOutcome;
+                        if (res.Outcome != ExecutionOutcome.Passed) recordOutcome = res.Outcome;
+                        else if (assertionFailed) recordOutcome = ExecutionOutcome.Failed;
+                        else if (res.StatusCode.HasValue && res.StatusCode.Value >= 400 && tdDef.Assertions.Count == 0) recordOutcome = ExecutionOutcome.Failed;
+                        else recordOutcome = ExecutionOutcome.Passed;
+
+                        var failMsg = assertionFailed
+                            ? string.Join("; ", assertions.Where(a => !a.Passed).Select(a => $"{a.Name}: {a.Message}"))
+                            : res.Error ?? (recordOutcome != ExecutionOutcome.Passed ? $"HTTP {res.StatusCode}" : null);
+
                         teardownResults.Add(new RequestExecutionRecord(
                             teardownId,
                             tdDef.Name,
                             0,
                             1,
-                            res.Outcome,
+                            recordOutcome,
                             res.StatusCode,
                             tdWatch.Elapsed,
-                            res.Error,
+                            failMsg,
                             res.Preview,
-                            res.BodyPath));
+                            res.BodyPath,
+                            assertions));
                     }
                     catch (Exception ex)
                     {
@@ -203,7 +242,7 @@ public sealed class CollectionRunner(HttpRequestService httpService)
 
         // 6. Aggregate Status
         RunStatus finalStatus;
-        if (cancellationToken.IsCancellationRequested)
+        if (cancellationToken.IsCancellationRequested || iterationRecords.Any(i => i.Status == RunStatus.Cancelled))
         {
             finalStatus = RunStatus.Cancelled;
         }
@@ -213,7 +252,10 @@ public sealed class CollectionRunner(HttpRequestService httpService)
         {
             finalStatus = RunStatus.Error;
         }
-        else if (collectionFailed || iterationRecords.Any(i => i.Status == RunStatus.Failed))
+        else if (teardownResults.Any(t => t.Outcome == ExecutionOutcome.Failed) ||
+                 setupResults.Any(s => s.Outcome == ExecutionOutcome.Failed) ||
+                 collectionFailed ||
+                 iterationRecords.Any(i => i.Status == RunStatus.Failed))
         {
             finalStatus = RunStatus.Failed;
         }
@@ -227,6 +269,8 @@ public sealed class CollectionRunner(HttpRequestService httpService)
                              teardownResults.Count(t => t.Outcome == ExecutionOutcome.Passed) +
                              iterationRecords.Sum(i => i.Requests.Count(r => r.Outcome == ExecutionOutcome.Passed));
         int failedRequests = totalRequests - passedRequests;
+
+        var osArch = $"{System.Runtime.InteropServices.RuntimeInformation.OSDescription} ({System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture})";
 
         return new CollectionExecutionReport(
             runId,
@@ -242,7 +286,8 @@ public sealed class CollectionRunner(HttpRequestService httpService)
             totalRequests,
             passedRequests,
             failedRequests,
-            failureError);
+            failureError,
+            OsArchitecture: osArch);
     }
 
     private async Task<IterationExecutionRecord> RunIterationAsync(
@@ -300,8 +345,31 @@ public sealed class CollectionRunner(HttpRequestService httpService)
             }
             reqWatch.Stop();
 
-            bool isFail = result.Outcome != ExecutionOutcome.Passed || (result.StatusCode.HasValue && result.StatusCode.Value >= 400);
-            var recordOutcome = isFail && result.Outcome == ExecutionOutcome.Passed ? ExecutionOutcome.Error : result.Outcome;
+            var assertions = AssertionEngine.EvaluateAll(reqDef.Assertions, result);
+            bool assertionFailed = assertions.Any(a => !a.Passed);
+
+            ExecutionOutcome recordOutcome;
+            if (result.Outcome != ExecutionOutcome.Passed)
+            {
+                recordOutcome = result.Outcome;
+            }
+            else if (assertionFailed)
+            {
+                recordOutcome = ExecutionOutcome.Failed;
+            }
+            else if (result.StatusCode.HasValue && result.StatusCode.Value >= 400 && reqDef.Assertions.Count == 0)
+            {
+                recordOutcome = ExecutionOutcome.Failed;
+            }
+            else
+            {
+                recordOutcome = ExecutionOutcome.Passed;
+            }
+
+            bool isFail = recordOutcome != ExecutionOutcome.Passed;
+            var failMessage = assertionFailed
+                ? string.Join("; ", assertions.Where(a => !a.Passed).Select(a => $"{a.Name}: {a.Message}"))
+                : result.Error ?? (isFail ? $"HTTP {result.StatusCode}" : null);
 
             var record = new RequestExecutionRecord(
                 reqId,
@@ -311,15 +379,16 @@ public sealed class CollectionRunner(HttpRequestService httpService)
                 recordOutcome,
                 result.StatusCode,
                 reqWatch.Elapsed,
-                result.Error ?? (isFail ? $"HTTP {result.StatusCode}" : null),
+                failMessage,
                 result.Preview,
-                result.BodyPath);
+                result.BodyPath,
+                assertions);
             requestRecords.Add(record);
 
             if (isFail)
             {
                 iterationFailed = true;
-                iterationError ??= $"Request '{reqDef.Name}' failed with {result.Outcome} (HTTP {result.StatusCode}).";
+                iterationError ??= $"Request '{reqDef.Name}' failed: {failMessage}";
                 if (options.StopOnFailure)
                 {
                     break;
