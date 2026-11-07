@@ -2361,6 +2361,12 @@ Do not resume a mutating API request automatically after a crash.
 
 ### 31.0 Necessity, batching, and run cadence
 
+Mandatory policy: tests must run only when absolutely necessary. The same restriction applies to builds. Batch all compatible parameters and related changes into as few test and build executions as possible to minimize token usage and total execution time.
+
+Local test environment: the user runs Docker Desktop and authorizes its use for container-based testing when useful. Use it for suitable headless checks or test fixtures, subject to the necessity and batching policy above. Windows WPF and manual desktop accessibility checks still require Windows desktop validation.
+
+ARM64 test resource: the user reports that the `dockurr/windows-arm` image has been pulled into Docker Desktop and is available if ARM64 testing is needed. ARM64 remains deferred; image availability alone does not establish a working ARM64 test environment or acceptance evidence. Verify runtime compatibility before using it for required ARM64 checks.
+
 Run builds and tests only when absolutely necessary: to resolve a concrete implementation risk, diagnose a failure, or satisfy a required acceptance, CI, or release gate. For documentation-only changes, do not run them unless an explicit gate requires it. Before running, identify the behavior or gate being verified and choose the smallest meaningful verification set.
 
 Batch all compatible test parameters (projects, filters, frameworks, configurations, and fixture setup) into one invocation or scripted run where practical. Batch compatible build parameters (solution or projects, configuration, target framework or runtime, and properties) into one invocation where practical. Plan the changed work and parameters up front so each run covers the required cases together; do not split checks into repeated runs by parameter. Use the fewest executions that establish the required evidence, and reuse valid results while relevant inputs remain unchanged.
@@ -2522,13 +2528,15 @@ Do not begin distributed infrastructure before these decisions are settled.
 
 **Implementation checkpoint (2026-11-07):** Phase 1 project discovery, versioned schemas, canonical assets, journaled persistence, watcher/recovery behavior, snapshots, local settings, and a desktop asset editor are implemented in PR #57. The five Phase 1 exit checks pass locally. After the Linux writer-lease fix, hosted Windows and Linux headless jobs each passed 30 tests with zero skipped; desktop build, format, and publish passed. ADR-0002 defines version 1 as the first supported format. P1.1-P1.3 are In review; P1.4 manual project-editor accessibility acceptance is In progress. The phase epic remains In progress until review, acceptance, and merge. See docs/implementation-status.md and docs/phase-1-exit-review.md.
 
-#### Restart bookmark (updated 2026-11-07 19:08 IST)
+#### Restart bookmark (updated 2026-11-07 19:54 IST)
 
-Verified: PR #57 is open, non-draft, mergeable, and has no reviews. Latest hosted desktop and Windows/Linux headless checks pass. P1.4 (#58) is open and remains In progress per the last project sync; its current Release build and project smoke passed programmatic UI Automation. Manual keyboard focus, Narrator, high-contrast, and 150% DPI acceptance still needs an interactive Windows session.
+Verified at 19:24 IST: PR #57 is open, non-draft, mergeable, and has no reviews or comments. Latest hosted desktop and Windows/Linux headless checks pass. P1.4 (#58) is open and remains In progress per the last project sync; its current Release build and project smoke passed programmatic UI Automation. Manual keyboard focus, Narrator, high-contrast, and 150% DPI acceptance still needs an interactive Windows session.
 
 GitHub Project 4 (last synced): P1.1-P1.3 are In review; P1.4 (#58) is In progress; P0.5 (#6) is Ready; Phase 1 remains In progress. #23, #59, and #60 remain Backlog. No issue or epic is Done.
 
-Next: complete the interactive accessibility review in #58, then address PR #57 review and merge before reassessing Phase 1 acceptance. Validation policy is in section 31.0 and step 6 of section 34.1: run builds/tests only when necessary, batch compatible parameters, minimize executions and output, and reuse valid results. No build or tests were run for this documentation update.
+Next: complete the interactive accessibility review in #58 with a person able to use the Windows desktop and Narrator; this session has no desktop interaction or Narrator access. Record results and fix defects, then address PR #57 review and merge before reassessing Phase 1 acceptance. Validation policy is in section 31.0 and step 6 of section 34.1: run builds/tests only when necessary, batch compatible parameters, minimize executions and output, and reuse valid results. No build or tests were run for this documentation update.
+
+Handoff: bookmark and docs/implementation-status.md have uncommitted documentation updates. User requests concise, efficient work, batched checks, and reuse of valid results.
 
 During active work, publish a 2-3 line status at least every 10 minutes, refresh this bookmark at least every 30 minutes and at handoff, and synchronize GitHub issues at material checkpoints. Run builds or tests only for a concrete risk or required gate and batch related checks.
 ### Phase 2 — HTTP testing workbench
@@ -2827,7 +2835,7 @@ For each phase:
 3. Identify the phase’s requirements.
 4. Implement the smallest complete vertical slice.
 5. Add meaningful tests for behavior and failure cases.
-6. Run checks only when section 31.0 says they are necessary; batch compatible parameters and use the fewest executions.
+6. Run tests and builds only when absolutely necessary under section 31.0; batch all compatible parameters and related changes into the fewest executions to reduce token usage and execution time.
 7. Update documentation.
 8. Record deviations and decisions.
 9. Produce a completion report.
