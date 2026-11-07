@@ -9,6 +9,7 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         DataContext = viewModel;
+        Loaded += async (_, _) => await viewModel.InitializeSettingsAsync();
         Closing += (_, _) => viewModel.SendCommand.Cancel();
         viewModel.ProjectEditor.PropertyChanged += (_, args) =>
         {

@@ -22,6 +22,7 @@ public partial class App : System.Windows.Application
                 Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ApiWrangler", "runs")));
             services.AddSingleton<HttpRequestService>();
             services.AddSingleton<IProjectRepository, ProjectRepository>();
+            services.AddSingleton<LocalSettingsStore>();
             services.AddSingleton<ProjectEditorViewModel>();
             services.AddSingleton<MainViewModel>();
             services.AddSingleton<MainWindow>();

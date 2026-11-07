@@ -2532,20 +2532,19 @@ Do not begin distributed infrastructure before these decisions are settled.
 
 **Implementation checkpoint (2026-11-07):** Phase 1 project discovery, versioned schemas, canonical assets, journaled persistence, watcher/recovery behavior, snapshots, local settings, and a desktop asset editor are implemented in PR #57. The five Phase 1 exit checks pass locally. After the Linux writer-lease fix, hosted Windows and Linux headless jobs each passed 30 tests with zero skipped; desktop build, format, and publish passed. ADR-0002 defines version 1 as the first supported format. P1.1-P1.3 are In review; P1.4 manual project-editor accessibility acceptance is In progress. The phase epic remains In progress until review, acceptance, and merge. See docs/implementation-status.md and docs/phase-1-exit-review.md.
 
-#### Restart bookmark (updated 2026-11-07 21:45 IST)
+#### Restart bookmark (updated 2026-11-07 21:55 IST)
 
-Verified: P2.3 (Issue #14: Required authentication flows and lifecycle) implemented and verified on branch `phase2-authentication`.
-- `AuthModels.cs` defines `RequestAuthDefinition` and `UnsupportedAuthException`.
-- `AuthApplier.cs` applies Basic, Bearer, API Key (header/query), and OAuth 2.0 (client credentials, refresh tokens, PKCE authorization code via `OAuthPkceHelper`), eliminating duplicate auth headers on repeated sends.
-- `HttpTransport.cs` adds transport-level authentication support for Windows integrated credentials and Client Certificates (mTLS) with `X509CertificateLoader`.
-- `RequestAssetSerializer.cs` serializes and deserializes all authentication flows, keeping secret references (`{{secret:...}}`) intact without persisting raw secrets.
-- `MainViewModel.cs` and `MainWindow.xaml` expose authentication type selection and inputs in the Desktop workbench.
-- Early rejection of unsupported imported authentication types (e.g., Digest, AWS4, OAuth1) prior to execution.
-- Consolidated batched verification: Release solution build passed with 0 warnings/errors; `dotnet test` passed 55 tests (0 failed, 4 skipped Node tests); desktop smoke passed (`Test-Desktop.ps1`); `dotnet format --verify-no-changes` passed.
+Verified: P2.4 (Issue #54: Type-aware structured editors, viewers, and font preferences) implemented and verified on branch `phase2-structured-editors`.
+- `StructuredTextEngine.cs` provides headless format auto-detection, beautification, and parse diagnostics for JSON, XML, YAML, GraphQL, and CSV without mutating raw content or semantic values.
+- Enforces large content threshold (5 MiB preview limit) without attempting pretty-printing above threshold.
+- `EditorBinding.cs` attaches dynamic syntax highlighting to AvalonEdit.
+- `LocalSettingsStore.cs` persists editor font preferences with Segoe UI 12 pt (16 px) default.
+- `MainViewModel.cs` and `MainWindow.xaml` expose font family/size selectors, request body "Format body" command, structured vs. raw response view toggle, and diagnostic banners.
+- Consolidated batched verification: Release solution build passed with 0 warnings/errors; `dotnet test` passed 76 tests (0 failed, 4 skipped Node tests); desktop smoke passed (`Test-Desktop.ps1`); `dotnet format --verify-no-changes` passed.
 
-Next: create PR for P2.3, link issue #14, merge into `main`, mark P2.3 Done in Project 4, and proceed directly to P2.4 (issue #54: Type-aware request body editors and editor font preferences).
+Next: create PR for P2.4, link issue #54, merge into `main`, mark P2.4 Done in Project 4, and proceed directly to P2.5 (issue #55: HTTP request tree, tabs, and persistence lifecycle).
 
-Handoff: working tree ready for commit and push on `phase2-authentication`.
+Handoff: working tree ready for commit and push on `phase2-structured-editors`.
 
 During active work, publish a 2-3 line status at least every 10 minutes, refresh this bookmark at least every 30 minutes and at handoff, and synchronize GitHub issues at material checkpoints. Run builds or tests only for a concrete risk or required gate and batch related checks.
 ### Phase 2 — HTTP testing workbench

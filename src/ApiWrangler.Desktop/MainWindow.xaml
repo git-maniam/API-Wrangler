@@ -8,6 +8,12 @@
     <Grid Margin="20" Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}">
         <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
         <DockPanel Margin="0,0,0,16">
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                <Label Content="_Font:" Target="{Binding ElementName=FontFamilyCombo}" VerticalAlignment="Center" Margin="0,0,4,0" Padding="0" />
+                <ComboBox x:Name="FontFamilyCombo" ItemsSource="{Binding AvailableFontFamilies}" SelectedItem="{Binding EditorFontFamily}" Width="130" Margin="0,0,12,0" AutomationProperties.Name="Editor font family" />
+                <Label Content="_Size:" Target="{Binding ElementName=FontSizeCombo}" VerticalAlignment="Center" Margin="0,0,4,0" Padding="0" />
+                <ComboBox x:Name="FontSizeCombo" ItemsSource="{Binding AvailableFontSizes}" SelectedItem="{Binding EditorFontSize}" Width="65" AutomationProperties.Name="Editor font size" />
+            </StackPanel>
             <TextBlock Text="API Wrangler" FontSize="26" FontWeight="SemiBold" />
             <TextBlock Text="Local HTTP workbench · foundation preview" VerticalAlignment="Center" Margin="24,0,0,0" />
         </DockPanel>
@@ -26,12 +32,23 @@
                         <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="8" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
                         <DockPanel>
                             <TextBlock DockPanel.Dock="Top" Text="Editor draft" Margin="0,0,0,4" />
-                            <editor:TextEditor x:Name="ProjectDraftEditor" local:EditorBinding.Text="{Binding EditorText}" IsReadOnly="{Binding IsEditorReadOnly}" ShowLineNumbers="True" FontFamily="Consolas" AutomationProperties.Name="Project asset draft" AutomationProperties.HelpText="Edit the selected JSON asset. Compare with the disk version on the right before choosing a conflict action." />
+                            <editor:TextEditor x:Name="ProjectDraftEditor" local:EditorBinding.Text="{Binding EditorText}"
+                                local:EditorBinding.SyntaxHighlighting="Json"
+                                IsReadOnly="{Binding IsEditorReadOnly}" ShowLineNumbers="True"
+                                FontFamily="{Binding DataContext.EditorFontFamily, RelativeSource={RelativeSource AncestorType=Window}}"
+                                FontSize="{Binding DataContext.EditorFontSize, RelativeSource={RelativeSource AncestorType=Window}}"
+                                AutomationProperties.Name="Project asset draft"
+                                AutomationProperties.HelpText="Edit the selected JSON asset. Compare with the disk version on the right before choosing a conflict action." />
                         </DockPanel>
                         <GridSplitter Grid.Column="1" Width="8" HorizontalAlignment="Stretch" />
                         <DockPanel Grid.Column="2">
                             <TextBlock DockPanel.Dock="Top" Text="Current disk version" Margin="0,0,0,4" />
-                            <editor:TextEditor x:Name="ProjectDiskEditor" local:EditorBinding.Text="{Binding DiskText, Mode=OneWay}" IsReadOnly="True" ShowLineNumbers="True" FontFamily="Consolas" AutomationProperties.Name="Project asset disk version" />
+                            <editor:TextEditor x:Name="ProjectDiskEditor" local:EditorBinding.Text="{Binding DiskText, Mode=OneWay}"
+                                local:EditorBinding.SyntaxHighlighting="Json"
+                                IsReadOnly="True" ShowLineNumbers="True"
+                                FontFamily="{Binding DataContext.EditorFontFamily, RelativeSource={RelativeSource AncestorType=Window}}"
+                                FontSize="{Binding DataContext.EditorFontSize, RelativeSource={RelativeSource AncestorType=Window}}"
+                                AutomationProperties.Name="Project asset disk version" />
                         </DockPanel>
                     </Grid>
                     <Grid Grid.Row="4" Margin="0,8,0,0">
@@ -50,51 +67,61 @@
                     <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="2*" /><RowDefinition Height="6" /><RowDefinition Height="3*" /></Grid.RowDefinitions>
                     <DockPanel Margin="0,0,0,8">
                         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                            <Label Content="Env:" Padding="0" VerticalAlignment="Center" Margin="8,0,4,0" />
-                            <ComboBox ItemsSource="{Binding ProjectEnvironments}" SelectedItem="{Binding SelectedEnvironment}" DisplayMemberPath="Name" Width="130" Margin="0,0,8,0" AutomationProperties.Name="Selected environment" />
-                            <Button Content="_New" Command="{Binding NewRequestCommand}" Margin="4,0" AutomationProperties.Name="New request" />
-                            <Button Content="_Save request" Command="{Binding SaveRequestCommand}" Margin="4,0" AutomationProperties.Name="Save request" />
-                            <Button Content="_Close" Command="{Binding CloseRequestCommand}" Margin="4,0" AutomationProperties.Name="Close request" />
-                            <ComboBox ItemsSource="{Binding ProjectRequests}" SelectedItem="{Binding SelectedProjectRequest}" DisplayMemberPath="Path" Width="160" Margin="8,0,0,0" AutomationProperties.Name="Saved project requests" />
-                            <Button Content="_Open" Command="{Binding LoadRequestCommand}" Margin="4,0,0,0" AutomationProperties.Name="Open selected request" />
+                            <Button Content="_New" Command="{Binding NewRequestCommand}" Margin="4,0,0,0" AutomationProperties.Name="New request" />
+                            <Button Content="_Save" Command="{Binding SaveRequestCommand}" Margin="4,0,0,0" AutomationProperties.Name="Save request" />
+                            <Button Content="_Close" Command="{Binding CloseRequestCommand}" Margin="4,0,0,0" AutomationProperties.Name="Close request" />
                         </StackPanel>
-                        <Label Content="Request _name:" Target="{Binding ElementName=RequestNameBox}" Padding="0" VerticalAlignment="Center" Margin="0,0,8,0" />
-                        <TextBox x:Name="RequestNameBox" Text="{Binding RequestName, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" AutomationProperties.Name="Request name" />
+                        <Label Content="Saved _request:" Target="{Binding ElementName=SavedRequestCombo}" VerticalAlignment="Center" Margin="0,0,8,0" Padding="0" />
+                        <ComboBox x:Name="SavedRequestCombo" ItemsSource="{Binding ProjectRequests}" SelectedItem="{Binding SelectedProjectRequest}" DisplayMemberPath="Path" AutomationProperties.Name="Saved project request" />
                     </DockPanel>
-                    <Grid Grid.Row="1" Margin="0,0,0,8">
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="110" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                        <ComboBox ItemsSource="{Binding Methods}" Text="{Binding Method}" IsEditable="True" VerticalContentAlignment="Center" AutomationProperties.Name="HTTP method" />
-                        <TextBox Grid.Column="1" Text="{Binding Url, UpdateSourceTrigger=PropertyChanged}" Margin="8,0" AutomationProperties.Name="Request URL" />
-                        <Button Grid.Column="2" Content="_Send" Command="{Binding SendCommand}" AutomationProperties.AutomationId="SendRequest" />
-                        <Button Grid.Column="3" Content="Cancel" Command="{Binding SendCancelCommand}" Margin="8,0,0,0" />
-                    </Grid>
-                    <TextBlock Grid.Row="2" Text="Redirects are preserved or followed per settings. Response bodies stay on this machine." Margin="0,0,0,8" TextWrapping="Wrap" />
+                    <DockPanel Grid.Row="1" Margin="0,0,0,8">
+                        <Label Content="_Environment:" Target="{Binding ElementName=EnvironmentCombo}" VerticalAlignment="Center" Margin="0,0,8,0" Padding="0" />
+                        <ComboBox x:Name="EnvironmentCombo" ItemsSource="{Binding ProjectEnvironments}" SelectedItem="{Binding SelectedEnvironment}" DisplayMemberPath="Path" Width="200" AutomationProperties.Name="Active environment" />
+                        <Label Content="Name:" Target="{Binding ElementName=RequestNameBox}" VerticalAlignment="Center" Margin="16,0,8,0" Padding="0" />
+                        <TextBox x:Name="RequestNameBox" Text="{Binding RequestName, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Request name" />
+                    </DockPanel>
+                    <DockPanel Grid.Row="2" Margin="0,0,0,12">
+                        <Button DockPanel.Dock="Right" Content="_Send" Command="{Binding SendCommand}" FontWeight="SemiBold" Padding="20,8" Margin="8,0,0,0" AutomationProperties.Name="Send HTTP request" AutomationProperties.HelpText="Executes the configured request. Press Ctrl+Enter from anywhere in the workbench." />
+                        <Button DockPanel.Dock="Right" Content="_Cancel" Command="{Binding CancelSendCommand}" Padding="12,8" Margin="8,0,0,0" AutomationProperties.Name="Cancel sending request" />
+                        <ComboBox ItemsSource="{Binding Methods}" SelectedItem="{Binding Method}" Width="100" Margin="0,0,8,0" AutomationProperties.Name="HTTP method" />
+                        <TextBox Text="{Binding Url, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Request URL" AutomationProperties.HelpText="Enter an absolute HTTP(S) URL. Credentials are not permitted." />
+                    </DockPanel>
                     <TabControl x:Name="RequestTabs" Grid.Row="3">
-                        <TabItem Header="Headers"><TextBox Text="{Binding RequestHeaders, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" FontFamily="Consolas" VerticalScrollBarVisibility="Auto" AutomationProperties.Name="Request headers" AutomationProperties.HelpText="Enter headers as Name: value per line. Repeated header names are supported." /></TabItem>
+                        <TabItem Header="Headers"><TextBox Text="{Binding RequestHeaders, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" FontFamily="{Binding EditorFontFamily}" FontSize="{Binding EditorFontSize}" VerticalScrollBarVisibility="Auto" AutomationProperties.Name="Request headers" AutomationProperties.HelpText="Enter headers as Name: value per line. Repeated header names are supported." /></TabItem>
                         <TabItem Header="Body">
                             <Grid Margin="8">
-                                <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
                                 <DockPanel Margin="0,0,0,8">
-                                    <Label Content="Body _mode:" Target="{Binding ElementName=BodyModeCombo}" VerticalAlignment="Center" Padding="0" Margin="0,0,8,0" />
-                                    <ComboBox x:Name="BodyModeCombo" ItemsSource="{Binding BodyModes}" SelectedItem="{Binding BodyMode}" Width="140" AutomationProperties.Name="Request body mode" />
-                                    <Label Content="File _path:" Target="{Binding ElementName=BodyFilePathBox}" VerticalAlignment="Center" Padding="0" Margin="16,0,8,0" />
-                                    <TextBox x:Name="BodyFilePathBox" Text="{Binding BodyFilePath, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="File-backed body path" />
+                                    <ComboBox DockPanel.Dock="Right" ItemsSource="{Binding BodyModes}" SelectedItem="{Binding BodyMode}" Width="120" AutomationProperties.Name="Request body mode" />
+                                    <Button DockPanel.Dock="Right" Content="Format _body" Command="{Binding FormatRequestBodyCommand}" Margin="0,0,8,0" AutomationProperties.Name="Format request body" />
+                                    <TextBox Text="{Binding BodyFilePath, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="File upload path" AutomationProperties.HelpText="Required when body mode is file." />
                                 </DockPanel>
-                                <editor:TextEditor Grid.Row="1" x:Name="RequestBodyEditor" local:EditorBinding.Text="{Binding RequestBody}" ShowLineNumbers="True" FontFamily="Consolas" FontSize="14" AutomationProperties.Name="Request text or JSON body" />
+                                <Border Grid.Row="1" Background="#FFEBEE" Padding="8,4" Margin="0,0,0,4" Visibility="{Binding RequestBodyDiagnosticVisibility}">
+                                    <TextBlock Text="{Binding RequestBodyDiagnostic}" Foreground="#C62828" TextWrapping="Wrap" AutomationProperties.Name="Request body diagnostic" />
+                                </Border>
+                                <editor:TextEditor Grid.Row="2" x:Name="RequestBodyEditor" local:EditorBinding.Text="{Binding RequestBody}"
+                                    local:EditorBinding.SyntaxHighlighting="{Binding RequestHighlighting}"
+                                    ShowLineNumbers="True" FontFamily="{Binding EditorFontFamily}" FontSize="{Binding EditorFontSize}" AutomationProperties.Name="Request text or JSON body" />
                             </Grid>
                         </TabItem>
-                        <TabItem Header="Query params"><TextBox Text="{Binding RequestQuery, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" FontFamily="Consolas" VerticalScrollBarVisibility="Auto" AutomationProperties.Name="Request query parameters" AutomationProperties.HelpText="Enter query parameters as name=value per line. Repeated parameter names are supported." /></TabItem>
+                        <TabItem Header="Query params"><TextBox Text="{Binding RequestQuery, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" FontFamily="{Binding EditorFontFamily}" FontSize="{Binding EditorFontSize}" VerticalScrollBarVisibility="Auto" AutomationProperties.Name="Request query parameters" AutomationProperties.HelpText="Enter query parameters as name=value per line. Repeated parameter names are supported." /></TabItem>
                         <TabItem Header="Transport settings">
                             <StackPanel Margin="12">
-                                <CheckBox Content="Follow redirects automatically (cross-origin auth is stripped)" IsChecked="{Binding FollowRedirects}" Margin="0,0,0,12" AutomationProperties.Name="Follow redirects" />
-                                <CheckBox Content="Dangerous: ignore TLS certificate errors (override default TLS validation)" IsChecked="{Binding DangerousIgnoreTlsErrors}" Margin="0,0,0,4" AutomationProperties.Name="Ignore TLS errors" />
-                                <TextBlock Text="Warning: TLS verification is strictly enabled by default. Ignoring errors exposes traffic to interception." Foreground="DarkRed" Margin="24,0,0,0" />
+                                <CheckBox Content="Follow redirects (cross-origin auth stripped)" IsChecked="{Binding FollowRedirects}" Margin="0,0,0,8" AutomationProperties.Name="Follow redirects" />
+                                <CheckBox Content="Ignore TLS certificate errors (insecure override)" IsChecked="{Binding DangerousIgnoreTlsErrors}" AutomationProperties.Name="Ignore TLS errors" />
                             </StackPanel>
                         </TabItem>
                         <TabItem Header="Variables">
-                            <DockPanel Margin="8">
-                                <Button DockPanel.Dock="Top" Content="_Inspect variables" Command="{Binding InspectVariablesCommand}" HorizontalAlignment="Left" Margin="0,0,0,8" AutomationProperties.Name="Inspect active variables" />
-                                <TextBox Text="{Binding VariablesInspectionText, Mode=OneWay}" IsReadOnly="True" AcceptsReturn="True" FontFamily="Consolas" VerticalScrollBarVisibility="Auto" AutomationProperties.Name="Variable inspection results" />
+                            <DockPanel Margin="12">
+                                <DockPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+                                    <Button DockPanel.Dock="Right" Content="_Inspect variables" Command="{Binding InspectVariablesCommand}" AutomationProperties.Name="Inspect resolved variables" />
+                                    <TextBlock Text="Resolved variable preview and origin scope:" VerticalAlignment="Center" />
+                                </DockPanel>
+                                <TextBox Text="{Binding VariablesInspectionText, Mode=OneWay}" IsReadOnly="True" AcceptsReturn="True" FontFamily="{Binding EditorFontFamily}" FontSize="{Binding EditorFontSize}" VerticalScrollBarVisibility="Auto" AutomationProperties.Name="Variable inspection results" />
                             </DockPanel>
                         </TabItem>
                         <TabItem Header="Auth">
@@ -121,9 +148,31 @@
                     </TabControl>
                     <GridSplitter Grid.Row="4" Height="6" HorizontalAlignment="Stretch" />
                     <TabControl Grid.Row="5">
-                        <TabItem Header="Response body"><editor:TextEditor local:EditorBinding.Text="{Binding ResponseBody, Mode=OneWay}" IsReadOnly="True" ShowLineNumbers="True" FontFamily="Consolas" FontSize="14" AutomationProperties.Name="Response body" /></TabItem>
-                        <TabItem Header="Response headers"><TextBox Text="{Binding ResponseHeaders, Mode=OneWay}" IsReadOnly="True" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" FontFamily="Consolas" AutomationProperties.Name="Response headers" /></TabItem>
-                        <TabItem Header="Cookies"><TextBox Text="{Binding ResponseCookies, Mode=OneWay}" IsReadOnly="True" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" FontFamily="Consolas" AutomationProperties.Name="Response cookies" /></TabItem>
+                        <TabItem Header="Response body">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+                                <DockPanel Margin="8,4,8,4">
+                                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
+                                        <Label Content="View:" VerticalAlignment="Center" Margin="0,0,4,0" Padding="0" />
+                                        <ComboBox ItemsSource="{Binding ResponseViewModes}" SelectedItem="{Binding ResponseViewMode}" Width="90" AutomationProperties.Name="Response view mode" />
+                                    </StackPanel>
+                                    <TextBlock Text="{Binding ResponseHighlighting, StringFormat='Format: {0}'}" VerticalAlignment="Center" Foreground="Gray" />
+                                </DockPanel>
+                                <Border Grid.Row="1" Background="#FFF3E0" Padding="8,4" Margin="4,0,4,4" Visibility="{Binding ResponseDiagnosticVisibility}">
+                                    <TextBlock Text="{Binding ResponseDiagnostic}" Foreground="#E65100" TextWrapping="Wrap" AutomationProperties.Name="Response diagnostic" />
+                                </Border>
+                                <editor:TextEditor Grid.Row="2" local:EditorBinding.Text="{Binding ResponseBody, Mode=OneWay}"
+                                    local:EditorBinding.SyntaxHighlighting="{Binding ResponseHighlighting}"
+                                    IsReadOnly="True" ShowLineNumbers="True"
+                                    FontFamily="{Binding EditorFontFamily}" FontSize="{Binding EditorFontSize}" AutomationProperties.Name="Response body" />
+                            </Grid>
+                        </TabItem>
+                        <TabItem Header="Response headers"><TextBox Text="{Binding ResponseHeaders, Mode=OneWay}" IsReadOnly="True" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" FontFamily="{Binding EditorFontFamily}" FontSize="{Binding EditorFontSize}" AutomationProperties.Name="Response headers" /></TabItem>
+                        <TabItem Header="Cookies"><TextBox Text="{Binding ResponseCookies, Mode=OneWay}" IsReadOnly="True" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" FontFamily="{Binding EditorFontFamily}" FontSize="{Binding EditorFontSize}" AutomationProperties.Name="Response cookies" /></TabItem>
                         <TabItem Header="Local artifact"><TextBox Text="{Binding ArtifactPath, Mode=OneWay}" IsReadOnly="True" TextWrapping="Wrap" AutomationProperties.Name="Local response body path" /></TabItem>
                     </TabControl>
                 </Grid>
