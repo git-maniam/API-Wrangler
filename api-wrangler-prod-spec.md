@@ -2520,18 +2520,15 @@ Do not begin distributed infrastructure before these decisions are settled.
 
 **Implementation checkpoint (2026-11-07):** Phase 1 project discovery, versioned schemas, canonical assets, journaled persistence, watcher/recovery behavior, snapshots, local settings, and a desktop asset editor are implemented in PR #57. The five Phase 1 exit checks pass locally. After the Linux writer-lease fix, hosted Windows and Linux headless jobs each passed 30 tests with zero skipped; desktop build, format, and publish passed. ADR-0002 defines version 1 as the first supported format. P1.1-P1.3 are In review; P1.4 manual project-editor accessibility acceptance is Ready. The phase epic remains In progress until review, acceptance, and merge. See docs/implementation-status.md and docs/phase-1-exit-review.md.
 
-#### Restart bookmark (updated 2026-11-07 15:07 IST)
+#### Restart bookmark (updated 2026-11-07 15:59 IST)
 
-Verified: the five Phase 1 exit checks pass locally. PR #57 is open and non-draft. After the Linux writer-lease fix, hosted Windows and Linux headless jobs each passed 30 tests with zero skipped; desktop build, format, and publish passed. Earlier local testing passed 26 tests and skipped four optional Node tests because that worker was not configured. ADR-0002 defines version 1 as the first supported format. Section 31.0 requires necessary, batched builds and tests.
+Verified: PR #57 is open, non-draft, mergeable, and has no review yet. Its last completed hosted desktop and Windows/Linux headless checks passed. The README now records current capabilities, the overall phase plan, and the immediate Phase 1 gate. No local build or test was run for this documentation cleanup; pushing this batch starts fresh CI.
 
-GitHub Project 4 at 15:04 IST: P1.1-P1.3 are In review against PR #57; P1.4 (#58) is Ready; the Phase 1 epic is In progress. P0.5 is Ready for private HTTPS/SSH verification. P3.4 exact snapshot execution (#59), P5.1 branch/cache invalidation (#23), and the first defined schema migration (#60) are Backlog. New tickets #58 and #59 are linked to their phase epics; #60 is a deferred roadmap item. No ticket or epic is Done.
+GitHub Project 4: P1.1-P1.3 are In review; P1.4 accessibility review (#58) and P0.5 private Git authentication (#6) are Ready; the Phase 1 epic remains In progress. Snapshot execution (#59), branch/cache invalidation (#23), and future schema migration (#60) are Backlog. No issue or epic is Done.
 
-Delivery checkpoint: README, planning, implementation-status, traceability, and bookmark changes are batched on branch phase1-project-editor-acceptance for one push. GitHub issues and board are updated. The README summarizes implemented behavior, hosted verification, open acceptance, and the overall phase plan. No local build or tests were run for this documentation and tracking batch; hosted CI runs after the push.
+Next: complete Windows 11 keyboard, Narrator, high-contrast, and 150% DPI review in #58; address PR #57 review, merge, and reassess Phase 1 acceptance. Phase 0 private HTTPS/SSH acceptance remains separate. Keep statuses tied to executed evidence.
 
-Next: complete Windows 11 x64 keyboard, Narrator, high-contrast, and 150% DPI review on #58; address PR #57 review and merge; then reassess Phase 1 acceptance. Future schema migration, branch/cache invalidation, and snapshot execution remain with #60, #23, and #59 respectively. Phase 0 private HTTPS/SSH acceptance remains separate.
-
-During active work, publish a 2-3 line status at least every 10 minutes, refresh this bookmark at least every 30 minutes and at handoff, and synchronize GitHub issues at material checkpoints. Batch verification; rerun builds or tests only for a concrete risk or required gate.
-
+During active work, publish a 2-3 line status at least every 10 minutes, refresh this bookmark at least every 30 minutes and at handoff, and synchronize GitHub issues at material checkpoints. Run builds or tests only for a concrete risk or required gate and batch related checks.
 ### Phase 2 — HTTP testing workbench
 
 **Build:**

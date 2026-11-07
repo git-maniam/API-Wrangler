@@ -7,7 +7,7 @@ A local-first Windows API testing workbench with a shared headless engine. The P
 - The WPF desktop shell can edit and send basic HTTP requests, inspect bounded responses, cancel an active request, and display a read-only 100,000-case grid. The CLI has `send`, `git-probe`, and `node-probe` feasibility commands.
 - Version-1 project schemas, discovery, canonical JSON, journaled saves, writer ownership, recovery, watching, local settings, immutable saved-file snapshots, and a desktop JSON asset editor are implemented in [PR #57](https://github.com/git-maniam/API-Wrangler/pull/57). The editor preserves drafts, reloads clean files, and requires a choice when a draft conflicts with disk.
 - The five Phase 1 specification exit checks pass locally. After the Linux writer-lease fix, hosted Windows and Linux headless jobs each passed 30 tests with zero skipped; desktop build, format, and publish passed. [Phase 1 exit review](docs/phase-1-exit-review.md) records the evidence and limits.
-- P1.1-P1.3 are **In review**. The Phase 1 epic remains **In progress**: manual Windows 11 keyboard, Narrator, high-contrast, and DPI review is [Ready in #58](https://github.com/git-maniam/API-Wrangler/issues/58). Phase 0 private HTTPS/SSH acceptance is also still open. No Phase 1 ticket is Done before review, acceptance, and merge.
+- P1.1-P1.3 are **In review** on PR #57, with passing checks and no review yet. The Phase 1 epic remains **In progress**: manual Windows 11 keyboard, Narrator, high-contrast, and DPI review is [Ready in #58](https://github.com/git-maniam/API-Wrangler/issues/58). Separate Phase 0 private HTTPS/SSH acceptance is [Ready in #6](https://github.com/git-maniam/API-Wrangler/issues/6). No Phase 1 ticket is Done before review, acceptance, and merge.
 
 ## Overall plan
 
@@ -22,6 +22,8 @@ A local-first Windows API testing workbench with a shared headless engine. The P
 Type-aware editors and font preferences ([#54](https://github.com/git-maniam/API-Wrangler/issues/54)), dataset previews ([#55](https://github.com/git-maniam/API-Wrangler/issues/55)), GraphQL display ([#56](https://github.com/git-maniam/API-Wrangler/issues/56)), and application icon packaging ([#5](https://github.com/git-maniam/API-Wrangler/issues/5)) are planned, not implemented.
 
 The [GitHub project](https://github.com/users/git-maniam/projects/4/views/3) tracks phase epics and tickets; the [tracking workflow](docs/planning/README.md) explains its statuses. The first real schema migration is [deferred until a source and destination version exist](https://github.com/git-maniam/API-Wrangler/issues/60). [Snapshot execution](https://github.com/git-maniam/API-Wrangler/issues/59) belongs to Phase 3, and [branch/cache invalidation](https://github.com/git-maniam/API-Wrangler/issues/23) to Phase 5. Windows 11 x64 is the current desktop target; [ARM64 is deferred](https://github.com/git-maniam/API-Wrangler/issues/53). No delivery dates are assigned.
+
+The next Phase 1 gate is the manual accessibility review in #58. After its findings are resolved, review and merge PR #57, then verify the Phase 1 epic and child tickets before moving any of them to Done.
 
 ## Build and verification
 
