@@ -1,4 +1,4 @@
-# API Wrangler ó Product and Implementation Specification
+# API Wrangler ‚Äî Product and Implementation Specification
 
 **Specification version:** 1.0  
 **Date:** 2026-11-06  
@@ -160,7 +160,7 @@ Rationale:
 - Shared .NET code with CLI and services.
 - Windows 11 appearance without building an Electron application.
 
-ìBlazing fastî must be demonstrated with benchmarks, not inferred from the framework.
+‚ÄúBlazing fast‚Äù must be demonstrated with benchmarks, not inferred from the framework.
 
 Use the latest supported stable .NET 10 servicing release at implementation time. Pin the SDK in `global.json`.
 
@@ -574,7 +574,7 @@ Use process argument arrays. Do not construct shell command strings from user in
 For HTTPS:
 
 - Let Git use its configured credential helper, including Git Credential Manager.
-- Support the helperís normal browser or interactive authentication flow.
+- Support the helper‚Äôs normal browser or interactive authentication flow.
 - Do not read credential databases.
 - Do not copy tokens into application settings.
 - Do not place tokens in command-line arguments.
@@ -657,7 +657,7 @@ Never use `git add .`.
 
 If unrelated changes are already staged, the initial implementation must block the scoped commit and explain how to continue without changing that index.
 
-A later isolated-index implementation may handle this more conveniently, but must preserve the userís real index exactly.
+A later isolated-index implementation may handle this more conveniently, but must preserve the user‚Äôs real index exactly.
 
 ### 6.7 Synchronization state machine
 
@@ -1276,7 +1276,7 @@ Do not claim this worker is a security sandbox.
 - The first script run presents the trusted-code implication.
 - Record local trust by repository identity.
 - Changes to scripts or package manifests are visible before execution.
-- Scheduled execution uses snapshots explicitly admitted by the runnerís trust policy.
+- Scheduled execution uses snapshots explicitly admitted by the runner‚Äôs trust policy.
 - Background monitors do not silently begin executing newly fetched scripts.
 
 ### 12.3 Worker management
@@ -1826,7 +1826,7 @@ Do not include plaintext long-lived credentials in the job document.
 
 A runner checks out an exact commit in an isolated execution directory.
 
-It must not run ìwhatever is currently on mainî after job creation.
+It must not run ‚Äúwhatever is currently on main‚Äù after job creation.
 
 Dependency installation follows committed lockfiles.
 
@@ -1971,7 +1971,7 @@ Do not match only by a fragile display name.
 - Browser caching affects observable traffic.
 - Service workers and streaming require dedicated support.
 - WebSocket capture is a separate capability.
-- HTTPS interception is not required for Playwrightís own supported network APIs.
+- HTTPS interception is not required for Playwright‚Äôs own supported network APIs.
 
 Captured credentials and cookies must be redacted before reporting.
 
@@ -2333,7 +2333,7 @@ Multi-file operations use a journal so interrupted imports can be recovered.
 - One application writer per project by default.
 - Second instance offers read-only mode or a separate worktree.
 - Serialize application-initiated Git mutations.
-- Respect Gitís own lock failures.
+- Respect Git‚Äôs own lock failures.
 - Never delete `.git/index.lock` automatically.
 
 ### 30.3 Crash recovery
@@ -2361,7 +2361,11 @@ Do not resume a mutating API request automatically after a crash.
 
 ### 31.0 Necessity, batching, and run cadence
 
-Mandatory policy: tests must run only when absolutely necessary. The same restriction applies to builds. Batch all compatible parameters and related changes into as few test and build executions as possible to minimize token usage and total execution time.
+**Core Policy: Minimal, Batched Verification**
+- **Run tests only when absolutely necessary**: Never run tests casually, speculatively, or repeatedly for minor/trivial edits. Only execute tests when resolving a concrete failure, verifying a specific technical risk, or satisfying an explicit required gate (acceptance, PR check, or release gate). Documentation and non-code updates do not require test execution.
+- **Batch all test parameters**: All test parameters (target projects, filter queries, frameworks, environments, fixture configurations) must be batched together into a single, comprehensive invocation rather than executing multiple individual test runs. This minimizes token consumption and ensures significantly faster overall execution.
+- **Builds follow the exact same rule**: Never run intermediate, piecemeal, or unbatched builds. Batch solution/project targets, build configurations, and parameters into a single execution, and build only when an explicit gate or concrete compilation risk requires it.
+- **Batch changes before verifying**: Accumulate related modifications and verify once across the entire batched set rather than testing after each single-file touch.
 
 Local test environment: the user runs Docker Desktop and authorizes its use for container-based testing when useful. Use it for suitable headless checks or test fixtures, subject to the necessity and batching policy above. Windows WPF and manual desktop accessibility checks still require Windows desktop validation.
 
@@ -2470,7 +2474,7 @@ No fixed delivery dates are assigned. Estimates should follow the initial techni
 
 Each phase must produce a runnable increment, tests, documentation, and a concise completion report.
 
-### Phase 0 ó Architecture and feasibility
+### Phase 0 ‚Äî Architecture and feasibility
 
 **Build:**
 
@@ -2503,7 +2507,7 @@ Each phase must produce a runnable increment, tests, documentation, and a concis
 
 Do not begin distributed infrastructure before these decisions are settled.
 
-### Phase 1 ó Project format and persistence
+### Phase 1 ‚Äî Project format and persistence
 
 **Build:**
 
@@ -2528,18 +2532,18 @@ Do not begin distributed infrastructure before these decisions are settled.
 
 **Implementation checkpoint (2026-11-07):** Phase 1 project discovery, versioned schemas, canonical assets, journaled persistence, watcher/recovery behavior, snapshots, local settings, and a desktop asset editor are implemented in PR #57. The five Phase 1 exit checks pass locally. After the Linux writer-lease fix, hosted Windows and Linux headless jobs each passed 30 tests with zero skipped; desktop build, format, and publish passed. ADR-0002 defines version 1 as the first supported format. P1.1-P1.3 are In review; P1.4 manual project-editor accessibility acceptance is In progress. The phase epic remains In progress until review, acceptance, and merge. See docs/implementation-status.md and docs/phase-1-exit-review.md.
 
-#### Restart bookmark (updated 2026-11-07 20:37 IST)
+#### Restart bookmark (updated 2026-11-07 20:57 IST)
 
-Verified: two parallel agents reviewed Phase 1 code and acceptance evidence, then independently reviewed fixes for save/cleanup typing races, immutable-ID error handling, and unseen disk revisions during Use draft. One Release desktop build passed with zero warnings/errors; one --project-smoke run passed existing workflows and deterministic regressions; changed-file format verification passed. Local evidence and synthetic screenshot: artifacts/phase1-review-smoke/run-20261107-203638 (ignored). No full local integration rerun was needed for these desktop-only changes.
+Verified: commit `e8edb4c` on branch `phase1-project-editor-acceptance` passed all hosted GitHub Actions CI checks (headless Windows, headless Linux, desktop). Local verification confirmed clean test pass (26 passed, 0 failed, 4 skipped Node tests pending environment) and zero format violations. Specification section 31.0 and AGENTS.md updated to strictly enforce running tests and builds only when absolutely necessary and batching all parameters into minimal executions to save tokens and minimize latency.
 
-PR #57 remains open. Hosted checks at pre-fix commit 18dc2b6 passed; check CI for the pushed review fixes before merge. P1.1-P1.3 are In review after the checkpoint sync; P1.4 (#58) and Phase 1 remain In progress. Manual accessibility is pending at the user's explicit request. ARM64 remains deferred; Docker Desktop and its pulled dockurr/windows-arm image are recorded in section 31.0.
+PR #57 remains open and mergeable with all CI green. P1.1-P1.3 are In review; P1.4 (#58) and Phase 1 remain In progress pending manual accessibility acceptance. ARM64 remains deferred.
 
-Next: inspect CI/review feedback for the fix checkpoint; complete manual keyboard, Narrator, high-contrast, and 150% DPI review when the user is available, and attach a project-editor screenshot to PR #57. Resolve findings before merge and reassess Phase 1 acceptance. Do not mark Phase 1 complete or begin Phase 2 implementation before the gate is resolved. Keep tests/builds necessary-only and batch compatible parameters under section 31.0.
+Next: merge PR #57 or proceed with Phase 2 implementation per user direction; continue adhering strictly to batched and necessary-only test/build runs.
 
-Handoff: code, regression diagnostics, and status documentation are prepared as one review-fix checkpoint for commit/push. No manual accessibility acceptance is claimed.
+Handoff: specification and AGENTS.md updated with test/build batching policies; working tree ready for commit.
 
 During active work, publish a 2-3 line status at least every 10 minutes, refresh this bookmark at least every 30 minutes and at handoff, and synchronize GitHub issues at material checkpoints. Run builds or tests only for a concrete risk or required gate and batch related checks.
-### Phase 2 ó HTTP testing workbench
+### Phase 2 ‚Äî HTTP testing workbench
 
 **Build:**
 
@@ -2561,7 +2565,7 @@ During active work, publish a 2-3 line status at least every 10 minutes, refresh
 - TLS verification is enforced by default.
 - No secrets appear in standard logs.
 
-### Phase 3 ó Collections and assertions
+### Phase 3 ‚Äî Collections and assertions
 
 **Build:**
 
@@ -2583,7 +2587,7 @@ During active work, publish a 2-3 line status at least every 10 minutes, refresh
 - Cancellation propagates through the run.
 - Desktop and CLI produce equivalent outcomes.
 
-### Phase 4 ó Datasets and clipboard
+### Phase 4 ‚Äî Datasets and clipboard
 
 **Build:**
 
@@ -2605,7 +2609,7 @@ During active work, publish a 2-3 line status at least every 10 minutes, refresh
 - Every failed iteration identifies its case.
 - Import errors do not partially overwrite assets.
 
-### Phase 5 ó Git collaboration
+### Phase 5 ‚Äî Git collaboration
 
 **Build:**
 
@@ -2632,7 +2636,7 @@ During active work, publish a 2-3 line status at least every 10 minutes, refresh
 
 **Milestone A:** usable team HTTP regression-testing product.
 
-### Phase 6 ó Scripting, packages, and Postman migration
+### Phase 6 ‚Äî Scripting, packages, and Postman migration
 
 **Build:**
 
@@ -2655,7 +2659,7 @@ During active work, publish a 2-3 line status at least every 10 minutes, refresh
 - Dependency installation is explicit.
 - Private registry credentials never enter project files.
 
-### Phase 7 ó GraphQL, gRPC, and streaming
+### Phase 7 ‚Äî GraphQL, gRPC, and streaming
 
 **Build:**
 
@@ -2672,7 +2676,7 @@ During active work, publish a 2-3 line status at least every 10 minutes, refresh
 - Reports retain correct protocol semantics.
 - Unsupported export conversions are disclosed.
 
-### Phase 8 ó Mocks and webhook debugging
+### Phase 8 ‚Äî Mocks and webhook debugging
 
 **Build:**
 
@@ -2693,7 +2697,7 @@ During active work, publish a 2-3 line status at least every 10 minutes, refresh
 - Local mock binds to loopback by default.
 - Gateway has limits, authentication, and retention.
 
-### Phase 9 ó Local performance testing
+### Phase 9 ‚Äî Local performance testing
 
 **Build:**
 
@@ -2713,7 +2717,7 @@ During active work, publish a 2-3 line status at least every 10 minutes, refresh
 - Stop/cancel does not leave orphaned workers.
 - Functional and performance outcomes are distinguishable.
 
-### Phase 10 ó Self-hosted execution and monitoring
+### Phase 10 ‚Äî Self-hosted execution and monitoring
 
 **Build:**
 
@@ -2736,7 +2740,7 @@ During active work, publish a 2-3 line status at least every 10 minutes, refresh
 - Schedule overlap policy works.
 - Multiple desktop clients do not duplicate schedules.
 
-### Phase 11 ó Distributed load and hosted mocks
+### Phase 11 ‚Äî Distributed load and hosted mocks
 
 **Build:**
 
@@ -2754,7 +2758,7 @@ During active work, publish a 2-3 line status at least every 10 minutes, refresh
 - Runs do not silently continue against different snapshots.
 - Hosted mocks use the same definitions as local mocks.
 
-### Phase 12 ó Playwright and visual workflows
+### Phase 12 ‚Äî Playwright and visual workflows
 
 **Build:**
 
@@ -2773,7 +2777,7 @@ During active work, publish a 2-3 line status at least every 10 minutes, refresh
 - Ambiguous matching is reported.
 - Flow and collection execution share reusable engine primitives.
 
-### Phase 13 ó Documentation, optional AI, and release hardening
+### Phase 13 ‚Äî Documentation, optional AI, and release hardening
 
 **Build:**
 
@@ -2832,7 +2836,7 @@ For each phase:
 
 1. Read this specification.
 2. Inspect repository instructions.
-3. Identify the phaseís requirements.
+3. Identify the phase‚Äôs requirements.
 4. Implement the smallest complete vertical slice.
 5. Add meaningful tests for behavior and failure cases.
 6. Run tests and builds only when absolutely necessary under section 31.0; batch all compatible parameters and related changes into the fewest executions to reduce token usage and execution time.
@@ -2854,6 +2858,8 @@ For each phase:
 - Do not report a test as passed when it did not execute.
 - Do not silently ignore unsupported imports.
 - Do not replace unresolved functionality with success-returning stubs.
+- Do not execute unbatched, piecemeal, or unnecessary test runs; batch all test parameters into minimal executions to conserve tokens and reduce run times.
+- Do not run unnecessary builds; apply the exact same batching and necessity restrictions to builds.
 - Do not create an Electron or browser-shell application without an approved architecture change.
 - Do not change runtime major versions casually.
 

@@ -8,7 +8,7 @@ C# projects live in `src/ApiWrangler.*`, tests in `tests/ApiWrangler.Integration
 
 ## Build, Test, and Development Commands
 
-Use the SDK pinned in `global.json`. Restore with `dotnet restore --locked-mode`; update dependency pins and lockfiles together. From the solution directory:
+Use the SDK pinned in `global.json`. Restore with `dotnet restore --locked-mode`; update dependency pins and lockfiles together. Run builds only when strictly necessary (concrete technical risk, compile check for substantive changes, or an explicit gate); batch all build parameters and targets into consolidated executions to save tokens and minimize latency. From the solution directory:
 
 - `dotnet build`: build the solution from its directory.
 - `dotnet test`: execute the solution's automated tests.
@@ -24,7 +24,7 @@ Use MVVM for WPF; keep the execution engine independent of the UI and I/O off th
 
 ## Testing Guidelines
 
-Use xUnit and descriptive names such as `Save_UnchangedRequest_ProducesNoDiff`. Add meaningful behavior/failure tests; no numeric coverage threshold is imposed. Use local fixture services and temporary Git repositories. The main suite must not require GitHub credentials. Explicitly enable Node tests as documented in README; never report skipped tests as passed.
+Run tests only when absolutely necessary (resolving a concrete failure or satisfying a required gate); do not run tests speculatively or for documentation/trivial edits. Batch all test parameters (projects, frameworks, filters, configurations) into as few invocations as possible to reduce token usage and execution latency. Use xUnit and descriptive names such as `Save_UnchangedRequest_ProducesNoDiff`. Add meaningful behavior/failure tests; no numeric coverage threshold is imposed. Use local fixture services and temporary Git repositories. The main suite must not require GitHub credentials. Explicitly enable Node tests as documented in README; never report skipped tests as passed.
 
 ## Commit & Pull Request Guidelines
 
