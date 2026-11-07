@@ -47,4 +47,4 @@ The GitHub project tracks the full plan in phase epics and implementation ticket
 
 ## Next implementation slice
 
-Finish phase-0 private HTTPS/SSH and accessibility validation. For phase 1, verify migration/backups and actionable schema diagnostics (P1.1), broader transaction recovery (P1.2), and watcher overflow, branch invalidation, and editor conflict handling (P1.3). Then review phase exit criteria before Phase 2. The checkpoint is also recorded in `api-wrangler-prod-spec.md`.
+Phase 1 restart bookmark: define supported legacy migration inputs and backup behavior, wire dirty-editor conflict decisions into the desktop, then review all exit criteria. Branch/cache invalidation waits for a project cache. Current estimate is 3–5 focused days (about 1–2 weeks part-time). Phase-0 private HTTPS/SSH and accessibility validation remain separate open work. Details are bookmarked in `api-wrangler-prod-spec.md`.
