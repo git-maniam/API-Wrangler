@@ -2522,13 +2522,13 @@ Do not begin distributed infrastructure before these decisions are settled.
 
 **Implementation checkpoint (2026-11-07):** Phase 1 project discovery, versioned schemas, canonical assets, journaled persistence, watcher/recovery behavior, snapshots, local settings, and a desktop asset editor are implemented in PR #57. The five Phase 1 exit checks pass locally. After the Linux writer-lease fix, hosted Windows and Linux headless jobs each passed 30 tests with zero skipped; desktop build, format, and publish passed. ADR-0002 defines version 1 as the first supported format. P1.1-P1.3 are In review; P1.4 manual project-editor accessibility acceptance is In progress. The phase epic remains In progress until review, acceptance, and merge. See docs/implementation-status.md and docs/phase-1-exit-review.md.
 
-#### Restart bookmark (updated 2026-11-07 16:28 IST)
+#### Restart bookmark (updated 2026-11-07 19:08 IST)
 
-Verified: PR #57 remains open, non-draft, mergeable, and has no review; hosted desktop and Windows/Linux headless checks pass. P1.4 (#58) is In progress. Its current Release build and project smoke pass for programmatic UI Automation; manual keyboard focus, Narrator, high-contrast, and 150% DPI acceptance still needs an interactive Windows session. The user requested stricter validation cadence; section 31.0 now requires builds/tests only when absolutely necessary, compatible parameters batched into as few runs as practical, concise output, and targeted reruns after failures.
+Verified: PR #57 is open, non-draft, mergeable, and has no reviews. Latest hosted desktop and Windows/Linux headless checks pass. P1.4 (#58) is open and remains In progress per the last project sync; its current Release build and project smoke passed programmatic UI Automation. Manual keyboard focus, Narrator, high-contrast, and 150% DPI acceptance still needs an interactive Windows session.
 
-GitHub Project 4: P1.1-P1.3 are In review; P1.4 accessibility review (#58) is In progress; P0.5 private Git authentication (#6) is Ready; the Phase 1 epic remains In progress. Snapshot execution (#59), branch/cache invalidation (#23), and future schema migration (#60) are Backlog. No issue or epic is Done.
+GitHub Project 4 (last synced): P1.1-P1.3 are In review; P1.4 (#58) is In progress; P0.5 (#6) is Ready; Phase 1 remains In progress. #23, #59, and #60 remain Backlog. No issue or epic is Done.
 
-Next: complete the interactive accessibility review in #58; address PR #57 review and merge, then reassess Phase 1 acceptance. Phase 0 private HTTPS/SSH acceptance remains separate. Keep statuses tied to executed evidence.
+Next: complete the interactive accessibility review in #58, then address PR #57 review and merge before reassessing Phase 1 acceptance. Validation policy is in section 31.0 and step 6 of section 34.1: run builds/tests only when necessary, batch compatible parameters, minimize executions and output, and reuse valid results. No build or tests were run for this documentation update.
 
 During active work, publish a 2-3 line status at least every 10 minutes, refresh this bookmark at least every 30 minutes and at handoff, and synchronize GitHub issues at material checkpoints. Run builds or tests only for a concrete risk or required gate and batch related checks.
 ### Phase 2 — HTTP testing workbench
@@ -2827,7 +2827,7 @@ For each phase:
 3. Identify the phase’s requirements.
 4. Implement the smallest complete vertical slice.
 5. Add meaningful tests for behavior and failure cases.
-6. Run relevant checks.
+6. Run checks only when section 31.0 says they are necessary; batch compatible parameters and use the fewest executions.
 7. Update documentation.
 8. Record deviations and decisions.
 9. Produce a completion report.
