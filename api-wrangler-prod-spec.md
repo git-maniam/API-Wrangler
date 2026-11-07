@@ -2538,6 +2538,8 @@ Current continuation: Phase 4 and P4.1 (#19/#20) are In progress. The streaming 
 
 Execution rules: Tests must run only when absolutely necessary to resolve a concrete failure or satisfy a required acceptance gate. Batch all relevant test parameters (projects, frameworks, filters, configurations) into as few invocations as possible for lower token usage and faster execution. Build only when necessary for a substantive compile risk or required gate; reuse existing build results when valid. After each completed implementation step, update this Restart bookmark and the affected GitHub Project tickets together, in parallel where independent. Record verified results, remaining work, blockers, and IST time; do not report historical tests as newly executed.
 
+Checkpoint: parser implementation pushed as `03aa35e` on `phase4-delimited-reader`, draft PR #69. Continue P4.1 on this branch with JSON/JSONL and preview/conversion/import integration. P4/P4.1 stay In progress because this PR covers only the delimited-reader foundation. No blocker; 14 unrelated whitespace edits remain unstaged and must be preserved.
+
 Verified: Phase 3 (Collections, Assertions, CLI, and Snapshot Execution) is 100% complete, fully verified, and merged into `main`.
 - All Phase 3 sub-issues are complete and marked Done in Project 4:
   - P3.1 (Issue #16, PR #65, commit `efb21ec`): Collection lifecycle, isolated iterations, loop budget (50 ceiling), setup/teardown policy (`Always`, `OnFailure`, `OnSuccess`), CLI `run` and desktop collection execution.
