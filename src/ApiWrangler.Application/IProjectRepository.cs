@@ -14,6 +14,8 @@ public interface IProjectSession : IAsyncDisposable
     bool IsReadOnly { get; }
     Task<ProjectView> ReadAsync(CancellationToken token = default);
     Task SaveAsync(IReadOnlyList<AssetEdit> changes, CancellationToken token = default);
+    Task ImportDatasetFileAsync(AssetEdit definition, Stream source, string sha256, CancellationToken token = default) =>
+        throw new NotSupportedException("This project session does not support file-backed imports.");
     Task<SnapshotInfo> SnapshotAsync(CancellationToken token = default);
     Task<SnapshotInfo> SnapshotAsync(IReadOnlyList<EditorDraft>? drafts, CancellationToken token = default);
     // Each coalesced notification, including watcher overflow, requires a full project rescan.

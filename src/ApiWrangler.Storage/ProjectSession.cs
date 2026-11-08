@@ -115,8 +115,12 @@ internal sealed class ProjectSession : IProjectSession
     public async Task SaveAsync(IReadOnlyList<AssetEdit> edits, CancellationToken token = default)
     {
         await gate.WaitAsync(token).ConfigureAwait(false);
-        try
-        {
+        try { await SaveCoreAsync(edits, token).ConfigureAwait(false); }
+        finally { gate.Release(); }
+    }
+
+    private async Task SaveCoreAsync(IReadOnlyList<AssetEdit> edits, CancellationToken token)
+    {
             EnsureWritable();
             EnsureNoGitIntegration();
             var view = await ReadAsync(token).ConfigureAwait(false);
@@ -162,8 +166,61 @@ internal sealed class ProjectSession : IProjectSession
             if (problems.Count != 0) throw new ProjectValidationException(problems);
             EnsureNoGitIntegration();
             await Transactions.ApplyAsync(files, token).ConfigureAwait(false);
+    }
+
+    public async Task ImportDatasetFileAsync(AssetEdit definition, Stream source, string sha256, CancellationToken token = default)
+    {
+        await gate.WaitAsync(token).ConfigureAwait(false);
+        string? stage = null;
+        try
+        {
+            EnsureWritable();
+            EnsureNoGitIntegration();
+            var view = await ReadAsync(token).ConfigureAwait(false);
+            if (!view.IsValid) throw new ProjectValidationException(view.Diagnostics);
+            var directory = view.Assets.Single(a => a.Kind == AssetKind.Manifest).Content["paths"]!["datasets"]!.GetValue<string>();
+            if (AssetValidator.KindFor(definition.Path) != AssetKind.Dataset || !definition.Path.StartsWith(directory + "/", StringComparison.Ordinal))
+                throw new ArgumentException("Dataset must be stored under the configured dataset directory.", nameof(definition));
+            if (view.Assets.FirstOrDefault(a => a.Path == definition.Path)?.Hash != definition.ExpectedHash)
+                throw new ProjectConflictException(definition.Path);
+            var target = ProjectPaths.Resolve(Root, definition.Path);
+            var parent = Path.GetDirectoryName(target)!;
+            Directory.CreateDirectory(parent);
+            var fileName = $"source-{Guid.NewGuid():N}.jsonl";
+            var published = Path.Combine(parent, fileName);
+            stage = published + ".tmp";
+            using var hash = System.Security.Cryptography.IncrementalHash.CreateHash(System.Security.Cryptography.HashAlgorithmName.SHA256);
+            await using (var output = new FileStream(stage, FileMode.CreateNew, FileAccess.Write, FileShare.None, 65536, FileOptions.Asynchronous))
+            {
+                var buffer = new byte[65536];
+                long total = 0;
+                int count;
+                while ((count = await source.ReadAsync(buffer, token).ConfigureAwait(false)) > 0)
+                {
+                    total += count;
+                    if (total > 1024L * 1024 * 1024) throw new IOException("Dataset exceeds the 1 GiB import limit.");
+                    hash.AppendData(buffer, 0, count);
+                    await output.WriteAsync(buffer.AsMemory(0, count), token).ConfigureAwait(false);
+                }
+                await output.FlushAsync(token).ConfigureAwait(false);
+                output.Flush(flushToDisk: true);
+            }
+            if (!string.Equals(Convert.ToHexStringLower(hash.GetHashAndReset()), sha256, StringComparison.Ordinal))
+                throw new IOException("Prepared dataset content changed; preview again.");
+            token.ThrowIfCancellationRequested();
+            File.Move(stage, published);
+            stage = null;
+            var content = (JsonObject)definition.Content.DeepClone();
+            content["source"] = new JsonObject { ["type"] = "jsonl", ["path"] = fileName, ["sha256"] = sha256 };
+            // Publish immutable content first, then atomically publish its reference. A crash may
+            // leave an unreferenced source, but cannot alter the previous definition or source.
+            await SaveCoreAsync([definition with { Content = content }], token).ConfigureAwait(false);
         }
-        finally { gate.Release(); }
+        finally
+        {
+            if (stage is not null && File.Exists(stage)) File.Delete(stage);
+            gate.Release();
+        }
     }
 
     public async Task<SnapshotInfo> SnapshotAsync(CancellationToken token = default) =>
