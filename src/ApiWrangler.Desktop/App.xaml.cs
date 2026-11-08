@@ -29,7 +29,7 @@ public partial class App : System.Windows.Application
         });
         host = builder.Build();
         MainWindow = host.Services.GetRequiredService<MainWindow>();
-        if (e.Args.Length == 2 && e.Args[0] is "--diagnostics" or "--http-smoke" or "--project-smoke" or "--dataset-smoke")
+        if (e.Args.Length == 2 && e.Args[0] is "--diagnostics" or "--http-smoke" or "--project-smoke" or "--dataset-smoke" or "--git-smoke")
         {
             var window = (MainWindow)MainWindow;
             var output = Path.GetFullPath(e.Args[1]);
@@ -41,6 +41,7 @@ public partial class App : System.Windows.Application
                     if (e.Args[0] == "--http-smoke") await DesktopDiagnostics.TestHttpAsync(window, model, output);
                     else if (e.Args[0] == "--project-smoke") await DesktopDiagnostics.TestProjectAsync(window, model, output);
                     else if (e.Args[0] == "--dataset-smoke") await DesktopDiagnostics.TestDatasetAsync(window, model, output);
+                    else if (e.Args[0] == "--git-smoke") await DesktopDiagnostics.TestGitAsync(window, model, output);
                     else await DesktopDiagnostics.RecordAsync(window, model, output);
                     Shutdown(0);
                 }
