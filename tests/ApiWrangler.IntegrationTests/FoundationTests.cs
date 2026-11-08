@@ -126,7 +126,8 @@ public sealed class FoundationTests
             await service.CloneAsync(remote, first);
             Directory.CreateDirectory(Path.Combine(first, "api-wrangler"));
             await File.WriteAllTextAsync(Path.Combine(first, "api-wrangler", "asset.txt"), "one");
-            await Git(first, "add", "api-wrangler/asset.txt");
+            await File.WriteAllTextAsync(Path.Combine(first, "api-wrangler", "CaseFile.txt"), "case baseline");
+            await Git(first, "add", "--", "api-wrangler/asset.txt", "api-wrangler/CaseFile.txt");
             await Git(first, "-c", "user.name=Fixture", "-c", "user.email=fixture@example.test", "-c", "commit.gpgsign=false", "commit", "-m", "First");
             await Git(first, "push", "-u", "origin", "HEAD");
             await Git(root, "clone", remote, second);
@@ -149,6 +150,14 @@ public sealed class FoundationTests
             Assert.Equal($"origin/{defaultBranch}", (await service.GetStatusAsync(second)).Upstream);
             await service.SwitchBranchAsync(second, defaultBranch);
             Assert.Equal(defaultBranch, (await service.GetStatusAsync(second)).Branch);
+            var caseFile = Path.Combine(second, "api-wrangler", "CaseFile.txt");
+            await File.WriteAllTextAsync(caseFile, "dirty case content");
+            if (OperatingSystem.IsWindows())
+                await Assert.ThrowsAsync<InvalidOperationException>(() => service.RestoreAssetAsync(second, "HEAD", "api-wrangler/casefile.txt"));
+            else
+                await Assert.ThrowsAsync<IOException>(() => service.RestoreAssetAsync(second, "HEAD", "api-wrangler/casefile.txt"));
+            Assert.Equal("dirty case content", await File.ReadAllTextAsync(caseFile));
+            await File.WriteAllTextAsync(caseFile, "case baseline");
             await service.RestoreAssetAsync(second, "HEAD~1", "api-wrangler/asset.txt");
             Assert.Equal("one", await File.ReadAllTextAsync(Path.Combine(second, "api-wrangler", "asset.txt")));
             await Assert.ThrowsAsync<ArgumentException>(() => service.RestoreAssetAsync(second, "HEAD", "unrelated.txt"));
@@ -230,6 +239,35 @@ public sealed class FoundationTests
         finally
         {
             foreach (var entry in Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories)) File.SetAttributes(entry, FileAttributes.Normal);
+            Directory.Delete(root, true);
+        }
+    }
+
+    [Fact]
+    public async Task GitRepository_GitHubComparisonUsesRewrittenRemoteWithoutCredentials()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "Api Wrangler GitHub compare", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        try
+        {
+            var service = new GitRepositoryService();
+            await service.InitializeAsync(root);
+            await Git(root, "config", "url.https://github.com/acme/" + ".insteadOf", "https://mirror.test/acme/");
+            await service.AddRemoteAsync(root, "origin", "https://mirror.test/acme/my-api.git");
+            var rewritten = await service.GetGitHubCompareUrlAsync(root, "origin", "main", "feature/git-workflows");
+            Assert.Equal("https://github.com/acme/my-api/compare/main...feature/git-workflows?expand=1", rewritten.AbsoluteUri);
+
+            await Git(root, "remote", "set-url", "origin", "https://fixture-secret@github.com/acme/my-api.git");
+            var credentialRemote = await service.GetGitHubCompareUrlAsync(root, "origin", "main", "topic");
+            Assert.Equal("https://github.com/acme/my-api/compare/main...topic?expand=1", credentialRemote.AbsoluteUri);
+            Assert.DoesNotContain("fixture-secret", credentialRemote.AbsoluteUri, StringComparison.Ordinal);
+
+            await Git(root, "remote", "set-url", "origin", "git@github.com:acme/my-api.git");
+            var sshRemote = await service.GetGitHubCompareUrlAsync(root, "origin", "main", "topic");
+            Assert.Equal("https://github.com/acme/my-api/compare/main...topic?expand=1", sshRemote.AbsoluteUri);
+        }
+        finally
+        {
             Directory.Delete(root, true);
         }
     }

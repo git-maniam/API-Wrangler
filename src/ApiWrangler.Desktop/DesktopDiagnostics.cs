@@ -28,10 +28,11 @@ internal static class DesktopDiagnostics
         var gitService = new GitRepositoryService();
         await gitService.InitializeAsync(remote, bare: true);
         await gitService.CloneAsync(remote, source);
-        Directory.CreateDirectory(Path.Combine(source, "api-wrangler"));
+        var projectRoot = Path.Combine(source, "api-wrangler");
+        await using (var project = await new ProjectRepository(Path.Combine(root, "source-state")).InitializeAsync(projectRoot, "Git workbench smoke")) { }
         var asset = Path.Combine(source, "api-wrangler", "smoke.txt");
         await File.WriteAllTextAsync(asset, "version one");
-        await GitFixtureAsync(source, "add", "api-wrangler/smoke.txt");
+        await GitFixtureAsync(source, "add", "-A", "--", "api-wrangler");
         await CommitGitFixtureAsync(source, "First smoke commit");
         await GitFixtureAsync(source, "push", "-u", "origin", "HEAD");
         await File.WriteAllTextAsync(asset, "version two");
@@ -44,6 +45,9 @@ internal static class DesktopDiagnostics
         git.RepositoryPath = target;
         await git.CloneCommand.ExecuteAsync(null);
         if (!git.OperationStatus.StartsWith("Clone complete", StringComparison.Ordinal)) throw new InvalidOperationException(git.OperationStatus);
+        await GitFixtureAsync(target, "config", "user.name", "Fixture");
+        await GitFixtureAsync(target, "config", "user.email", "fixture@example.test");
+        await GitFixtureAsync(target, "config", "commit.gpgsign", "false");
         await git.RefreshCommand.ExecuteAsync(null);
         if (!git.Summary.Contains("Git ", StringComparison.Ordinal) || git.Branches.Count == 0)
             throw new InvalidOperationException("Git workbench did not discover the executable and repository.");
@@ -67,6 +71,19 @@ internal static class DesktopDiagnostics
         if (!git.OperationStatus.StartsWith("Restored", StringComparison.Ordinal) || await File.ReadAllTextAsync(Path.Combine(target, git.AssetPath)) != "version one")
             throw new InvalidOperationException("Git workbench did not restore the selected API Wrangler asset.");
 
+        git.SelectedCommitPaths = "api-wrangler/smoke.txt";
+        git.CommitMessage = "Commit reviewed asset restore";
+        await git.ReviewSelectedCommitCommand.ExecuteAsync(null);
+        if (!git.CanCommitReviewed || !git.CommitReviewStatus.Contains("schema validation passed", StringComparison.OrdinalIgnoreCase) ||
+            !git.CommitDiff.Contains("version one", StringComparison.Ordinal))
+            throw new InvalidOperationException("Git commit review did not present the validated staged diff.");
+        await git.CommitReviewedCommand.ExecuteAsync(null);
+        if (!git.OperationStatus.StartsWith("Created commit", StringComparison.Ordinal)) throw new InvalidOperationException(git.OperationStatus);
+        await git.PushCommand.ExecuteAsync(null);
+        if (!git.OperationStatus.StartsWith("Push complete", StringComparison.Ordinal)) throw new InvalidOperationException(git.OperationStatus);
+        await git.LoadHistoryCommand.ExecuteAsync(null);
+        if (git.History.Count != 3) throw new InvalidOperationException("The reviewed commit was not visible in Git history.");
+
         git.RepositoryPath = Path.Combine(root, "initialized by desktop");
         await git.InitializeCommand.ExecuteAsync(null);
         if (!git.OperationStatus.StartsWith("Initialized a local repository", StringComparison.Ordinal)) throw new InvalidOperationException(git.OperationStatus);
@@ -74,6 +91,7 @@ internal static class DesktopDiagnostics
         await git.RefreshCommand.ExecuteAsync(null);
 
         window.MainTabs.SelectedIndex = window.MainTabs.Items.Count - 1;
+        window.GitDetailTabs.SelectedIndex = 1;
         window.UpdateLayout();
         Capture(window, Path.Combine(directory, "git-workbench.png"));
         await File.WriteAllTextAsync(Path.Combine(directory, "git-smoke.json"), JsonSerializer.Serialize(new
@@ -85,6 +103,7 @@ internal static class DesktopDiagnostics
             desktopCloneAndInit = true,
             fetchPreservedWorkingFiles = true,
             branchCreateSwitchPush = true,
+            reviewedCommitValidatedAndPushed = true,
             historyCount = git.History.Count,
             scopedRestore = true
         }));

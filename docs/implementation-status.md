@@ -1,5 +1,12 @@
 # Implementation status
 
+## Phase 5 parallel Git work checkpoint (2026-11-08 19:25 IST)
+
+- P5.1 follow-up: fixed case-insensitive restore safety on Windows, added visible labels and a GitHub compare action (including Git URL rewrite handling), and extended local workflow coverage.
+- P5.2 started in parallel because its only prerequisite is the completed Phase 4 epic. Added high-confidence secret scanning, scoped staged-diff review, JSON syntax checks, desktop project-schema/reference validation, exact index-tree and branch/HEAD confirmation, explicit commit, and separate push. Configured hooks/signing/authentication remain enabled.
+- Verification: Release solution build succeeded with 0 warnings/errors; 12 focused integration tests passed, 0 failed/skipped; `scripts/Test-GitDesktop.ps1` passed the desktop review/commit/push workflow and screenshot inspection.
+- P5.1 remains In progress for provider-specific authentication and manual accessibility review. P5.2 remains In progress: scanner pattern coverage is intentionally limited and the UI commit flow has only local fixture validation. P5.3 is not started. See `docs/phase-5.1-progress.md`, `docs/phase-5.2-progress.md`, and the Restart bookmark.
+
 ## Phase 5.1 Git workflow checkpoint (2026-11-08 17:58 IST)
 
 P5.1 has started on `phase5-repository-workflows`:
@@ -82,7 +89,7 @@ Measurement host: Windows x64, AMD Ryzen 7 6800H, eight physical cores, about 21
 | 2 | In progress: P2.1 and P2.2 implemented on `phase2-variables-and-secrets`. Request workbench with full lifecycle controls, repeated headers/query params, multipart/urlencoded/file-backed bodies, automatic decompression, cookies, explicit TLS override, cross-origin redirect auth stripping, and non-idempotent retry protection. P2.2 delivered variable resolution with documented precedence (RequestLocal > Dataset > RunOverride > LocalEnvironment > Environment > Collection > ProjectDefault), bounded nesting ($\le 10$), circular reference detection with cycle trace, non-shadowed explicit `{{secret:...}}` namespace, Windows DPAPI secret store (`LocalSecretStore`), deterministic dynamic helpers, and redaction engine across headers, logs, and execution previews. Release build, 44 integration tests, and desktop smoke pass. |
 | 3 | Not started: collections, assertions, lifecycle, isolated iteration execution, reports, final CLI contracts |
 | 4 | Only the read-only grid probe exists; imports, editing, type/null semantics, stable cases, and export remain |
-| 5 | P5.1 Git service and desktop workflow checkpoint started; acceptance remains in progress. P5.2 scoped commits and P5.3 conflict resolution remain |
+| 5 | P5.1 remains In progress; P5.2 scoped review/commit work has started in parallel; P5.3 conflict resolution remains |
 | 6 | Only framed IPC/process probe exists; script execution, trust policy, packages, imports, and compatibility remain |
 | 7–9 | Not started: additional protocols, mocks, webhook gateway, local performance engine |
 | 10–11 | Not started: control plane, runners, scheduler, distributed load, hosted mocks; do not start before foundation decisions settle |

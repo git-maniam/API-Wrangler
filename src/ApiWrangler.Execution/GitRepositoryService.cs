@@ -159,6 +159,23 @@ public sealed class GitRepositoryService(string executable = "git")
             : null).Where(x => x is not null).Cast<GitCommit>().ToArray();
     }
 
+    public async Task<Uri> GetGitHubCompareUrlAsync(string path, string remote, string baseBranch, string headBranch, CancellationToken token = default)
+    {
+        EnsureName(remote, nameof(remote));
+        EnsureName(baseBranch, nameof(baseBranch));
+        EnsureName(headBranch, nameof(headBranch));
+        string root = await DiscoverRepositoryAsync(path, token).ConfigureAwait(false);
+        ProcessResult result = await RunAsync(root, ["remote", "get-url", remote], token).ConfigureAwait(false);
+        EnsureSuccess(result, "Remote lookup");
+        string? repositoryPath = GitHubRepositoryPath(result.StandardOutput.Trim());
+        if (repositoryPath is null)
+            throw new InvalidOperationException("GitHub comparison links are available for recognized github.com HTTPS and SSH remote URLs.");
+        string ownerAndRepository = string.Join('/', repositoryPath.Split('/').Select(Uri.EscapeDataString));
+        string EscapeBranch(string branch) => string.Join('/', branch.Split('/').Select(Uri.EscapeDataString));
+        string comparison = $"{EscapeBranch(baseBranch)}...{EscapeBranch(headBranch)}";
+        return new Uri($"https://github.com/{ownerAndRepository}/compare/{comparison}?expand=1");
+    }
+
     public async Task SelectRemoteAsync(string path, string remote, string? remoteBranch = null, CancellationToken token = default)
     {
         EnsureName(remote, nameof(remote));
@@ -245,7 +262,8 @@ public sealed class GitRepositoryService(string executable = "git")
         string relative = ValidateProjectAssetPath(root, assetPath);
         GitRepositoryStatus status = await GetStatusAsync(root, token).ConfigureAwait(false);
         EnsureNoOperation(status);
-        if (status.Changes.Any(c => string.Equals(c.Path, relative, StringComparison.Ordinal) || string.Equals(c.OriginalPath, relative, StringComparison.Ordinal)))
+        StringComparison pathComparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+        if (status.Changes.Any(c => string.Equals(c.Path, relative, pathComparison) || string.Equals(c.OriginalPath, relative, pathComparison)))
             throw new InvalidOperationException("The selected asset has local changes. Save or commit them before restoring from history.");
         ProcessResult result = await RunAsync(root, ["restore", $"--source={revision}", "--worktree", "--", relative], token).ConfigureAwait(false);
         EnsureSuccess(result, "Asset restore");
@@ -332,6 +350,29 @@ public sealed class GitRepositoryService(string executable = "git")
         ProcessResult result = await ProcessRunner.RunAsync(finder, [git], Environment.CurrentDirectory, token).ConfigureAwait(false);
         EnsureSuccess(result, "Git discovery");
         return Lines(result.StandardOutput).FirstOrDefault() ?? throw new FileNotFoundException("Git executable was not found.");
+    }
+
+    private static string? GitHubRepositoryPath(string remote)
+    {
+        string? path = null;
+        if (Uri.TryCreate(remote, UriKind.Absolute, out Uri? uri) &&
+            uri.Host.Equals("github.com", StringComparison.OrdinalIgnoreCase) &&
+            uri.Scheme is "https" or "http" or "ssh")
+        {
+            path = uri.AbsolutePath.Trim('/');
+        }
+        else
+        {
+            var match = System.Text.RegularExpressions.Regex.Match(remote,
+                @"^(?:[^@/:]+@)?github\.com:(?<path>[^\s]+)$", System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.CultureInvariant);
+            if (match.Success) path = match.Groups["path"].Value.Trim('/');
+        }
+
+        if (path is null) return null;
+        string[] parts = path.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length != 2) return null;
+        string repo = parts[1].EndsWith(".git", StringComparison.OrdinalIgnoreCase) ? parts[1][..^4] : parts[1];
+        return string.IsNullOrWhiteSpace(parts[0]) || string.IsNullOrWhiteSpace(repo) ? null : $"{parts[0]}/{repo}";
     }
 
     private Task<ProcessResult> RunAsync(string workingDirectory, string[] args, CancellationToken token) => ProcessRunner.RunAsync(git, args, workingDirectory, token);

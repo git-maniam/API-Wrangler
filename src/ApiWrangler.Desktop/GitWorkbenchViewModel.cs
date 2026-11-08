@@ -1,6 +1,8 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
+using ApiWrangler.Storage;
 using ApiWrangler.Execution;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -18,13 +20,20 @@ public partial class GitWorkbenchViewModel : ObservableObject
     [ObservableProperty] private string remoteUrl = "";
     [ObservableProperty] private string branchName = "";
     [ObservableProperty] private string revision = "";
+    [ObservableProperty] private string comparisonBaseBranch = "main";
     [ObservableProperty] private string assetPath = "";
+    [ObservableProperty] private string selectedCommitPaths = "";
+    [ObservableProperty] private string commitMessage = "";
+    [ObservableProperty] private string commitReviewStatus = "Select project paths, one per line, then review the exact staged diff.";
+    [ObservableProperty] private string commitDiff = "";
     [ObservableProperty] private string summary = "Open a local Git repository or clone one to begin.";
     [ObservableProperty] private string operationStatus = "";
+    private GitCommitReview? commitReview;
 
     public ObservableCollection<string> Changes { get; } = [];
     public ObservableCollection<string> Branches { get; } = [];
     public ObservableCollection<GitCommit> History { get; } = [];
+    public bool CanCommitReviewed => commitReview is { CanCommit: true, SchemaValidated: true } && !string.IsNullOrWhiteSpace(CommitMessage);
 
     [RelayCommand]
     private Task RefreshAsync(CancellationToken token) => RunAsync(() => RefreshCoreAsync(token));
@@ -118,6 +127,48 @@ public partial class GitWorkbenchViewModel : ObservableObject
     });
 
     [RelayCommand]
+    private Task OpenGitHubCompareAsync(CancellationToken token) => RunAsync(async () =>
+    {
+        Uri url = await Git.GetGitHubCompareUrlAsync(RepositoryPath, RemoteName, ComparisonBaseBranch, BranchName, token);
+        Process.Start(new ProcessStartInfo(url.AbsoluteUri) { UseShellExecute = true });
+        OperationStatus = $"Opened GitHub comparison for {ComparisonBaseBranch}...{BranchName}.";
+    });
+
+    [RelayCommand]
+    private Task ReviewSelectedCommitAsync(CancellationToken token) => RunAsync(async () =>
+    {
+        commitReview = null;
+        CommitDiff = "";
+        OnPropertyChanged(nameof(CanCommitReviewed));
+        string[] selected = SelectedCommitPaths.Split(["\r\n", "\n"], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        commitReview = await new GitCommitReviewService(GitExecutable).ReviewAsync(
+            RepositoryPath, selected, token, ValidateSelectedProjectAssetsAsync);
+        CommitDiff = commitReview.CachedDiff;
+        OnPropertyChanged(nameof(CanCommitReviewed));
+        var findings = commitReview.SecretFindings.Select(item => $"{item.Path}:{item.Line} {item.Rule}")
+            .Concat(commitReview.JsonSyntaxErrors).ToArray();
+        CommitReviewStatus = findings.Length == 0
+            ? $"Review ready for {commitReview.SelectedPaths.Count} path(s). {commitReview.SchemaValidationNote} Tree {commitReview.IndexTreeHash}."
+            : "Commit blocked: " + string.Join("; ", findings);
+        await RefreshCoreAsync(token);
+        OperationStatus = "Review the complete cached diff and click Commit reviewed files to confirm this exact index tree.";
+    });
+
+    [RelayCommand]
+    private Task CommitReviewedAsync(CancellationToken token) => RunAsync(async () =>
+    {
+        GitCommitReview review = commitReview ?? throw new InvalidOperationException("Review selected project files before committing.");
+        if (!CanCommitReviewed) throw new InvalidOperationException("Resolve secret or JSON findings and provide a commit message first.");
+        string commit = await new GitCommitReviewService(GitExecutable).CommitAsync(review, CommitMessage, review.IndexTreeHash, token);
+        commitReview = null;
+        CommitMessage = "";
+        OnPropertyChanged(nameof(CanCommitReviewed));
+        CommitReviewStatus = $"Created commit {commit}. Configured Git hooks and signing were honored.";
+        await RefreshCoreAsync(token);
+        OperationStatus = CommitReviewStatus;
+    });
+
+    [RelayCommand]
     private Task RestoreAsync(CancellationToken token) => RunAsync(async () =>
     {
         await Git.RestoreAssetAsync(RepositoryPath, Revision, AssetPath, token);
@@ -149,6 +200,21 @@ public partial class GitWorkbenchViewModel : ObservableObject
         OperationStatus = state.IsDirty ? "Working tree has changes. Branch switching and integration remain blocked until the whole tree is clean." : "Working tree is clean.";
     }
 
+    private async Task ValidateSelectedProjectAssetsAsync(IReadOnlyList<string> selectedPaths, CancellationToken token)
+    {
+        string projectRoot = ProjectRepository.Discover(RepositoryPath);
+        await using var session = await new ProjectRepository().OpenAsync(projectRoot, writable: false, token);
+        var view = await session.ReadAsync(token);
+        if (!view.IsValid)
+            throw new InvalidOperationException("Project schema/reference validation failed: " + string.Join("; ", view.Diagnostics.Take(3).Select(item => $"{item.File}{item.Pointer}: {item.Message}")));
+
+        string relativeProjectRoot = Path.GetRelativePath(RepositoryPath, projectRoot).Replace(Path.DirectorySeparatorChar, '/');
+        if (!relativeProjectRoot.Equals("api-wrangler", OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal))
+            throw new InvalidOperationException("Scoped commit validation requires the active repository-root api-wrangler/ project.");
+        if (selectedPaths.Any(path => !path.StartsWith("api-wrangler/", StringComparison.Ordinal)))
+            throw new InvalidOperationException("Every selected commit path must belong to api-wrangler/.");
+    }
+
     private async Task RunAsync(Func<Task> action)
     {
         try { await action(); }
@@ -158,4 +224,6 @@ public partial class GitWorkbenchViewModel : ObservableObject
             OperationStatus = error.Message;
         }
     }
+
+    partial void OnCommitMessageChanged(string value) => OnPropertyChanged(nameof(CanCommitReviewed));
 }
