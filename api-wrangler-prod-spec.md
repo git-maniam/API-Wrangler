@@ -2532,38 +2532,21 @@ Do not begin distributed infrastructure before these decisions are settled.
 
 **Implementation checkpoint (2026-11-07):** Phase 1 project discovery, versioned schemas, canonical assets, journaled persistence, watcher/recovery behavior, snapshots, local settings, and a desktop asset editor are implemented in PR #57. The five Phase 1 exit checks pass locally. After the Linux writer-lease fix, hosted Windows and Linux headless jobs each passed 30 tests with zero skipped; desktop build, format, and publish passed. ADR-0002 defines version 1 as the first supported format. P1.1-P1.3 are In review; P1.4 manual project-editor accessibility acceptance is In progress. The phase epic remains In progress until review, acceptance, and merge. See docs/implementation-status.md and docs/phase-1-exit-review.md.
 
-#### Restart bookmark (updated 2026-11-09 01:20 IST)
+#### Restart bookmark (updated 2026-11-09 01:36 IST)
 
-Phase 12 (Playwright and visual workflows) is fully implemented and certified complete on branch `phase12-visual-flows`:
-- P12.2 (Issue #48):
-  - Domain models (`VisualFlowModels.cs`): `FlowNodeKind`, `FlowEdge`, `FlowNodeDefinition`, `FlowDefinition`, `FlowNodeLayout`, `FlowLayoutDefinition`, `FlowExecutionOutcome`, `FlowNodeExecutionRecord`, `FlowExecutionReport`, `FlowValidationDiagnostic`, `FlowValidationResult`, and `DebuggerState`.
-  - Application services (`VisualFlowEngine.cs`):
-    - Separation of canvas coordinates from execution semantics: `FlowDefinition` contains exclusively semantic nodes and edges; coordinates live in `FlowLayoutDefinition` preventing Git merge conflicts on layout repositioning.
-    - Graph validation: Rejects unreachable nodes via BFS traversal from the Start node and rejects unbounded loops lacking a positive `MaxIterations` limit.
-    - Shared execution engine: Reuses `HttpRequestService` and `VariableContext` execution primitives for request dispatch and variable evaluation.
-    - Secret redaction: Variables containing sensitive keywords (`password`, `secret`, `token`, `apiKey`, `credential`, etc.) or token prefixes are automatically masked with `[REDACTED]` during variable inspection and snapshot recording.
-    - Cancellation propagation: Immediately propagates cancellation tokens across in-flight requests and delay intervals.
-    - Interactive debugger session (`FlowDebugSession`): Supports setting/removing breakpoints, single-step stepping (`StepAsync`), run-to-breakpoint (`ContinueAsync`), and redacted variable inspection.
-  - CLI operations: Added `flow run` command to `api-wrangler` CLI (`Program.cs`) for headless execution of flow definition files.
-  - Integration tests (`VisualFlowTests.cs`): 4 tests verifying rejection of unreachable nodes and unbounded loops, cancellation propagation, canvas coordinate separation from semantics, shared execution engine with secret redaction, and debugger stepping/breakpoints.
-- P12.1 (Issue #47):
-  - Domain models (`PlaywrightModels.cs`): `CapturedTrafficRecord`, `TrafficMatchResult`, `TrafficAssertionRule`, `CapturedTrafficValidationResult`, `DependencyEdge`, `TrafficDependencyMap`, `PlaywrightCombinedScenarioResult`, and `PlaywrightSummaryReport`.
-  - TypeScript integration (`workers/node/src/playwright.ts`):
-    - `PlaywrightTrafficCollector`: Listens to `page.on('request')` and `page.on('response')`, calculates request durations, redacts credentials and sensitive JSON values, bounds body payloads (default 256 KiB), flags service workers, cached responses, and WebSocket upgrades, and writes capture files.
-    - `attachApiWranglerCollector`: Helper for one-line attachment to Playwright pages.
-  - Application services (`PlaywrightTrafficService.cs`):
-    - `RedactTraffic`: Redacts headers (`Authorization`, `Cookie`, `Set-Cookie`, `X-Api-Key`, etc.) and sensitive JSON keys (`password`, `token`, `secret`, `apiKey`), truncating payloads exceeding size limits.
-    - `MatchTraffic`: Specificity scoring for origins, methods, exact/parameterized/wildcard path templates, and headers, with deterministic precedence and ambiguity detection.
-    - `ValidateTrafficRecord`: Evaluates response status codes, headers, and body JSON properties (`Equals`, `LessThan`, `GreaterThan`, `Contains`, `Regex`).
-    - `EvaluateScenario`: Unifies UI and API assertion outcomes. When a UI scenario passes but an API assertion fails, marks combined outcome as `Failed`, designates failure source as `API`, and explicitly names the failing browser scenario. Discloses encountered browser limitations (`BrowserHttpCache`, `ServiceWorkerInterception`, `WebSocketTraffic`, `BoundedPayloadLimit`).
-    - `BuildDependencyMap`: Generates sequential API dependency graph and call frequency maps.
-    - `GenerateDraftRequests`: Bootstraps draft `HttpRequestDefinition` assets from unmatched traffic.
-    - `GenerateCiArtifacts`: Emits machine-readable `playwright-api-report.json` and formatted `playwright-api-summary.md` with scenario breakdown tables.
-  - CLI operations: Added `playwright evaluate` command to `api-wrangler` CLI (`Program.cs`) for headless CI evaluation of captured test traffic.
-  - Integration tests (`PlaywrightTrafficTests.cs`): 4 tests verifying passing UI with failing API assertion naming the scenario, ambiguous/unmatched traffic surfacing and secret redaction, explicit limitation disclosure and CI artifact generation, and dependency mapping/draft request generation.
-- Full automated test suite: 292 passed, 0 failed, 0 skipped. `scripts/Test-Desktop.ps1` passed cleanly. `dotnet format --verify-no-changes` passed.
-- Documentation: Verified in `docs/phase-12.1-progress.md`, `docs/phase-12.2-progress.md`, and `docs/phase-12-exit-review.md`.
-- Next work: push branch `phase12-visual-flows`, open PR for Issue #48, move ticket in Project 4 to In review, await CI checks, squash-merge into `main`, update Issue #48 and Phase Epic #46 to Done in Project 4, and advance to Phase 13 (Documentation, optional AI, and release hardening).
+Phase 13.1 (Contracts, static documentation, catalog, and SDK generation) is implemented and verified on branch `phase13-contracts-docs-catalog`:
+- P13.1 (Issue #50):
+  - Domain models (`ContractModels.cs`): `ContractBreakingChange`, `ContractDiffReport`, `ContractOperationLink`, `CatalogSearchResult`, `SdkGenerationTarget`, `GeneratedSdkFile`, and `SdkGenerationResult`.
+  - Application services (`ContractAndCatalogServices.cs`):
+    - `ContractDiffEngine`: Compares baseline and target OpenAPI specifications, detecting removed endpoints, removed HTTP methods, removed required parameters, parameter type changes, newly required request parameters/bodies, and removed response status codes.
+    - `DocumentationGenerator`: Generates responsive HTML (`index.html`) and Markdown (`api-reference.md`) documentation with sensitive secret values and credentials completely omitted or masked with `[REDACTED_SECRET]`.
+    - `ApiCatalogIndex`: High-performance in-memory catalog with measured 10,000-request acceptance benchmarks, executing search queries across 10,000 requests in sub-millisecond to few milliseconds latency.
+    - `SdkGenerator`: Generates idiomatic client SDKs for C# (`ApiClient.cs`), TypeScript (`apiClient.ts`), and Python (`api_client.py`), strictly outputting to isolated preview directories prior to workspace adoption.
+  - CLI operations: Added `contract diff`, `docs generate`, and `sdk generate` commands to `api-wrangler` CLI (`Program.cs`).
+  - Integration tests (`ContractAndCatalogTests.cs`): 4 tests verifying contract breaking change detection, secret omission in generated static documentation, 10,000-request catalog indexing and search performance, and multi-language SDK preview directory generation.
+  - Full automated test suite: 297 passed, 0 failed, 0 skipped. `scripts/Test-Desktop.ps1` passed cleanly. `dotnet format --verify-no-changes` passed.
+  - Documentation: Verified in `docs/phase-13.1-progress.md`.
+- Next work: push branch `phase13-contracts-docs-catalog`, open PR for Issue #50, move ticket in Project 4 to In review, await CI checks, squash-merge into `main`, mark Issue #50 Done in Project 4, and advance to P13.2 (Issue #51: Optional AI with explicit context and reviewable changes).
 Published checkpoint: implementation `9156d80` pushed; PR #69 is now non-draft and P4.1 (#20) is In review. P4 (#19) remains In progress. Hosted desktop/Windows/Linux checks were pending at 11:25 IST. Resume by checking those results and PR review before merge/completion; local evidence is 62 passing tests and the passing desktop dataset smoke described below. No tests/builds rerun for this final metadata refresh. Next 30-minute refresh is due by 11:55 IST if execution is active.
 
 Current verified handoff: P4.1 file-backed import and desktop prepare/accept workflow implemented on `phase4-delimited-reader`, PR #69 being submitted for review. `PreparedDatasetFile` streams validated rows to a temporary spool; `ImportDatasetFileAsync` holds the project writer gate, verifies the prepared hash, publishes immutable JSONL then atomically saves its definition. Full-source mappings/culture/null/date conversions use the same streaming converter as preview. Desktop supports CSV/TSV/JSON/JSONL, UTF-8/UTF-16 LE/Windows-1252, explicit case-ID addition, cancellation and stale-preview rejection. Source changes after preparation cannot alter accepted rows. Release solution build succeeded; 62 dataset/persistence tests passed, 0 skipped. Desktop dataset smoke passed and screenshot inspected (`artifacts/dataset-ui-smoke/dataset-import.png`). A smoke-only compile error referencing the wrong tab name was corrected and the desktop rebuild/smoke passed. Changed-file formatting only afterward; no broad retest. Prior unverified notes below are superseded. Next: inspect PR #69 review/CI, resolve findings; do not mark P4.1 Done until acceptance and merge. P4 epic stays In progress; then continue P4.2 (#21) grid/clipboard work. Preserve 14 unrelated whitespace edits. No external blocker. Limits and crash-orphan behavior: `docs/dataset-import.md`.
