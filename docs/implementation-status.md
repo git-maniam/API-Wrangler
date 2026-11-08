@@ -1,5 +1,9 @@
 # Implementation status
 
+## Phase 4 inline import checkpoint (2026-11-08 09:00 IST)
+
+`DatasetImport` prepares bounded inline datasets without touching assets and returns an immutable `PreparedDatasetImport` for explicit acceptance. Existing string case IDs are preserved; duplicate/invalid IDs fail, and missing IDs require explicit addition preview. Commit reuses journaled `IProjectSession.SaveAsync` with expected-hash conflict checks and existing schema/path/writer validation. Persisted inline sources are included in project snapshots. One batched invocation (`dotnet test tests/ApiWrangler.IntegrationTests -c Release --no-restore --filter 'FullyQualifiedName~Dataset|FullyQualifiedName~Save_ReplacementFailure_RollsBackAllFiles' --verbosity minimal`) passed 43 tests, none skipped. No standalone build. P4/P4.1 remain In progress: large file-backed imports, JSON-array admission bounds, full-import conversion integration, flattening/dates, encoding selection and UI remain. Existing unrelated edits preserved.
+
 ## Phase 4 JSON and preview continuation (2026-11-08 08:57 IST)
 
 Added streaming JSON-array/JSONL object readers preserving nested JSON, missing fields, and explicit nulls; duplicate properties are rejected recursively. JSONL supports BOM, CRLF, cancellation, and bounded records. Added a headless preview capped at 1,000 rows (100 default), column mapping, explicit culture-aware decimal/boolean/string conversions, and opt-in empty-string-to-null mapping. Source assets remain untouched. JSON-array per-record admission limits, stable case IDs, transactional import/snapshots, flattening/date conversion, and import UI/encoding selection remain in P4.1. Batched verification: delimited, JSON, and preview suites passed 31 tests (0 skipped); two initial failures were exact-exception test assertions, corrected before the single rerun. No standalone build or broad test suite. Draft PR #69; P4/P4.1 remain In progress.

@@ -2,6 +2,7 @@
 
 | Specification | Current implementation | Evidence / gap |
 |---|---|---|
+| 7.2, 10.1, Phase 4 import integrity | Prepared inline dataset imports, preserved case IDs, explicit missing-ID addition, duplicate rejection and journaled commit | 43 dataset/rollback tests pass; stale writes, late parse failure, cancellation and snapshot bytes verified. Large file-backed import and UI integration remain in #20. |
 | 10.2-10.3 | Typed streaming JSON-array/JSONL readers and bounded headless mapping/conversion preview | 31 combined dataset tests pass, including nested JSON, missing/null, duplicate properties, explicit culture/null conversions, cancellation and preview limits. Transactional import, stable case IDs, array record admission bounds and UI remain in #20. |
 | 10.2 | Streaming raw delimited dataset reader with explicit delimiter and bounded records | 11 focused tests pass for multiline/escaped values, leading zeros, BOM, malformed headers/rows, buffer boundaries, bounds, and cancellation. Preview/conversion, encoding UI, and transactional import remain in #20. |
 | 3, 32 phase 0 | Domain → Application ← Execution, WPF and CLI hosts | FoundationTests architecture boundary test; Windows 11 x64 current scope, ARM64 deferred |
