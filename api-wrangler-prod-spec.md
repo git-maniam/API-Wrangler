@@ -2532,22 +2532,22 @@ Do not begin distributed infrastructure before these decisions are settled.
 
 **Implementation checkpoint (2026-11-07):** Phase 1 project discovery, versioned schemas, canonical assets, journaled persistence, watcher/recovery behavior, snapshots, local settings, and a desktop asset editor are implemented in PR #57. The five Phase 1 exit checks pass locally. After the Linux writer-lease fix, hosted Windows and Linux headless jobs each passed 30 tests with zero skipped; desktop build, format, and publish passed. ADR-0002 defines version 1 as the first supported format. P1.1-P1.3 are In review; P1.4 manual project-editor accessibility acceptance is In progress. The phase epic remains In progress until review, acceptance, and merge. See docs/implementation-status.md and docs/phase-1-exit-review.md.
 
-#### Restart bookmark (updated 2026-11-08 23:13 IST)
+#### Restart bookmark (updated 2026-11-08 23:23 IST)
 
-Phase 8.1 (Local mock engine, deterministic matching, and fault scenarios) is complete and verified on branch `phase8-local-mock-engine`:
-- P8.1 (Issue #34):
-  - Domain models (`MockModels.cs`): `MockRule`, `MockFaultType`, `MockServerLogEntry`, `MockServerConfiguration`, and `MockMatchResult`.
-  - Application services (`MockEngine.cs`, `MockExampleGenerator.cs`):
-    - `MockEngine`: In-process loopback ASP.NET Core server (`127.0.0.1` enforced unless explicitly opted into external binding).
-    - Deterministic matching: specificity scoring combining rule priority, exact vs parameterized vs wildcard paths, query parameter checks, header checks, and body regex matching. Ambiguity detection and detailed match explanations.
-    - Stateful scenarios: state machine prerequisites (`ScenarioStateRequired`) and transitions (`ScenarioStateTransition`), with manual and automated state reset.
-    - Fault simulations: delays, HTTP status codes, malformed payloads, rate-limiting (429 with `Retry-After`), connection abortions (`context.Abort()`), and seeded intermittent failure rates.
-    - Example generator: generates mock rules from OpenAPI schemas and saved responses.
-  - Desktop integration: added `MockServerViewModel` and "Mocks & Webhooks" tab in `MainWindow.xaml` featuring rule configuration, start/stop controls, and real-time request audit logs.
-  - Integration tests (`MockEngineTests.cs`): 5 tests covering matching specificity, scenario transitions, HTTP server hosting, fault simulations, and loopback binding enforcement.
-  - Automated test suite: 246 passed, 0 failed, 0 skipped. `scripts/Test-Desktop.ps1` passed cleanly (`{"editorRoundTrip":true,"httpRoundTrip":true,"cancellation":true,"dispatcherTicksDuringRequest":9}`). `dotnet format --verify-no-changes` passed.
-  - Documentation: Verified in `docs/phase-8.1-progress.md`.
-- Next work: push branch `phase8-local-mock-engine`, open PR for Issue #34, await CI checks, squash-merge into `main`, update Issue #34 to Done in Project 4, and advance to P8.2 (Issue #35: Webhook capture, public gateway, forwarding, and replay).
+Phase 8 (Mocks and webhook debugging) is complete and verified on branch `phase8-webhook-debugging`:
+- P8.2 (Issue #35):
+  - Domain models (`WebhookModels.cs`): `WebhookListenerDefinition`, `WebhookSignatureType`, `WebhookCapturedEvent`, `WebhookReplayRequest`, and `WebhookReplayResult`.
+  - Application services (`WebhookService.cs`):
+    - `WebhookService`: In-process loopback ASP.NET Core listener.
+    - Byte-perfect cryptographic signature verification (`HmacSha256Hex`, `HmacSha256Base64`, `HmacSha1Hex`) using `CryptographicOperations.FixedTimeEquals` directly on raw bytes prior to any JSON/text parsing.
+    - Safeguards: body size limits (`MaxBodySizeBytes`, HTTP 413) and destination policy enforcement (`AllowedForwardingDestinations`, HTTP 403) to prevent SSRF and unrestricted open forwarding.
+    - Replay engine: original byte-preserving and edit-and-replay dispatching with audit records.
+  - Desktop integration: added "Webhook Debugger" tab under "Mocks & Webhooks" in `MainWindow.xaml` to inspect incoming payloads, signature verification results, and replay history.
+  - Integration tests (`WebhookServiceTests.cs`): 3 tests covering signature verification against raw bytes and failure on tampering, webhook capture with headers, and destination policy replay enforcement.
+  - Verification: 249 tests passed, 0 failed, 0 skipped. `scripts/Test-Desktop.ps1` passed cleanly (`{"editorRoundTrip":true,"httpRoundTrip":true,"cancellation":true,"dispatcherTicksDuringRequest":9}`). `dotnet format --verify-no-changes` passed.
+  - Documentation: Verified in `docs/phase-8.2-progress.md` and `docs/phase-8-exit-review.md`.
+- Phase 8 Epic (#33) complete: all sub-issues P8.1 (#34) and P8.2 (#35) verified.
+- Next work: push branch `phase8-webhook-debugging`, open PR for Issue #35, await CI checks, squash-merge into `main`, update Issue #35 and Epic #33 to Done in Project 4, and advance to Phase 9 (Monitoring, alerting, and scheduled runs).
 Published checkpoint: implementation `9156d80` pushed; PR #69 is now non-draft and P4.1 (#20) is In review. P4 (#19) remains In progress. Hosted desktop/Windows/Linux checks were pending at 11:25 IST. Resume by checking those results and PR review before merge/completion; local evidence is 62 passing tests and the passing desktop dataset smoke described below. No tests/builds rerun for this final metadata refresh. Next 30-minute refresh is due by 11:55 IST if execution is active.
 
 Current verified handoff: P4.1 file-backed import and desktop prepare/accept workflow implemented on `phase4-delimited-reader`, PR #69 being submitted for review. `PreparedDatasetFile` streams validated rows to a temporary spool; `ImportDatasetFileAsync` holds the project writer gate, verifies the prepared hash, publishes immutable JSONL then atomically saves its definition. Full-source mappings/culture/null/date conversions use the same streaming converter as preview. Desktop supports CSV/TSV/JSON/JSONL, UTF-8/UTF-16 LE/Windows-1252, explicit case-ID addition, cancellation and stale-preview rejection. Source changes after preparation cannot alter accepted rows. Release solution build succeeded; 62 dataset/persistence tests passed, 0 skipped. Desktop dataset smoke passed and screenshot inspected (`artifacts/dataset-ui-smoke/dataset-import.png`). A smoke-only compile error referencing the wrong tab name was corrected and the desktop rebuild/smoke passed. Changed-file formatting only afterward; no broad retest. Prior unverified notes below are superseded. Next: inspect PR #69 review/CI, resolve findings; do not mark P4.1 Done until acceptance and merge. P4 epic stays In progress; then continue P4.2 (#21) grid/clipboard work. Preserve 14 unrelated whitespace edits. No external blocker. Limits and crash-orphan behavior: `docs/dataset-import.md`.

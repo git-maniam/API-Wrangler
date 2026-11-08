@@ -29,6 +29,15 @@ public partial class MockServerViewModel : ObservableObject, IAsyncDisposable
     [ObservableProperty] private string logsSummary = "0 requests logged.";
     [ObservableProperty] private string rawLogs = "";
 
+    // Webhook Debugger
+    private WebhookService? webhookService;
+    [ObservableProperty] private string webhookStatus = "Stopped";
+    [ObservableProperty] private string webhookListeningUrl = "";
+    [ObservableProperty] private bool isWebhookRunning = false;
+    [ObservableProperty] private string webhookPathPrefix = "/webhooks/incoming";
+    [ObservableProperty] private string webhookCapturedCountText = "0 events captured.";
+    [ObservableProperty] private string rawWebhookEvents = "";
+
     public ObservableCollection<MockRule> ConfiguredRules { get; } = new();
 
     public MockServerViewModel()
@@ -140,9 +149,63 @@ public partial class MockServerViewModel : ObservableObject, IAsyncDisposable
         RefreshLogs();
     }
 
+    [RelayCommand]
+    public async Task ToggleWebhookServiceAsync()
+    {
+        if (IsWebhookRunning)
+        {
+            if (webhookService is not null)
+            {
+                await webhookService.StopAsync();
+                RefreshWebhookEvents();
+                webhookService = null;
+            }
+            WebhookListeningUrl = "";
+            WebhookStatus = "Stopped";
+            IsWebhookRunning = false;
+        }
+        else
+        {
+            try
+            {
+                WebhookStatus = "Starting...";
+                webhookService = new WebhookService();
+                webhookService.AddListener(new WebhookListenerDefinition(
+                    Id: "listener-default",
+                    Name: "Default Webhook Listener",
+                    PathPrefix: WebhookPathPrefix
+                ));
+
+                await webhookService.StartAsync();
+                WebhookListeningUrl = webhookService.ListeningUrl ?? "";
+                WebhookStatus = $"Listening on {WebhookListeningUrl}";
+                IsWebhookRunning = true;
+            }
+            catch (Exception ex)
+            {
+                WebhookStatus = $"Start failed: {ex.Message}";
+                IsWebhookRunning = false;
+            }
+        }
+    }
+
+    [RelayCommand]
+    public void RefreshWebhookEvents()
+    {
+        if (webhookService is null) return;
+        var events = webhookService.Events;
+        WebhookCapturedCountText = $"{events.Count} events captured.";
+        RawWebhookEvents = string.Join("\n", events.Select(e =>
+            $"[{e.ReceivedAt:HH:mm:ss.fff}] {e.Method} {e.Path} (Size: {e.RawBody.Length}B) Verified: {e.SignatureVerified} Replay: {e.IsReplay} -> {e.BodyString}"));
+    }
+
     public async ValueTask DisposeAsync()
     {
         await StopServerAsync();
+        if (webhookService is not null)
+        {
+            await webhookService.StopAsync();
+        }
     }
 }
 
