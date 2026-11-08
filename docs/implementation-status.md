@@ -1,5 +1,9 @@
 # Implementation status
 
+## Phase 4 JSON and preview continuation (2026-11-08 08:57 IST)
+
+Added streaming JSON-array/JSONL object readers preserving nested JSON, missing fields, and explicit nulls; duplicate properties are rejected recursively. JSONL supports BOM, CRLF, cancellation, and bounded records. Added a headless preview capped at 1,000 rows (100 default), column mapping, explicit culture-aware decimal/boolean/string conversions, and opt-in empty-string-to-null mapping. Source assets remain untouched. JSON-array per-record admission limits, stable case IDs, transactional import/snapshots, flattening/date conversion, and import UI/encoding selection remain in P4.1. Batched verification: delimited, JSON, and preview suites passed 31 tests (0 skipped); two initial failures were exact-exception test assertions, corrected before the single rerun. No standalone build or broad test suite. Draft PR #69; P4/P4.1 remain In progress.
+
 ## Phase 4 continuation (2026-11-07 22:46 IST)
 
 P4 and P4.1 (#19/#20) are In progress. `DelimitedDatasetReader` streams raw CSV/TSV/custom-delimited records with quoted multiline fields, escaped quotes, BOM handling, leading-zero and empty-string preservation, duplicate/empty-header and record-width validation, cancellation, and per-record bounds. One necessary focused invocation (`dotnet test tests/ApiWrangler.IntegrationTests -c Release --no-restore --filter FullyQualifiedName~DelimitedDatasetTests --verbosity minimal`) compiled affected projects and passed 11 tests, none skipped. No separate build or broad suite run. JSON/JSONL, preview/mapping, explicit conversion/null policies, stable case IDs, and transactional import remain; no Phase 4 acceptance claim. Existing unrelated whitespace changes are preserved.
