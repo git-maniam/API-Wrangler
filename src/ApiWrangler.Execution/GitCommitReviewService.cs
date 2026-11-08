@@ -132,8 +132,14 @@ public sealed class GitCommitReviewService(string executable = "git")
 
     private async Task<byte[]?> ReadStagedBlobAsync(string root, string path, CancellationToken token)
     {
-        var start = new ProcessStartInfo(git) { WorkingDirectory = root, UseShellExecute = false, CreateNoWindow = true,
-            RedirectStandardOutput = true, RedirectStandardError = true };
+        var start = new ProcessStartInfo(git)
+        {
+            WorkingDirectory = root,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true
+        };
         start.ArgumentList.Add("show");
         start.ArgumentList.Add(":" + path);
         using Process process = Process.Start(start) ?? throw new IOException("Git could not read a staged asset.");

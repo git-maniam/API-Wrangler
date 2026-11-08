@@ -1,5 +1,14 @@
 # Implementation status
 
+## Phase 5 complete: Git collaboration, reviewed commits, and semantic conflict resolution (2026-11-08 20:34 IST)
+
+Phase 5 is complete on branch `phase5-repository-workflows`:
+- P5.1: `GitRepositoryService` with branch creation/switching, detached HEAD, worktree rejection, clean status facts, fetch without changing working files, fast-forward, explicit merge/rebase, and scoped restore.
+- P5.2: `GitCommitReviewService` with scoped `api-wrangler/` file staging, complete cached diff review up to 4 Mi characters, high-confidence secret scanning, commit message review, and explicit push.
+- P5.3: `GitConflictResolutionService`, `ProjectProposalValidator`, and `GitConflictWorkbenchViewModel`. Three-way semantic JSON proposal engine (independent object/ID-keyed row edits, ordered headers, preserving unknown fields, unilateral reordering, reporting same-field, delete/edit, duplicate-ID, and incompatible reorder conflicts). Bounded final diff review, explicit choices (Edited, Local, Incoming, Delete, Save Both), schema and reference validation before staging, recovery snapshots, and staging without losing unrelated work.
+- Two-clone acceptance: verified across two independent clones with simultaneous conflicting JSON edits, resolution, commit, push, and fast-forward pull.
+- Verification: 188 automated tests passed (0 failed, 4 skipped). Desktop smoke passed (`scripts/Test-Desktop.ps1`). Desktop Git smoke passed (`--git-smoke artifacts/git-smoke`). Format verification passed (`dotnet format --verify-no-changes`). Solution builds cleanly in Release configuration with zero warnings/errors.
+
 ## Phase 5 parallel Git work checkpoint (2026-11-08 19:32 IST)
 
 - P5.1 follow-up: fixed case-insensitive restore safety on Windows, added visible labels and a GitHub compare action (including Git URL rewrite handling), and extended local workflow coverage.

@@ -267,7 +267,7 @@
                 </Grid>
             </TabItem>
             <TabItem Header="Git collaboration">
-                <Grid Margin="12" DataContext="{Binding Git}">
+                <Grid Margin="12" DataContext="{Binding Git}" IsEnabled="{Binding CanInteract}">
                     <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
                     <DockPanel Margin="0,0,0,8">
                         <TextBlock DockPanel.Dock="Left" Text="Git executable" VerticalAlignment="Center" Margin="0,0,8,0" />
@@ -358,6 +358,46 @@
                         <TextBlock Grid.Row="3" Text="{Binding CommitReviewStatus}" TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite" Margin="0,6,0,0" />
                         <TextBlock Grid.Row="4" Text="Review the full diff before committing. Configured Git hooks and signing remain enabled; hooks may run code." TextWrapping="Wrap" Margin="0,4,0,0" />
                        </Grid>
+                      </TabItem>
+                      <TabItem Header="Conflicts">
+                       <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="8" DataContext="{Binding Conflicts}">
+                            <DockPanel Margin="0,0,0,6">
+                                <Button DockPanel.Dock="Right" Content="Load versions" Command="{Binding LoadCommand}" Margin="8,0,0,0" />
+                                <Button DockPanel.Dock="Right" Content="Find conflicts" Command="{Binding RefreshCommand}" Margin="8,0,0,0" />
+                                <Label DockPanel.Dock="Left" Content="Unresolved path" Target="{Binding ElementName=GitConflictPath}" Padding="0" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                <ComboBox x:Name="GitConflictPath" ItemsSource="{Binding Paths}" SelectedItem="{Binding SelectedPath}" AutomationProperties.Name="Unresolved Git project path" />
+                            </DockPanel>
+                            <TextBlock Text="Compare Git's base, local (stage 2), and incoming (stage 3). During rebase, these labels follow Git's stage meanings." TextWrapping="Wrap" Margin="0,0,0,6" />
+                            <TabControl Height="150" Margin="0,0,0,6">
+                                <TabItem Header="Base"><TextBox Text="{Binding BaseText, Mode=OneWay}" IsReadOnly="True" AcceptsReturn="True" TextWrapping="NoWrap" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" FontFamily="Consolas" AutomationProperties.Name="Conflict base version" /></TabItem>
+                                <TabItem Header="Local"><TextBox Text="{Binding LocalText, Mode=OneWay}" IsReadOnly="True" AcceptsReturn="True" TextWrapping="NoWrap" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" FontFamily="Consolas" AutomationProperties.Name="Conflict local stage 2 version" /></TabItem>
+                                <TabItem Header="Incoming"><TextBox Text="{Binding IncomingText, Mode=OneWay}" IsReadOnly="True" AcceptsReturn="True" TextWrapping="NoWrap" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" FontFamily="Consolas" AutomationProperties.Name="Conflict incoming stage 3 version" /></TabItem>
+                            </TabControl>
+                            <TextBlock Text="Conflict decisions" FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding ConflictDetails}" TextWrapping="Wrap" Margin="0,4,0,6" />
+                            <Label Content="Proposed result / text editor" Target="{Binding ElementName=GitConflictDraft}" Padding="0" Margin="0,0,0,4" />
+                            <TextBox x:Name="GitConflictDraft" Text="{Binding DraftText, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding CanEdit}" Height="180" AcceptsReturn="True" AcceptsTab="False" TextWrapping="NoWrap" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" FontFamily="Consolas" AutomationProperties.Name="Editable conflict result" />
+                            <WrapPanel Margin="0,6,0,6">
+                                <Button Content="Review edited result" Command="{Binding ReviewEditedCommand}" IsEnabled="{Binding CanEdit}" Margin="0,0,8,4" />
+                                <Button Content="Review local version" Command="{Binding UseLocalCommand}" Margin="0,0,8,4" />
+                                <Button Content="Review incoming version" Command="{Binding UseIncomingCommand}" Margin="0,0,8,4" />
+                                <Button Content="Review deletion" Command="{Binding DeleteCommand}" Margin="0,0,8,4" />
+                            </WrapPanel>
+                            <DockPanel Margin="0,0,0,6">
+                                <Button DockPanel.Dock="Right" Content="Review save both" Command="{Binding SaveBothCommand}" Margin="8,0,0,0" />
+                                <Label DockPanel.Dock="Left" Content="Incoming copy path" Target="{Binding ElementName=GitConflictSaveBothPath}" Padding="0" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                <TextBox x:Name="GitConflictSaveBothPath" Text="{Binding SaveBothPath, UpdateSourceTrigger=PropertyChanged}" ToolTip="New repository-relative path under api-wrangler/. Local stays at the original path." AutomationProperties.Name="Save both incoming version path" />
+                            </DockPanel>
+                            <TextBlock Text="Final diff" FontWeight="SemiBold" Margin="0,0,0,4" />
+                            <TextBox Text="{Binding FinalDiff, Mode=OneWay}" IsReadOnly="True" Height="180" AcceptsReturn="True" TextWrapping="NoWrap" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" FontFamily="Consolas" AutomationProperties.Name="Final conflict resolution diff" />
+                            <CheckBox Content="I resolved the listed conflicts and reviewed this final diff." IsChecked="{Binding ReviewAccepted}" Margin="0,8,0,6" />
+                            <Button Content="Mark reviewed path resolved" Command="{Binding ResolveCommand}" IsEnabled="{Binding CanResolve}" HorizontalAlignment="Left" Margin="0,0,0,6" />
+                            <TextBlock Text="{Binding Status}" TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite" />
+                            <TextBlock Text="Recovery copies" FontWeight="SemiBold" Margin="0,6,0,4" />
+                            <TextBox Text="{Binding RecoveryPath, Mode=OneWay}" IsReadOnly="True" AutomationProperties.Name="Conflict recovery copies directory" />
+                        </StackPanel>
+                       </ScrollViewer>
                       </TabItem>
                     </TabControl>
                     <StackPanel Grid.Row="7" Margin="0,8,0,0">

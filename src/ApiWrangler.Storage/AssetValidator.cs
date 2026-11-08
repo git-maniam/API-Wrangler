@@ -42,7 +42,7 @@ internal sealed class AssetValidator
         _ => null
     };
 
-    public List<ProjectDiagnostic> Validate(string root, IReadOnlyList<ProjectAsset> assets)
+    public List<ProjectDiagnostic> Validate(string root, IReadOnlyList<ProjectAsset> assets, Func<string, bool>? fileExists = null)
     {
         var problems = new List<ProjectDiagnostic>();
         foreach (var asset in assets)
@@ -91,7 +91,7 @@ internal sealed class AssetValidator
             if (asset.Kind == AssetKind.Dataset && asset.Content["source"]?["path"] is JsonValue path)
             {
                 var relative = (Path.GetDirectoryName(asset.Path)?.Replace('\\', '/') + "/" + path.GetValue<string>()).TrimStart('/');
-                try { if (!File.Exists(ProjectPaths.Resolve(root, relative))) throw new IOException(); }
+                try { if (!(fileExists ?? File.Exists)(ProjectPaths.Resolve(root, relative))) throw new IOException(); }
                 catch (IOException) { problems.Add(new(asset.Path, "/source/path", "Dataset source is missing or unsafe.", asset.Id)); }
             }
             if (asset.Kind == AssetKind.Folder)

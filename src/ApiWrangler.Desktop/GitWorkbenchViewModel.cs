@@ -13,6 +13,12 @@ public partial class GitWorkbenchViewModel : ObservableObject
 {
     private GitRepositoryService Git => new(GitExecutable);
 
+    public GitWorkbenchViewModel() => Conflicts = new(this);
+
+    public GitConflictWorkbenchViewModel Conflicts { get; }
+    [ObservableProperty] private bool isBusy;
+    public bool CanInteract => !IsBusy;
+
     [ObservableProperty] private string gitExecutable = "git";
     [ObservableProperty] private string gitVersion = "";
     [ObservableProperty] private string repositoryPath = "";
@@ -215,15 +221,21 @@ public partial class GitWorkbenchViewModel : ObservableObject
             throw new InvalidOperationException("Every selected commit path must belong to api-wrangler/.");
     }
 
-    private async Task RunAsync(Func<Task> action)
+    internal async Task RunAsync(Func<Task> action)
     {
+        if (IsBusy) return;
+        IsBusy = true;
         try { await action(); }
         catch (OperationCanceledException) { OperationStatus = "Git operation cancelled."; }
         catch (Exception error) when (error is IOException or UnauthorizedAccessException or InvalidOperationException or ArgumentException or Win32Exception)
         {
             OperationStatus = error.Message;
         }
+        finally { IsBusy = false; }
     }
 
     partial void OnCommitMessageChanged(string value) => OnPropertyChanged(nameof(CanCommitReviewed));
+    partial void OnIsBusyChanged(bool value) => OnPropertyChanged(nameof(CanInteract));
+    partial void OnRepositoryPathChanged(string value) => Conflicts.Reset();
+    partial void OnGitExecutableChanged(string value) => Conflicts.Reset();
 }
