@@ -1,5 +1,16 @@
 # Implementation status
 
+## Phase 6.1 complete: Production Node worker, trust policy, and packages (2026-11-08 21:46 IST)
+
+Phase 6.1 is implemented and verified on branch `phase6-scripting-and-packages`:
+- P6.1 (Issue #27):
+  - `ProjectTrustService`: Host-local trust storage under local app data, non-execution on repository open/clone/fetch/import, deterministic SHA-256 script hashing across all project scripts and manifests, detection of tampered scripts, and explicit untrusted execution blocking.
+  - `NodeRuntimeService`: Node and npm discovery across PATH, standard directories, and environment variables, with Node LTS 20+ validation and dependency diagnostics.
+  - `NpmPackageService`: Package metadata extraction without code execution, lockfile presence verification, `npm ci --ignore-scripts` enforcement, separate explicit lifecycle execution, and host configuration for private registries.
+  - Production Node Worker (`workers/node/src/worker.ts` & `NodeScriptHost`): Framed binary IPC, native `wrangler.test` and `wrangler.expect` assertions, request/response contexts, scoped variable mutations, bounded console logs, and hard termination of infinite loops/descendant processes via wall-clock timeouts.
+  - Documentation: Verified in `docs/phase-6.1-progress.md`.
+- Automated test suite: 213 passed, 0 failed, 0 skipped. Desktop smoke (`scripts/Test-Desktop.ps1`) passed cleanly. Solution builds cleanly in Release configuration with zero warnings/errors. Format verification passed (`dotnet format --verify-no-changes`).
+
 ## Phase 5 complete: Git collaboration, reviewed commits, and semantic conflict resolution (2026-11-08 20:48 IST)
 
 Phase 5 is complete, fully verified, and merged into `main` via PR #72 (commit `74e0719`). Milestone A (Team HTTP regression) is accepted. All Phase 5 sub-issues (#23, #24, #25) and parent Epic #22 are closed and marked `Done` in GitHub Project 4.

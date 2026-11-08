@@ -110,6 +110,11 @@ public static class RequestAssetSerializer
             obj["assertions"] = assertArr;
         }
 
+        if (!string.IsNullOrEmpty(request.PreRequestScript))
+            obj["preRequestScript"] = request.PreRequestScript;
+        if (!string.IsNullOrEmpty(request.TestScript))
+            obj["testScript"] = request.TestScript;
+
         return obj;
     }
 
@@ -249,7 +254,9 @@ public static class RequestAssetSerializer
             Query = query,
             BodyDefinition = bodyDef,
             Auth = authDef,
-            Assertions = assertions
+            Assertions = assertions,
+            PreRequestScript = json["preRequestScript"]?.GetValue<string>(),
+            TestScript = json["testScript"]?.GetValue<string>()
         };
     }
 }

@@ -48,6 +48,8 @@ public sealed record HttpRequestDefinition
     public HttpTransportOptions TransportOptions { get; init; } = new();
     public RequestAuthDefinition Auth { get; init; } = new();
     public IReadOnlyList<RequestAssertionDefinition> Assertions { get; init; } = [];
+    public string? PreRequestScript { get; init; }
+    public string? TestScript { get; init; }
 }
 
 public sealed record ExecutionLimits
