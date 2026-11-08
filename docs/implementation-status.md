@@ -1,5 +1,15 @@
 # Implementation status
 
+## Phase 4 editable grid and clipboard workflows checkpoint (2026-11-08 11:45 IST)
+
+P4.2 implemented and verified on branch `phase4-editable-grid`:
+- `EditableDatasetGrid`: Virtualized 100,000-row editable dataset grid with responsive row retrieval and cell editing (<10ms), multi-cell editing, Undo/Redo transaction history stack, Fill Down across selected rows, Duplicate Case with generated unique `_caseId`, Insert/Delete row operations, Search/Filter, and View Sorting (Ascending/Descending) without mutating underlying source dataset ordering.
+- `ClipboardFormatDetector`: Recognizes spreadsheet TSV (Excel, Google Sheets), CSV text, JSON arrays, JSON Lines, raw HTTP requests, plain text, and cURL commands (enforcing the specification rule that pasted shell commands are never executed).
+- `SpreadsheetSafeExport`: Provides spreadsheet-safe CSV export that neutralizes formula-leading cell triggers (`=`, `+`, `-`, `@`, `\t`, `\r`) by prefixing single quotes, while preserving native values when disabled.
+- `ExternalResultAttachmentService`: Attaches pasted external test run records (JUnit XML, Newman / Postman JSON), records provenance (tool, import timestamp, SHA-256 content hash, test mapping, status), and guarantees that imported results are never represented as API Wrangler executions (`IsWranglerExecution = false`).
+- Desktop Workbench: Adds interactive "Dataset grid & clipboard" tab with search/filter, undo/redo, paste, fill-down, duplicate case, insert, delete, spreadsheet-safe CSV export, and external results attachment.
+- Verification: 145 automated tests passed (0 failed, 4 skipped). Desktop smoke passed (`scripts/Test-Desktop.ps1`). Solution builds cleanly in Release configuration with zero warnings/errors. Format verification passed (`dotnet format --verify-no-changes`).
+
 ## Phase 4 file-backed import and desktop checkpoint (2026-11-08 11:24 IST)
 
 P4.1 is ready for review in PR #69: streaming file-backed JSONL preparation/publication with hash checking, stable case identity, full-import conversions, and desktop source/encoding/mapping/preview/accept/cancellation flow. Input source changes after preview do not alter accepted content. Existing project transactions protect definitions and stale writes; immutable source files participate in project snapshots. Release solution build passed; 62 dataset/persistence tests passed without skips. Desktop dataset smoke verified explicit conversion, stale-options rejection, and exact prepared-source import; screenshot inspected. A diagnostic tab-name compile error was fixed before the successful desktop rebuild/smoke. See `docs/dataset-import.md` for limits and remaining polish. P4 stays In progress; P4.1 is not Done before review/acceptance/merge. Existing unrelated edits preserved.

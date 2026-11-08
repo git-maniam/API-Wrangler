@@ -218,6 +218,49 @@
                     </DataGrid>
                 </DockPanel>
             </TabItem>
+            <TabItem Header="Dataset grid &amp; clipboard">
+                <Grid Margin="12" DataContext="{Binding DatasetGrid}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <DockPanel Margin="0,0,0,8">
+                        <Button DockPanel.Dock="Right" Content="_Clear" Command="{Binding ClearSearchCommand}" Margin="4,0,0,0" AutomationProperties.Name="Clear filter" />
+                        <Button DockPanel.Dock="Right" Content="_Filter" Command="{Binding SearchCommand}" Margin="8,0,0,0" AutomationProperties.Name="Apply filter" />
+                        <Label Content="_Search / Filter:" Target="{Binding ElementName=GridSearchBox}" VerticalAlignment="Center" Margin="0,0,8,0" Padding="0" />
+                        <TextBox x:Name="GridSearchBox" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Dataset search filter" />
+                    </DockPanel>
+                    <WrapPanel Grid.Row="1" Margin="0,0,0,8">
+                        <Button Content="↶ _Undo" Command="{Binding UndoCommand}" IsEnabled="{Binding CanUndo}" Margin="0,0,6,0" AutomationProperties.Name="Undo grid edit" />
+                        <Button Content="↷ _Redo" Command="{Binding RedoCommand}" IsEnabled="{Binding CanRedo}" Margin="0,0,12,0" AutomationProperties.Name="Redo grid edit" />
+                        <Button Content="_Paste clipboard" Command="{Binding PasteFromClipboardCommand}" Margin="0,0,6,0" AutomationProperties.Name="Paste from clipboard" AutomationProperties.HelpText="Detects TSV, CSV, or JSON from clipboard. cURL commands are safely previewed without execution." />
+                        <Button Content="_Duplicate case" Command="{Binding DuplicateSelectedRowCommand}" Margin="0,0,6,0" AutomationProperties.Name="Duplicate case" />
+                        <Button Content="Fill _down" Command="{Binding FillDownCommand}" Margin="0,0,6,0" AutomationProperties.Name="Fill down selected column" />
+                        <Button Content="_Insert row" Command="{Binding InsertRowCommand}" Margin="0,0,6,0" AutomationProperties.Name="Insert new row" />
+                        <Button Content="De_lete row" Command="{Binding DeleteSelectedRowCommand}" Margin="0,0,12,0" AutomationProperties.Name="Delete selected row" />
+                        <CheckBox Content="Spreadsheet-_safe export" IsChecked="{Binding IsSpreadsheetSafe}" VerticalAlignment="Center" Margin="0,0,6,0" AutomationProperties.HelpText="Neutralizes leading formula characters (=, +, -, @) to prevent formula execution in spreadsheet applications." />
+                        <Button Content="_Export CSV" Command="{Binding ExportSpreadsheetSafeCommand}" Margin="0,0,12,0" AutomationProperties.Name="Export CSV" />
+                        <Button Content="_Attach external results" Command="{Binding AttachExternalResultsCommand}" Margin="0,0,6,0" AutomationProperties.Name="Attach external results" AutomationProperties.HelpText="Attach pasted results from external test runners (e.g. Newman, JUnit). Tagged as non-Wrangler execution." />
+                    </WrapPanel>
+                    <DataGrid x:Name="EditableGrid" Grid.Row="2" ItemsSource="{Binding Grid}" SelectedIndex="{Binding SelectedRowIndex}"
+                        AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="True" CanUserSortColumns="True"
+                        EnableRowVirtualization="True" EnableColumnVirtualization="True" VirtualizingPanel.VirtualizationMode="Recycling"
+                        ScrollViewer.CanContentScroll="True" SelectionMode="Extended" SelectionUnit="CellOrRowHeader"
+                        AutomationProperties.Name="Editable virtualized dataset grid">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Case ID" Binding="{Binding CaseId}" IsReadOnly="False" Width="180" />
+                            <DataGridTextColumn Header="Email" Binding="{Binding Cells[email]}" IsReadOnly="False" Width="*" />
+                            <DataGridTextColumn Header="Status" Binding="{Binding Cells[status]}" IsReadOnly="False" Width="120" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <StackPanel Grid.Row="3" Margin="0,8,0,0">
+                        <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite" Foreground="DarkSlateGray" />
+                        <TextBlock Text="{Binding ClipboardSummary}" TextWrapping="Wrap" Margin="0,2,0,0" Foreground="DimGray" />
+                    </StackPanel>
+                </Grid>
+            </TabItem>
         </TabControl>
         <StatusBar Grid.Row="2" Margin="0,12,0,0"><TextBlock Text="{Binding Status}" AutomationProperties.LiveSetting="Polite" /></StatusBar>
     </Grid>
