@@ -465,4 +465,84 @@ mock.Subcommands.Add(mockServe);
 
 root.Subcommands.Add(mock);
 
+var playwright = new Command("playwright", "Playwright application testing integration: evaluate captured network traffic against collection definitions and generate CI reports.");
+
+var pwEval = new Command("evaluate", "Evaluate a captured Playwright traffic JSON file against collection definitions.");
+var pwCapture = new Option<FileInfo>("--capture") { Required = true, Description = "Path to captured traffic JSON file" };
+var pwRequests = new Option<FileInfo?>("--requests") { Description = "Path to collection HttpRequestDefinition JSON array" };
+var pwScenario = new Option<string>("--scenario") { DefaultValueFactory = _ => "DefaultScenario", Description = "Scenario name" };
+var pwUiPassed = new Option<bool>("--ui-passed") { DefaultValueFactory = _ => true, Description = "Whether the UI browser test passed" };
+var pwOutputDir = new Option<DirectoryInfo?>("--output-dir") { Description = "Directory to emit CI reports (playwright-api-report.json, playwright-api-summary.md)" };
+
+pwEval.Options.Add(pwCapture);
+pwEval.Options.Add(pwRequests);
+pwEval.Options.Add(pwScenario);
+pwEval.Options.Add(pwUiPassed);
+pwEval.Options.Add(pwOutputDir);
+
+pwEval.SetAction(async (parse, token) =>
+{
+    try
+    {
+        var capFile = parse.GetValue(pwCapture)!;
+        if (!capFile.Exists)
+        {
+            Console.Error.WriteLine($"Capture file not found: {capFile.FullName}");
+            return 2;
+        }
+
+        var trafficText = await File.ReadAllTextAsync(capFile.FullName, token);
+        var traffic = JsonSerializer.Deserialize<List<CapturedTrafficRecord>>(trafficText, json) ?? new();
+
+        var knownRequests = new List<HttpRequestDefinition>();
+        var reqFile = parse.GetValue(pwRequests);
+        if (reqFile is not null && reqFile.Exists)
+        {
+            var reqText = await File.ReadAllTextAsync(reqFile.FullName, token);
+            var parsed = JsonSerializer.Deserialize<List<HttpRequestDefinition>>(reqText, json);
+            if (parsed is not null) knownRequests.AddRange(parsed);
+        }
+
+        var svc = new PlaywrightTrafficService();
+        var result = svc.EvaluateScenario(
+            scenarioName: parse.GetValue(pwScenario)!,
+            uiPassed: parse.GetValue(pwUiPassed),
+            traffic: traffic,
+            knownRequests: knownRequests
+        );
+
+        var outDir = parse.GetValue(pwOutputDir);
+        if (outDir is not null)
+        {
+            var summary = new PlaywrightSummaryReport(
+                TotalScenarios: 1,
+                PassedScenarios: result.CombinedPassed ? 1 : 0,
+                FailedScenarios: result.CombinedPassed ? 0 : 1,
+                FailingScenarios: result.CombinedPassed ? Array.Empty<string>() : new[] { result.ScenarioName },
+                TotalCapturedRequests: traffic.Count,
+                MatchedRequests: traffic.Count - result.UnmatchedTraffic.Count,
+                UnmatchedRequests: result.UnmatchedTraffic.Count,
+                AmbiguousRequests: result.AmbiguousTraffic.Count,
+                TotalAssertionFailures: result.ValidationResults.Count(v => !v.AssertionsPassed),
+                Scenarios: new[] { result }
+            );
+
+            svc.GenerateCiArtifacts(summary, outDir.FullName);
+        }
+
+        Console.WriteLine(JsonSerializer.Serialize(result, json));
+        return result.CombinedPassed ? 0 : 1;
+    }
+    catch (OperationCanceledException) { return 4; }
+    catch (Exception ex)
+    {
+        Console.Error.WriteLine($"Evaluation error: {ex.Message}");
+        return 3;
+    }
+});
+
+playwright.Subcommands.Add(pwEval);
+
+root.Subcommands.Add(playwright);
+
 return await root.Parse(args).InvokeAsync();

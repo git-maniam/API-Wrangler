@@ -1,5 +1,26 @@
 # Implementation status
 
+## Phase 12.1 complete: Playwright package, traffic matching, and combined results (2026-11-09 01:05 IST)
+
+Phase 12.1 is implemented and verified on branch `phase12-playwright-traffic`:
+- P12.1 (Issue #47):
+  - Domain models (`PlaywrightModels.cs`): `CapturedTrafficRecord`, `TrafficMatchResult`, `TrafficAssertionRule`, `CapturedTrafficValidationResult`, `DependencyEdge`, `TrafficDependencyMap`, `PlaywrightCombinedScenarioResult`, and `PlaywrightSummaryReport`.
+  - TypeScript integration (`workers/node/src/playwright.ts`):
+    - `PlaywrightTrafficCollector`: Listens to `page.on('request')` and `page.on('response')`, calculates request durations, redacts credentials and sensitive JSON values, bounds body payloads (default 256 KiB), flags service workers, cached responses, and WebSocket upgrades, and writes capture files.
+    - `attachApiWranglerCollector`: Helper for one-line attachment to Playwright pages.
+  - Application services (`PlaywrightTrafficService.cs`):
+    - `RedactTraffic`: Redacts headers (`Authorization`, `Cookie`, `Set-Cookie`, `X-Api-Key`, etc.) and sensitive JSON keys (`password`, `token`, `secret`, `apiKey`), truncating payloads exceeding size limits.
+    - `MatchTraffic`: Specificity scoring for origins, methods, exact/parameterized/wildcard path templates, and headers, with deterministic precedence and ambiguity detection.
+    - `ValidateTrafficRecord`: Evaluates response status codes, headers, and body JSON properties (`Equals`, `LessThan`, `GreaterThan`, `Contains`, `Regex`).
+    - `EvaluateScenario`: Unifies UI and API assertion outcomes. When a UI scenario passes but an API assertion fails, marks combined outcome as `Failed`, designates failure source as `API`, and explicitly names the failing browser scenario. Discloses encountered browser limitations (`BrowserHttpCache`, `ServiceWorkerInterception`, `WebSocketTraffic`, `BoundedPayloadLimit`).
+    - `BuildDependencyMap`: Generates sequential API dependency graph and call frequency maps.
+    - `GenerateDraftRequests`: Bootstraps draft `HttpRequestDefinition` assets from unmatched traffic.
+    - `GenerateCiArtifacts`: Emits machine-readable `playwright-api-report.json` and formatted `playwright-api-summary.md` with scenario breakdown tables.
+  - CLI operations: Added `playwright evaluate` command to `api-wrangler` CLI (`Program.cs`) for headless CI evaluation of captured test traffic.
+  - Integration tests (`PlaywrightTrafficTests.cs`): 4 tests verifying passing UI with failing API assertion naming the scenario, ambiguous/unmatched traffic surfacing and secret redaction, explicit limitation disclosure and CI artifact generation, and dependency mapping/draft request generation.
+  - Full automated test suite: 288 passed, 0 failed, 0 skipped. `scripts/Test-Desktop.ps1` passed cleanly. `dotnet format --verify-no-changes` passed.
+  - Documentation: Verified in `docs/phase-12.1-progress.md`.
+
 ## Phase 11 complete: Distributed load and hosted mocks (2026-11-09 00:52 IST)
 
 Phase 11 is fully implemented and certified complete on branch `phase11-hosted-mocks`:
