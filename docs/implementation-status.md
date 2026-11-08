@@ -1,8 +1,19 @@
 # Implementation status
 
-## Phase 12.1 complete: Playwright package, traffic matching, and combined results (2026-11-09 01:05 IST)
+## Phase 12 complete: Playwright and visual workflows (2026-11-09 01:20 IST)
 
-Phase 12.1 is implemented and verified on branch `phase12-playwright-traffic`:
+Phase 12 is fully implemented and certified complete on branch `phase12-visual-flows`:
+- P12.2 (Issue #48):
+  - Domain models (`VisualFlowModels.cs`): `FlowNodeKind`, `FlowEdge`, `FlowNodeDefinition`, `FlowDefinition`, `FlowNodeLayout`, `FlowLayoutDefinition`, `FlowExecutionOutcome`, `FlowNodeExecutionRecord`, `FlowExecutionReport`, `FlowValidationDiagnostic`, `FlowValidationResult`, and `DebuggerState`.
+  - Application services (`VisualFlowEngine.cs`):
+    - Separation of canvas coordinates from execution semantics: `FlowDefinition` contains exclusively semantic nodes and edges; coordinates live in `FlowLayoutDefinition` preventing Git merge conflicts on layout repositioning.
+    - Graph validation: Rejects unreachable nodes via BFS traversal from the Start node and rejects unbounded loops lacking a positive `MaxIterations` limit.
+    - Shared execution engine: Reuses `HttpRequestService` and `VariableContext` execution primitives for request dispatch and variable evaluation.
+    - Secret redaction: Variables containing sensitive keywords (`password`, `secret`, `token`, `apiKey`, `credential`, etc.) or token prefixes are automatically masked with `[REDACTED]` during variable inspection and snapshot recording.
+    - Cancellation propagation: Immediately propagates cancellation tokens across in-flight requests and delay intervals.
+    - Interactive debugger session (`FlowDebugSession`): Supports setting/removing breakpoints, single-step stepping (`StepAsync`), run-to-breakpoint (`ContinueAsync`), and redacted variable inspection.
+  - CLI operations: Added `flow run` command to `api-wrangler` CLI (`Program.cs`) for headless execution of flow definition files.
+  - Integration tests (`VisualFlowTests.cs`): 4 tests verifying rejection of unreachable nodes and unbounded loops, cancellation propagation, canvas coordinate separation from semantics, shared execution engine with secret redaction, and debugger stepping/breakpoints.
 - P12.1 (Issue #47):
   - Domain models (`PlaywrightModels.cs`): `CapturedTrafficRecord`, `TrafficMatchResult`, `TrafficAssertionRule`, `CapturedTrafficValidationResult`, `DependencyEdge`, `TrafficDependencyMap`, `PlaywrightCombinedScenarioResult`, and `PlaywrightSummaryReport`.
   - TypeScript integration (`workers/node/src/playwright.ts`):
@@ -18,8 +29,8 @@ Phase 12.1 is implemented and verified on branch `phase12-playwright-traffic`:
     - `GenerateCiArtifacts`: Emits machine-readable `playwright-api-report.json` and formatted `playwright-api-summary.md` with scenario breakdown tables.
   - CLI operations: Added `playwright evaluate` command to `api-wrangler` CLI (`Program.cs`) for headless CI evaluation of captured test traffic.
   - Integration tests (`PlaywrightTrafficTests.cs`): 4 tests verifying passing UI with failing API assertion naming the scenario, ambiguous/unmatched traffic surfacing and secret redaction, explicit limitation disclosure and CI artifact generation, and dependency mapping/draft request generation.
-  - Full automated test suite: 288 passed, 0 failed, 0 skipped. `scripts/Test-Desktop.ps1` passed cleanly. `dotnet format --verify-no-changes` passed.
-  - Documentation: Verified in `docs/phase-12.1-progress.md`.
+- Full automated test suite: 292 passed, 0 failed, 0 skipped. `scripts/Test-Desktop.ps1` passed cleanly. `dotnet format --verify-no-changes` passed.
+- Documentation: Verified in `docs/phase-12.1-progress.md`, `docs/phase-12.2-progress.md`, and `docs/phase-12-exit-review.md`.
 
 ## Phase 11 complete: Distributed load and hosted mocks (2026-11-09 00:52 IST)
 

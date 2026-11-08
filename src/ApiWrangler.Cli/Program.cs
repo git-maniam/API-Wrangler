@@ -545,4 +545,59 @@ playwright.Subcommands.Add(pwEval);
 
 root.Subcommands.Add(playwright);
 
+var flow = new Command("flow", "Visual workflows: validate, debug, and execute text-backed workflow graphs.");
+
+var flowRun = new Command("run", "Execute a visual workflow JSON definition.");
+var flowFile = new Option<FileInfo>("--file") { Required = true, Description = "Path to FlowDefinition JSON file" };
+var flowVars = new Option<FileInfo?>("--variables") { Description = "Path to initial variables JSON file" };
+
+flowRun.Options.Add(flowFile);
+flowRun.Options.Add(flowVars);
+
+flowRun.SetAction(async (parse, token) =>
+{
+    try
+    {
+        var file = parse.GetValue(flowFile)!;
+        if (!file.Exists)
+        {
+            Console.Error.WriteLine($"Flow file not found: {file.FullName}");
+            return 2;
+        }
+
+        var text = await File.ReadAllTextAsync(file.FullName, token);
+        var def = JsonSerializer.Deserialize<FlowDefinition>(text, json);
+        if (def is null)
+        {
+            Console.Error.WriteLine("Failed to parse flow definition.");
+            return 2;
+        }
+
+        var vars = new Dictionary<string, string>();
+        var varFile = parse.GetValue(flowVars);
+        if (varFile is not null && varFile.Exists)
+        {
+            var vt = await File.ReadAllTextAsync(varFile.FullName, token);
+            var pv = JsonSerializer.Deserialize<Dictionary<string, string>>(vt, json);
+            if (pv is not null) foreach (var (k, v) in pv) vars[k] = v;
+        }
+
+        var engine = new VisualFlowEngine();
+        var report = await engine.ExecuteFlowAsync(def, vars, cancellationToken: token);
+        Console.WriteLine(JsonSerializer.Serialize(report, json));
+
+        return report.Outcome == FlowExecutionOutcome.Passed ? 0 : 1;
+    }
+    catch (OperationCanceledException) { return 4; }
+    catch (Exception ex)
+    {
+        Console.Error.WriteLine($"Flow execution error: {ex.Message}");
+        return 3;
+    }
+});
+
+flow.Subcommands.Add(flowRun);
+
+root.Subcommands.Add(flow);
+
 return await root.Parse(args).InvokeAsync();
