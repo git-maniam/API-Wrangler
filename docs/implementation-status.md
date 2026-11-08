@@ -1,5 +1,20 @@
 # Implementation status
 
+## Phase 8 complete: Mocks and webhook debugging (2026-11-08 23:22 IST)
+
+Phase 8 is fully implemented and verified on branch `phase8-webhook-debugging`:
+- P8.2 (Issue #35):
+  - Domain models (`WebhookModels.cs`): `WebhookListenerDefinition`, `WebhookSignatureType`, `WebhookCapturedEvent`, `WebhookReplayRequest`, and `WebhookReplayResult`.
+  - Application services (`WebhookService.cs`):
+    - `WebhookService`: In-process loopback ASP.NET Core listener.
+    - Byte-perfect cryptographic signature verification (`HmacSha256Hex`, `HmacSha256Base64`, `HmacSha1Hex`) using `CryptographicOperations.FixedTimeEquals` directly on raw bytes prior to any JSON/text parsing.
+    - Safeguards: body size limits (`MaxBodySizeBytes`, HTTP 413) and destination policy enforcement (`AllowedForwardingDestinations`, HTTP 403) to prevent SSRF and unrestricted open forwarding.
+    - Replay engine: original byte-preserving and edit-and-replay dispatching with audit records.
+  - Desktop integration: added "Webhook Debugger" tab under "Mocks & Webhooks" in `MainWindow.xaml` to inspect incoming payloads, signature verification results, and replay history.
+  - Integration tests (`WebhookServiceTests.cs`): 3 tests covering signature verification against raw bytes and failure on tampering, webhook capture with headers, and destination policy replay enforcement.
+  - Verification: 249 tests passed, 0 failed, 0 skipped. `scripts/Test-Desktop.ps1` passed cleanly. `dotnet format --verify-no-changes` passed.
+  - Documentation: Verified in `docs/phase-8.2-progress.md` and `docs/phase-8-exit-review.md`.
+
 ## Phase 8.1 complete: Local mock engine, deterministic matching, and fault scenarios (2026-11-08 23:12 IST)
 
 Phase 8.1 is implemented and verified on branch `phase8-local-mock-engine`:

@@ -395,15 +395,45 @@
                             </ListBox.ItemTemplate>
                         </ListBox>
                     </DockPanel>
-                    <!-- Right: Live Request Logs & Inspection -->
+                    <!-- Right: Live Request Logs & Webhook Debugger -->
                     <DockPanel Grid.Column="1">
-                        <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,6">
-                            <TextBlock Text="Request Logs &amp; Diagnostics" FontWeight="Bold" FontSize="16" VerticalAlignment="Center" Margin="0,0,12,0" />
-                            <Button Content="Refresh Logs" Command="{Binding RefreshLogsCommand}" Margin="0,0,6,0" />
-                            <Button Content="Reset State" Command="{Binding ResetStateCommand}" Margin="0,0,6,0" />
-                        </WrapPanel>
-                        <TextBlock DockPanel.Dock="Top" Text="{Binding LogsSummary}" Margin="0,0,0,4" />
-                        <TextBox Text="{Binding RawLogs, Mode=OneWay}" IsReadOnly="True" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" FontFamily="Consolas" FontSize="12" AutomationProperties.Name="Mock request logs" />
+                        <TabControl>
+                            <TabItem Header="Mock Request Logs">
+                                <DockPanel Margin="8">
+                                    <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,6">
+                                        <TextBlock Text="Request Logs &amp; Diagnostics" FontWeight="Bold" FontSize="14" VerticalAlignment="Center" Margin="0,0,12,0" />
+                                        <Button Content="Refresh Logs" Command="{Binding RefreshLogsCommand}" Margin="0,0,6,0" />
+                                        <Button Content="Reset State" Command="{Binding ResetStateCommand}" Margin="0,0,6,0" />
+                                    </WrapPanel>
+                                    <TextBlock DockPanel.Dock="Top" Text="{Binding LogsSummary}" Margin="0,0,0,4" />
+                                    <TextBox Text="{Binding RawLogs, Mode=OneWay}" IsReadOnly="True" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" FontFamily="Consolas" FontSize="12" AutomationProperties.Name="Mock request logs" />
+                                </DockPanel>
+                            </TabItem>
+                            <TabItem Header="Webhook Debugger">
+                                <DockPanel Margin="8">
+                                    <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,6">
+                                        <TextBlock Text="Path Prefix: " VerticalAlignment="Center" />
+                                        <TextBox Width="140" Text="{Binding WebhookPathPrefix, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,8,0" />
+                                        <Button Content="{Binding IsWebhookRunning, Converter={x:Null}}" Command="{Binding ToggleWebhookServiceCommand}" Padding="8,2" Margin="0,0,8,0">
+                                            <Button.Style>
+                                                <Style TargetType="Button">
+                                                    <Setter Property="Content" Value="Start Webhook Listener" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsWebhookRunning}" Value="True">
+                                                            <Setter Property="Content" Value="Stop Listener" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Button.Style>
+                                        </Button>
+                                        <Button Content="Refresh Events" Command="{Binding RefreshWebhookEventsCommand}" />
+                                    </WrapPanel>
+                                    <TextBlock DockPanel.Dock="Top" Text="{Binding WebhookStatus}" FontWeight="SemiBold" Margin="0,0,0,4" />
+                                    <TextBlock DockPanel.Dock="Top" Text="{Binding WebhookCapturedCountText}" Margin="0,0,0,4" />
+                                    <TextBox Text="{Binding RawWebhookEvents, Mode=OneWay}" IsReadOnly="True" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" FontFamily="Consolas" FontSize="12" AutomationProperties.Name="Captured webhook events" />
+                                </DockPanel>
+                            </TabItem>
+                        </TabControl>
                     </DockPanel>
                 </Grid>
             </TabItem>
