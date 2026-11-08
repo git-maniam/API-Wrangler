@@ -1,5 +1,17 @@
 # Implementation status
 
+## Phase 10 complete: Unattended execution and monitoring (2026-11-09 00:30 IST)
+
+Phase 10 is fully implemented and certified complete on branch `phase10-scheduler-notifications`:
+- P10.3 (Issue #42):
+  - Domain models (`SchedulerModels.cs`): `ScheduleType`, `ScheduleOverlapPolicy`, `ScheduleMissedRunPolicy`, `NotificationSeverity`, `NotificationRoute`, `ScheduleDefinition`, `ScheduleExecutionRecord`, `NotificationEvent`, and `NotificationDeliveryDiagnostic`.
+  - Application services (`SchedulerService.cs`):
+    - `SchedulerEngine`: Designated deployment ownership (`DesignatedDeploymentId`) ensuring opening the repository on multiple laptops never duplicates scheduled monitoring; IANA time zone conversions and DST handling; missed run interval suppression (`SkipMissedIntervals`) preventing downtime backlog flooding; overlap prevention (`Skip`) avoiding overlapping executions; and pinned approved commit dispatch (`ApprovedCommitSha`).
+    - `NotificationDispatcher`: Generic HTTP notification webhooks, host-local secrets resolution (`SecretEnvVarName` via environment variables) without Git credential exposure, failure alert deduplication and cooldown suppression, and recovery notifications after failures.
+  - Integration tests (`SchedulerServiceTests.cs`): 5 tests verifying multi-client designated deployment ownership, downtime missed interval suppression, overlap skipping, alert cooldown deduplication, and authenticated recovery webhooks.
+  - Full automated test suite: 273 passed, 0 failed, 0 skipped. `scripts/Test-Desktop.ps1` passed cleanly (`{"editorRoundTrip":true,"httpRoundTrip":true,"cancellation":true,"dispatcherTicksDuringRequest":9}`). `dotnet format --verify-no-changes` passed.
+  - Documentation: Verified in `docs/phase-10.3-progress.md` and `docs/phase-10-exit-review.md`.
+
 ## Phase 10.2 complete: Control plane, fenced leases, artifacts, and crash recovery (2026-11-09 00:20 IST)
 
 Phase 10.2 is implemented and verified on branch `phase10-control-plane-leases`:
