@@ -7,9 +7,13 @@ public sealed record ProcessResult(int ExitCode, string StandardOutput, string S
 
 public static class ProcessRunner
 {
+    public const int DefaultMaxOutputCharacters = 65_536;
+
     public static async Task<ProcessResult> RunAsync(string executable, IEnumerable<string> arguments,
-        string workingDirectory, CancellationToken cancellationToken = default)
+        string workingDirectory, CancellationToken cancellationToken = default,
+        int maxOutputCharacters = DefaultMaxOutputCharacters)
     {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxOutputCharacters);
         var start = new ProcessStartInfo(executable)
         {
             WorkingDirectory = workingDirectory,
@@ -23,8 +27,8 @@ public static class ProcessRunner
         foreach (var argument in arguments) start.ArgumentList.Add(argument);
         using var process = Process.Start(start) ?? throw new IOException("Process could not be started.");
         using var lifetime = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        var output = ReadBoundedAsync(process.StandardOutput, lifetime);
-        var error = ReadBoundedAsync(process.StandardError, lifetime);
+        var output = ReadBoundedAsync(process.StandardOutput, lifetime, maxOutputCharacters);
+        var error = ReadBoundedAsync(process.StandardError, lifetime, maxOutputCharacters);
         try
         {
             await process.WaitForExitAsync(lifetime.Token).ConfigureAwait(false);
@@ -32,7 +36,7 @@ public static class ProcessRunner
         }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
-            throw new IOException("Process output exceeded the diagnostic limit.");
+            throw new IOException($"Process output exceeded the {maxOutputCharacters:N0}-character limit.");
         }
         finally
         {
@@ -45,17 +49,18 @@ public static class ProcessRunner
         }
     }
 
-    private static async Task<string> ReadBoundedAsync(StreamReader reader, CancellationTokenSource lifetime)
+    private static async Task<string> ReadBoundedAsync(StreamReader reader, CancellationTokenSource lifetime,
+        int maxOutputCharacters)
     {
         var text = new StringBuilder();
         var buffer = new char[4096];
         int count;
         while ((count = await reader.ReadAsync(buffer, lifetime.Token).ConfigureAwait(false)) > 0)
         {
-            if (text.Length + count > 65_536)
+            if (text.Length + count > maxOutputCharacters)
             {
                 await lifetime.CancelAsync().ConfigureAwait(false);
-                throw new IOException("Process output exceeded the 64 KiB diagnostic limit.");
+                throw new IOException($"Process output exceeded the {maxOutputCharacters:N0}-character limit.");
             }
             text.Append(buffer, 0, count);
         }

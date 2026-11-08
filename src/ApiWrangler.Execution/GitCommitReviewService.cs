@@ -15,6 +15,7 @@ public sealed record GitCommitReview(string RepositoryRoot, IReadOnlyList<string
 /// <summary>Stages and reviews only explicit project asset paths before a caller-confirmed commit.</summary>
 public sealed class GitCommitReviewService(string executable = "git")
 {
+    private const int MaxCachedDiffCharacters = 4 * 1024 * 1024;
     private readonly string git = executable;
 
     public async Task<GitCommitReview> ReviewAsync(string repositoryPath, IEnumerable<string> selectedPaths,
@@ -54,7 +55,8 @@ public sealed class GitCommitReviewService(string executable = "git")
             }
         }
 
-        ProcessResult diff = await RunAsync(root, ["diff", "--cached", "--no-ext-diff", "--binary", "--"], cancellationToken).ConfigureAwait(false);
+        ProcessResult diff = await RunAsync(root, ["diff", "--cached", "--no-ext-diff", "--binary", "--"],
+            cancellationToken, MaxCachedDiffCharacters).ConfigureAwait(false);
         EnsureSuccess(diff, "Cached diff");
         string tree = (await RunCheckedAsync(root, ["write-tree"], "Index tree", cancellationToken).ConfigureAwait(false)).StandardOutput.Trim();
         GitRepositoryStatus reviewedState = await new GitRepositoryService(git).GetStatusAsync(root, cancellationToken).ConfigureAwait(false);
@@ -124,7 +126,9 @@ public sealed class GitCommitReviewService(string executable = "git")
             throw new InvalidOperationException("Resolve the active Git integration operation before reviewing a commit.");
     }
 
-    private Task<ProcessResult> RunAsync(string root, string[] args, CancellationToken token) => ProcessRunner.RunAsync(git, args, root, token);
+    private Task<ProcessResult> RunAsync(string root, string[] args, CancellationToken token,
+        int maxOutputCharacters = ProcessRunner.DefaultMaxOutputCharacters) =>
+        ProcessRunner.RunAsync(git, args, root, token, maxOutputCharacters);
 
     private async Task<byte[]?> ReadStagedBlobAsync(string root, string path, CancellationToken token)
     {

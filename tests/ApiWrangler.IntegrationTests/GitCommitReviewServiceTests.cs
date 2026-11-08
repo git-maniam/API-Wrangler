@@ -25,6 +25,45 @@ public sealed class GitCommitReviewServiceTests
     }
 
     [Fact]
+    public async Task Review_ReturnsCompleteDiffLargerThanDefaultProcessLimit()
+    {
+        string root = NewRepositoryPath();
+        try
+        {
+            await InitializeAsync(root);
+            Directory.CreateDirectory(Path.Combine(root, "api-wrangler"));
+            string content = new('x', ProcessRunner.DefaultMaxOutputCharacters + 4_096);
+            await File.WriteAllTextAsync(Path.Combine(root, "api-wrangler", "large.txt"), content);
+
+            GitCommitReview review = await new GitCommitReviewService().ReviewAsync(root, ["api-wrangler/large.txt"]);
+
+            Assert.True(review.CachedDiff.Length > ProcessRunner.DefaultMaxOutputCharacters);
+            Assert.Contains(content, review.CachedDiff, StringComparison.Ordinal);
+            Assert.True(review.CanCommit);
+        }
+        finally { DeleteTree(root); }
+    }
+
+    [Fact]
+    public async Task Review_RejectsDiffAboveExplicitCapacityWithoutReturningPartialReview()
+    {
+        string root = NewRepositoryPath();
+        try
+        {
+            await InitializeAsync(root);
+            Directory.CreateDirectory(Path.Combine(root, "api-wrangler"));
+            string content = new('x', 4 * 1024 * 1024 + 1);
+            await File.WriteAllTextAsync(Path.Combine(root, "api-wrangler", "oversized.txt"), content);
+
+            IOException exception = await Assert.ThrowsAsync<IOException>(() =>
+                new GitCommitReviewService().ReviewAsync(root, ["api-wrangler/oversized.txt"]));
+
+            Assert.Contains("character limit", exception.Message, StringComparison.Ordinal);
+        }
+        finally { DeleteTree(root); }
+    }
+
+    [Fact]
     public async Task Review_RefusesUnrelatedStagedPathBeforeChangingIndex()
     {
         string root = NewRepositoryPath();

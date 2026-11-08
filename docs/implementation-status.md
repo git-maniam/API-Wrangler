@@ -1,12 +1,12 @@
 # Implementation status
 
-## Phase 5 parallel Git work checkpoint (2026-11-08 19:25 IST)
+## Phase 5 parallel Git work checkpoint (2026-11-08 19:32 IST)
 
 - P5.1 follow-up: fixed case-insensitive restore safety on Windows, added visible labels and a GitHub compare action (including Git URL rewrite handling), and extended local workflow coverage.
-- P5.2 started in parallel because its only prerequisite is the completed Phase 4 epic. Added high-confidence secret scanning, scoped staged-diff review, JSON syntax checks, desktop project-schema/reference validation, exact index-tree and branch/HEAD confirmation, explicit commit, and separate push. Configured hooks/signing/authentication remain enabled.
-- Verification: Release solution build succeeded with 0 warnings/errors; 12 focused integration tests passed, 0 failed/skipped; `scripts/Test-GitDesktop.ps1` passed the desktop review/commit/push workflow and screenshot inspection.
-- P5.1 remains In progress for provider-specific authentication and manual accessibility review. P5.2 remains In progress: scanner pattern coverage is intentionally limited and the UI commit flow has only local fixture validation. P5.3 is not started. See `docs/phase-5.1-progress.md`, `docs/phase-5.2-progress.md`, and the Restart bookmark.
-
+- P5.2 includes high-confidence secret scanning, explicit scoped staging, strict JSON syntax checks, desktop project schema/reference validation, exact index-tree and branch/HEAD confirmation, explicit commit, and separate push. Cached diff review returns complete output up to 4 Mi characters and fails closed above that limit.
+- P5.3 started with a read-only JSON three-way proposal engine. It merges independent object and ID-keyed row edits, preserves unknown fields and unilateral reorder, and reports same-field, delete/edit, duplicate-ID, and incompatible reorder conflicts.
+- Verification: prior Release solution build and desktop Git smoke passed; the latest focused Release test batch passed 15/15 with 0 skipped, covering P5.2 review/scanning and P5.3 proposals.
+- P5.1 remains In Progress for provider-specific rejected-auth and manual accessibility review. P5.2 remains In Progress with high-confidence-only scanner patterns. P5.3 remains In Progress; desktop/Git conflict integration, other file types, and two-clone acceptance remain. See the phase progress notes and Restart bookmark.
 ## Phase 5.1 Git workflow checkpoint (2026-11-08 17:58 IST)
 
 P5.1 has started on `phase5-repository-workflows`:
@@ -16,7 +16,7 @@ P5.1 has started on `phase5-repository-workflows`:
 - Existing `ProjectSession` guards continue to suspend writes during index locks and merge/rebase markers; snapshots compare Git identity across capture. No new cache was added.
 - Verification: Release solution build succeeded (0 warnings/errors); four focused tests passed (0 failed/skipped), covering offline/rejected operations, real merge/rebase conflicts and recovery, external branch changes with an open project session, snapshots, index-lock write suspension, fetch immutability, dirty/unrelated files, fast-forward, branch/history/restore, detached HEAD, and linked worktrees. Desktop Git workflow smoke passed; screenshot inspected.
 
-P5.1 remains In progress. Remaining: manually review provider-specific rejected-auth behavior and accessibility/credential prompts. A local HTTP 401 fixture hung in Git's credential path and was removed rather than treated as passing evidence. P5.2 scoped reviewed commits and P5.3 semantic conflict handling have not started. See `docs/phase-5.1-progress.md` and the Restart bookmark in the product spec.
+P5.1 remains In progress. Remaining: manually review provider-specific rejected-auth behavior and accessibility/credential prompts. A local HTTP 401 fixture hung in Git's credential path and was removed rather than treated as passing evidence. P5.2 scoped reviewed commits and P5.3 semantic conflict handling are tracked in the current Phase 5 progress checkpoint above. See `docs/phase-5.1-progress.md` and the Restart bookmark in the product spec.
 
 ## Phase 4 color-highlighted preview checkpoint (2026-11-08 11:51 IST)
 
