@@ -327,6 +327,86 @@
                     </DockPanel>
                 </Grid>
             </TabItem>
+            <TabItem Header="Mocks &amp; Webhooks">
+                <Grid Margin="12" DataContext="{Binding Mocks}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="380" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <!-- Left: Control & Rule Definition -->
+                    <DockPanel Grid.Column="0" Margin="0,0,12,0">
+                        <TextBlock DockPanel.Dock="Top" Text="Local Mock Server" FontWeight="Bold" FontSize="16" Margin="0,0,0,6" />
+                        <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,6">
+                            <TextBlock Text="Host: " VerticalAlignment="Center" />
+                            <TextBox Width="90" Text="{Binding Host, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Mock Host" />
+                            <TextBlock Text=" Port: " VerticalAlignment="Center" Margin="6,0,0,0" />
+                            <TextBox Width="50" Text="{Binding Port, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Mock Port" />
+                            <Button Content="{Binding IsRunning, Converter={x:Null}}" Command="{Binding ToggleServerCommand}" Margin="8,0,0,0" Padding="8,2">
+                                <Button.Style>
+                                    <Style TargetType="Button">
+                                        <Setter Property="Content" Value="Start Mock" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsRunning}" Value="True">
+                                                <Setter Property="Content" Value="Stop Mock" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                            </Button>
+                        </WrapPanel>
+                        <CheckBox DockPanel.Dock="Top" Content="Allow external binding (explicit opt-in)" IsChecked="{Binding AllowExternalBinding}" Margin="0,2,0,8" AutomationProperties.Name="Allow external binding" />
+                        <TextBlock DockPanel.Dock="Top" Text="{Binding ServerStatus}" FontWeight="SemiBold" Margin="0,0,0,8" />
+                        
+                        <Separator DockPanel.Dock="Top" Margin="0,4,0,8" />
+                        <TextBlock DockPanel.Dock="Top" Text="Add Mock Rule" FontWeight="SemiBold" Margin="0,0,0,6" />
+                        <TextBlock DockPanel.Dock="Top" Text="Rule Name:" Margin="0,2" />
+                        <TextBox DockPanel.Dock="Top" Text="{Binding NewRuleName, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,4" />
+                        <WrapPanel DockPanel.Dock="Top" Margin="0,2,0,4">
+                            <TextBlock Text="Method: " VerticalAlignment="Center" />
+                            <TextBox Width="50" Text="{Binding NewRuleMethod, UpdateSourceTrigger=PropertyChanged}" />
+                            <TextBlock Text=" Status: " VerticalAlignment="Center" Margin="6,0,0,0" />
+                            <TextBox Width="40" Text="{Binding NewRuleStatus, UpdateSourceTrigger=PropertyChanged}" />
+                            <TextBlock Text=" Delay ms: " VerticalAlignment="Center" Margin="6,0,0,0" />
+                            <TextBox Width="40" Text="{Binding NewRuleDelayMs, UpdateSourceTrigger=PropertyChanged}" />
+                        </WrapPanel>
+                        <TextBlock DockPanel.Dock="Top" Text="Path Pattern (e.g. /api/users/{id}):" Margin="0,2" />
+                        <TextBox DockPanel.Dock="Top" Text="{Binding NewRulePath, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,4" />
+                        <WrapPanel DockPanel.Dock="Top" Margin="0,2,0,4">
+                            <TextBlock Text="Fault Simulation: " VerticalAlignment="Center" />
+                            <ComboBox SelectedValue="{Binding NewRuleFault}" SelectedValuePath="Content" Width="140">
+                                <ComboBoxItem Content="None" IsSelected="True" />
+                                <ComboBoxItem Content="DelayedResponse" />
+                                <ComboBoxItem Content="HttpError" />
+                                <ComboBoxItem Content="RateLimit" />
+                                <ComboBoxItem Content="MalformedPayload" />
+                                <ComboBoxItem Content="ConnectionTermination" />
+                            </ComboBox>
+                        </WrapPanel>
+                        <TextBlock DockPanel.Dock="Top" Text="Response Body (JSON):" Margin="0,2" />
+                        <TextBox DockPanel.Dock="Top" Height="70" Text="{Binding NewRuleBody, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" FontFamily="{Binding DataContext.EditorFontFamily, RelativeSource={RelativeSource AncestorType=Window}}" FontSize="{Binding DataContext.EditorFontSize, RelativeSource={RelativeSource AncestorType=Window}}" Margin="0,0,0,6" />
+                        <Button DockPanel.Dock="Top" Content="Add Rule" Command="{Binding AddRuleCommand}" HorizontalAlignment="Left" Padding="12,2" Margin="0,0,0,8" />
+
+                        <TextBlock DockPanel.Dock="Top" Text="Configured Rules:" FontWeight="SemiBold" Margin="0,4,0,4" />
+                        <ListBox ItemsSource="{Binding ConfiguredRules}">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Name}" ToolTip="{Binding PathPattern}" />
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </DockPanel>
+                    <!-- Right: Live Request Logs & Inspection -->
+                    <DockPanel Grid.Column="1">
+                        <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,6">
+                            <TextBlock Text="Request Logs &amp; Diagnostics" FontWeight="Bold" FontSize="16" VerticalAlignment="Center" Margin="0,0,12,0" />
+                            <Button Content="Refresh Logs" Command="{Binding RefreshLogsCommand}" Margin="0,0,6,0" />
+                            <Button Content="Reset State" Command="{Binding ResetStateCommand}" Margin="0,0,6,0" />
+                        </WrapPanel>
+                        <TextBlock DockPanel.Dock="Top" Text="{Binding LogsSummary}" Margin="0,0,0,4" />
+                        <TextBox Text="{Binding RawLogs, Mode=OneWay}" IsReadOnly="True" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" FontFamily="Consolas" FontSize="12" AutomationProperties.Name="Mock request logs" />
+                    </DockPanel>
+                </Grid>
+            </TabItem>
             <TabItem Header="Dataset feasibility">
                 <DockPanel Margin="12">
                     <TextBlock DockPanel.Dock="Top" Text="100,000 synthetic cases · paged rows · read-only feasibility fixture" Margin="0,0,0,12" />
