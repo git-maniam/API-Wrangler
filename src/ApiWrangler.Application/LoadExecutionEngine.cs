@@ -53,6 +53,45 @@ public sealed class LoadExecutionEngine
         );
     }
 
+    public static LatencyHistogram MergeHistograms(IReadOnlyList<LatencyHistogram> histograms)
+    {
+        var allLatencies = histograms.SelectMany(h => h.LatenciesMs.Select(ms => TimeSpan.FromMilliseconds(ms))).ToList();
+        return CalculateHistogram(allLatencies);
+    }
+
+    public static LoadThresholdEvaluation EvaluateThresholds(LoadThresholdPolicy? policy, LoadTestReport report)
+    {
+        if (policy is null)
+        {
+            return new LoadThresholdEvaluation(true, Array.Empty<string>());
+        }
+
+        var violations = new List<string>();
+
+        if (policy.MaxP95LatencyMs.HasValue && report.Latency.P95Ms > policy.MaxP95LatencyMs.Value)
+        {
+            violations.Add($"p95 latency threshold exceeded: {report.Latency.P95Ms:F1}ms > {policy.MaxP95LatencyMs.Value:F1}ms");
+        }
+
+        if (policy.MaxP99LatencyMs.HasValue && report.Latency.P99Ms > policy.MaxP99LatencyMs.Value)
+        {
+            violations.Add($"p99 latency threshold exceeded: {report.Latency.P99Ms:F1}ms > {policy.MaxP99LatencyMs.Value:F1}ms");
+        }
+
+        double errorRate = report.TotalRequests > 0 ? (double)report.FailedRequests / report.TotalRequests * 100.0 : 0.0;
+        if (policy.MaxErrorRatePercent.HasValue && errorRate > policy.MaxErrorRatePercent.Value)
+        {
+            violations.Add($"Error rate threshold exceeded: {errorRate:F1}% > {policy.MaxErrorRatePercent.Value:F1}%");
+        }
+
+        if (policy.MinThroughputRps.HasValue && report.AchievedRps < policy.MinThroughputRps.Value)
+        {
+            violations.Add($"Minimum throughput threshold failed: {report.AchievedRps:F1} rps < {policy.MinThroughputRps.Value:F1} rps");
+        }
+
+        return new LoadThresholdEvaluation(violations.Count == 0, violations);
+    }
+
     public async Task<LoadTestReport> ExecuteAsync(
         LoadTestConfiguration config,
         CancellationToken cancellationToken = default)
@@ -259,7 +298,7 @@ public sealed class LoadExecutionEngine
 
         var histogram = CalculateHistogram(allMetrics.Select(m => m.Latency).ToList());
 
-        return new LoadTestReport(
+        var preliminaryReport = new LoadTestReport(
             TargetUrl: config.TargetUrl,
             ModelType: config.ModelType,
             ProfileType: config.ProfileType,
@@ -275,8 +314,13 @@ public sealed class LoadExecutionEngine
             GeneratorSaturated: generatorSaturated,
             AbortReason: abortReason,
             ErrorCategories: errorCounts.ToDictionary(kvp => kvp.Key, kvp => kvp.Value),
-            Latency: histogram
+            Latency: histogram,
+            ThresholdEvaluation: null
         );
+
+        var thresholdEvaluation = EvaluateThresholds(config.Thresholds, preliminaryReport);
+
+        return preliminaryReport with { ThresholdEvaluation = thresholdEvaluation };
     }
 }
 
