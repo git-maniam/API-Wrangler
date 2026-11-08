@@ -1,5 +1,17 @@
 # Implementation status
 
+## Phase 7.1 complete: GraphQL and gRPC editors, adapters, and contracts (2026-11-08 22:30 IST)
+
+Phase 7.1 is implemented and verified on branch `phase7-graphql-grpc`:
+- P7.1 (Issue #31):
+  - `GraphQLService`: GraphQL SDL parser extracting operations, types, fields, arguments, and scalars. Introspection query generator and parser into `GraphQLSchemaDefinition`. Schema-aware field completion suggestions. Query validation against root types. HTTP POST execution with `{ query, variables, operationName }`, error extraction (`message`, `path`, `locations`, `extensions.code`). Local fixture execution verified.
+  - `GrpcService` & `ProtoParser`: Proto3 parser extracting packages, services, RPC methods, and call patterns (Unary, ServerStreaming, ClientStreaming, BidirectionalStreaming). Recursive proto import resolution across include directories with actionable diagnostics for missing include paths.
+  - `GrpcFrameCodec`: Standard 5-byte gRPC framing (compression flag + 4-byte big-endian length) encoding and decoding.
+  - `GrpcStreamingSession`: Explicit protocol-specific chronological transcript tracking (`Connected`, `MetadataSent`, `MessageSent`, `MessageReceived`, `TrailersReceived`, `Completed`, `Cancelled`), preserving full status codes (`grpc-status`), details (`grpc-message`), and trailers. Deadlines and cancellation support.
+  - Desktop integration: Added `ProtocolExpansionViewModel` and "GraphQL & gRPC" tab in `MainWindow.xaml`.
+  - Documentation: Verified in `docs/phase-7.1-progress.md`.
+- Automated test suite: 235 passed, 0 failed, 0 skipped (`GraphQLAndGrpcTests`, `ProjectImportExportTests`, and all Phase 0-6 tests). Desktop smoke (`scripts/Test-Desktop.ps1`) passed cleanly. Solution builds cleanly in Release configuration with zero warnings/errors. Format verification passed (`dotnet format --verify-no-changes`).
+
 ## Phase 6.3 complete: Transactional Postman/OpenAPI/cURL/HAR import and supported exports (2026-11-08 22:18 IST)
 
 Phase 6.3 is implemented and verified on branch `phase6-import-export`:
