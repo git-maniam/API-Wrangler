@@ -1,5 +1,18 @@
 # Implementation status
 
+## Phase 10.2 complete: Control plane, fenced leases, artifacts, and crash recovery (2026-11-09 00:20 IST)
+
+Phase 10.2 is implemented and verified on branch `phase10-control-plane-leases`:
+- P10.2 (Issue #41):
+  - Domain models (`ControlPlaneModels.cs`): `ControlPlaneJobQueueItem`, `ArtifactBackendType`, `ArtifactMetadata`, `ArtifactPolicyConfig`, and `ControlPlaneHealthReport`.
+  - Application services (`ControlPlaneService.cs`):
+    - `ControlPlaneQueue`: Outbound polling job queue, capability-matching lease acquisition with strictly monotonic `FencingToken`, fenced heartbeat extensions and completions rejecting stale or superseded tokens, cancellation propagation, and crash/lease expiration recovery.
+    - Crash recovery policy: Lost potentially mutating jobs become `Indeterminate` and are not silently retried; lost non-mutating jobs are safely re-enqueued within attempt budgets.
+    - `ArtifactStorageService`: Streamed artifact storage with SHA-256 calculation, size policy limits (`MaxSizeBytes`), operational artifact retention sweeps (`ApplyRetentionSweep`), and system health reporting (`GetHealthReport`).
+  - Integration tests (`ControlPlaneTests.cs`): 6 tests verifying fenced lease dispatch and completion, lost mutating job indeterminate status, non-mutating retries, cancellation signaling, artifact size limits/checksums, and retention sweeps/health reporting.
+  - Full automated test suite: 268 passed, 0 failed, 0 skipped. `scripts/Test-Desktop.ps1` passed cleanly (`{"editorRoundTrip":true,"httpRoundTrip":true,"cancellation":true,"dispatcherTicksDuringRequest":8}`). `dotnet format --verify-no-changes` passed.
+  - Documentation: Verified in `docs/phase-10.2-progress.md`.
+
 ## Phase 10.1 complete: Runner service, enrollment, and exact-snapshot execution (2026-11-09 00:09 IST)
 
 Phase 10.1 is implemented and verified on branch `phase10-runner-enrollment`:
