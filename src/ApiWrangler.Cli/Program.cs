@@ -317,4 +317,66 @@ validate.SetAction(async (parse, token) =>
 });
 root.Subcommands.Add(validate);
 
+var runner = new Command("runner", "Unattended runner operations: scoped token enrollment and exact-commit execution.");
+
+var runnerEnroll = new Command("enroll", "Generate a cryptographically secure, scoped enrollment token.");
+var enrollName = new Option<string>("--name") { Required = true, Description = "Descriptive name for the runner token" };
+var enrollScope = new Option<string>("--scope") { DefaultValueFactory = _ => "RunnerRegistration", Description = "Token scope: RunnerRegistration, JobSubmission, Admin" };
+var enrollDays = new Option<int>("--validity-days") { DefaultValueFactory = _ => 30, Description = "Validity period in days" };
+runnerEnroll.Options.Add(enrollName);
+runnerEnroll.Options.Add(enrollScope);
+runnerEnroll.Options.Add(enrollDays);
+runnerEnroll.SetAction((parse) =>
+{
+    var scope = Enum.TryParse<RunnerEnrollmentScope>(parse.GetValue(enrollScope), true, out var s) ? s : RunnerEnrollmentScope.RunnerRegistration;
+    var svc = new RunnerEnrollmentService();
+    var res = svc.CreateToken(parse.GetValue(enrollName)!, scope, TimeSpan.FromDays(parse.GetValue(enrollDays)));
+    if (!res.Success)
+    {
+        Console.Error.WriteLine(res.ErrorMessage);
+        return 2;
+    }
+
+    Console.WriteLine(JsonSerializer.Serialize(new
+    {
+        tokenId = res.TokenId,
+        scope = scope.ToString(),
+        token = res.PlaintextToken,
+        warning = "Plaintext token will not be shown again. Store securely on the runner host."
+    }, json));
+    return 0;
+});
+runner.Subcommands.Add(runnerEnroll);
+
+var runnerExec = new Command("exec", "Execute a job against an exact commit in an isolated runner directory.");
+var execJobId = new Option<string>("--job-id") { Required = true, Description = "Unique Job ID" };
+var execCommit = new Option<string>("--commit") { Required = true, Description = "Exact 40-character or 7+ character commit SHA" };
+var execRepo = new Option<string>("--repo") { DefaultValueFactory = _ => ".", Description = "Repository URL or directory" };
+var execOutput = new Option<DirectoryInfo>("--output")
+{
+    DefaultValueFactory = _ => new DirectoryInfo(Path.Combine(Path.GetTempPath(), "api-wrangler-runner")),
+    Description = "Isolated execution working directory"
+};
+runnerExec.Options.Add(execJobId);
+runnerExec.Options.Add(execCommit);
+runnerExec.Options.Add(execRepo);
+runnerExec.Options.Add(execOutput);
+runnerExec.SetAction(async (parse, token) =>
+{
+    var job = new RunnerJobDefinition(
+        JobId: parse.GetValue(execJobId)!,
+        ProjectId: "cli-execution",
+        RepositoryUrl: parse.GetValue(execRepo)!,
+        ExactCommitSha: parse.GetValue(execCommit)!
+    );
+
+    var executor = new ExactCommitJobExecutor();
+    var result = await executor.ExecuteJobAsync(job, parse.GetValue(execOutput)!.FullName, cancellationToken: token);
+    Console.WriteLine(JsonSerializer.Serialize(result, json));
+    return result.ExitCode;
+});
+runner.Subcommands.Add(runnerExec);
+
+root.Subcommands.Add(runner);
+
 return await root.Parse(args).InvokeAsync();

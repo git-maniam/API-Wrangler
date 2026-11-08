@@ -1,5 +1,19 @@
 # Implementation status
 
+## Phase 10.1 complete: Runner service, enrollment, and exact-snapshot execution (2026-11-09 00:09 IST)
+
+Phase 10.1 is implemented and verified on branch `phase10-runner-enrollment`:
+- P10.1 (Issue #40):
+  - Domain models (`RunnerModels.cs`): `RunnerPlatform`, `RunnerStatus`, `RunnerEnrollmentScope`, `RunnerJobOutcome`, `RunnerDescriptor`, `RunnerEnrollmentToken`, `RunnerJobDefinition`, and `RunnerJobResult`.
+  - Application services (`RunnerService.cs`):
+    - `RunnerEnrollmentService`: Cryptographic token generation (`awr_tok_...`), SHA-256 hashed secret storage, constant-time equality validation (`CryptographicOperations.FixedTimeEquals`), role-based scope enforcement (Admin inheritance), expiration, revocation, and atomic rotation.
+    - `ExactCommitJobExecutor`: Enforces exact commit execution (prevents running unverified branch tips), isolates execution directories, writes execution manifest with host machine and dedicated account, enforces host-local secrets (`API_WRANGLER_SECRET_*`) without desktop credentials, and reports crashes during mutating runs as `Indeterminate` with descriptive diagnostics.
+    - Capability label matching (`MatchCapabilities`) supporting multi-label requirements.
+  - CLI operations: Added `runner enroll` and `runner exec` commands to `api-wrangler` CLI (`Program.cs`) for unattended execution without desktop installation.
+  - Integration tests (`RunnerServiceTests.cs`): 5 tests verifying token creation/validation, scope permissions, expiration/revocation/rotation, exact commit enforcement and execution manifests, indeterminate crash outcomes, capability matching, and host secret isolation.
+  - Full automated test suite: 262 passed, 0 failed, 0 skipped. `scripts/Test-Desktop.ps1` passed cleanly (`{"editorRoundTrip":true,"httpRoundTrip":true,"cancellation":true,"dispatcherTicksDuringRequest":8}`). `dotnet format --verify-no-changes` passed.
+  - Documentation: Verified in `docs/phase-10.1-progress.md`.
+
 ## Phase 9 complete: Local performance testing (2026-11-08 23:58 IST)
 
 Phase 9 is fully implemented and certified complete on branch `phase9-histograms-reports`:

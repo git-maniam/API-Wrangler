@@ -2532,22 +2532,20 @@ Do not begin distributed infrastructure before these decisions are settled.
 
 **Implementation checkpoint (2026-11-07):** Phase 1 project discovery, versioned schemas, canonical assets, journaled persistence, watcher/recovery behavior, snapshots, local settings, and a desktop asset editor are implemented in PR #57. The five Phase 1 exit checks pass locally. After the Linux writer-lease fix, hosted Windows and Linux headless jobs each passed 30 tests with zero skipped; desktop build, format, and publish passed. ADR-0002 defines version 1 as the first supported format. P1.1-P1.3 are In review; P1.4 manual project-editor accessibility acceptance is In progress. The phase epic remains In progress until review, acceptance, and merge. See docs/implementation-status.md and docs/phase-1-exit-review.md.
 
-#### Restart bookmark (updated 2026-11-09 00:00 IST)
+#### Restart bookmark (updated 2026-11-09 00:10 IST)
 
-Phase 9 (Local performance testing) is fully implemented and certified complete on branch `phase9-histograms-reports`:
-- P9.2 (Issue #38):
-  - Domain models (`LoadTestModels.cs`): added `LoadThresholdPolicy` (`MaxP95LatencyMs`, `MaxP99LatencyMs`, `MaxErrorRatePercent`, `MinThroughputRps`) and `LoadThresholdEvaluation` (`Passed`, `Violations`).
-  - Application services (`LoadExecutionEngine.cs`):
-    - True histogram percentile calculations (min, mean, max, p50, p90, p95, p99) derived directly from sorted measurement pools.
-    - Multi-worker histogram merging (`MergeHistograms`) pooling sample sets and recalculating percentiles across the whole distribution.
-    - Monotonic duration measurement via `Stopwatch.GetTimestamp()` high-resolution counters.
-    - Threshold evaluation (`EvaluateThresholds`) reporting distinct violations.
-    - Distinct categorization of functional HTTP status codes (e.g. `HTTP 500`), transport/network exceptions (e.g. `HttpRequestException`, connection termination), and threshold policy failures.
-  - Desktop integration: added threshold settings (`MaxP95LatencyMs`, `MaxErrorRatePercent`) in `LoadTestingViewModel` and `MainWindow.xaml`, and integrated threshold pass/fail violations into report summaries.
-  - Integration tests (`LoadExecutionEngineTests.cs`): 8 tests passing, verifying histogram calculations, multi-worker histogram pooling, threshold evaluations, distinct failure categorization, target safety gates, VU execution, consecutive error aborts, and clean cancellation.
-  - Full automated test suite: 257 passed, 0 failed, 0 skipped. `scripts/Test-Desktop.ps1` passed cleanly (`{"editorRoundTrip":true,"httpRoundTrip":true,"cancellation":true,"dispatcherTicksDuringRequest":10}`). `dotnet format --verify-no-changes` passed.
-  - Documentation: Verified in `docs/phase-9.2-progress.md` and `docs/phase-9-exit-review.md`.
-- Next work: push branch `phase9-histograms-reports`, open PR for Issue #38, await CI checks, squash-merge into `main`, update Issue #38 and Epic #36 to Done in Project 4, and advance to Phase 10 (Self-hosted execution and monitoring, Epic #39).
+Phase 10.1 (Runner service, enrollment, and exact-snapshot execution) is implemented and verified on branch `phase10-runner-enrollment`:
+- P10.1 (Issue #40):
+  - Domain models (`RunnerModels.cs`): `RunnerPlatform`, `RunnerStatus`, `RunnerEnrollmentScope`, `RunnerJobOutcome`, `RunnerDescriptor`, `RunnerEnrollmentToken`, `RunnerJobDefinition`, and `RunnerJobResult`.
+  - Application services (`RunnerService.cs`):
+    - `RunnerEnrollmentService`: Cryptographic token generation (`awr_tok_...`), SHA-256 hashed secret storage, constant-time equality validation (`CryptographicOperations.FixedTimeEquals`), role-based scope enforcement (Admin inheritance), expiration, revocation, and atomic rotation.
+    - `ExactCommitJobExecutor`: Enforces exact commit execution (prevents running unverified branch tips), isolates execution directories, writes execution manifest with host machine and dedicated account, enforces host-local secrets (`API_WRANGLER_SECRET_*`) without desktop credentials, and reports crashes during mutating runs as `Indeterminate` with descriptive diagnostics.
+    - Capability label matching (`MatchCapabilities`) supporting multi-label requirements.
+  - CLI operations: Added `runner enroll` and `runner exec` commands to `api-wrangler` CLI (`Program.cs`) for unattended execution without desktop installation.
+  - Integration tests (`RunnerServiceTests.cs`): 5 tests verifying token creation/validation, scope permissions, expiration/revocation/rotation, exact commit enforcement and execution manifests, indeterminate crash outcomes, capability matching, and host secret isolation.
+  - Full automated test suite: 262 passed, 0 failed, 0 skipped. `scripts/Test-Desktop.ps1` passed cleanly (`{"editorRoundTrip":true,"httpRoundTrip":true,"cancellation":true,"dispatcherTicksDuringRequest":8}`). `dotnet format --verify-no-changes` passed.
+  - Documentation: Verified in `docs/phase-10.1-progress.md`.
+- Next work: push branch `phase10-runner-enrollment`, open PR for Issue #40, update ticket in Project 4 to In review, await CI checks, squash-merge into `main`, update Issue #40 to Done in Project 4, and advance to P10.2 (Issue #41: Control plane, fenced leases, artifacts, and crash recovery).
 Published checkpoint: implementation `9156d80` pushed; PR #69 is now non-draft and P4.1 (#20) is In review. P4 (#19) remains In progress. Hosted desktop/Windows/Linux checks were pending at 11:25 IST. Resume by checking those results and PR review before merge/completion; local evidence is 62 passing tests and the passing desktop dataset smoke described below. No tests/builds rerun for this final metadata refresh. Next 30-minute refresh is due by 11:55 IST if execution is active.
 
 Current verified handoff: P4.1 file-backed import and desktop prepare/accept workflow implemented on `phase4-delimited-reader`, PR #69 being submitted for review. `PreparedDatasetFile` streams validated rows to a temporary spool; `ImportDatasetFileAsync` holds the project writer gate, verifies the prepared hash, publishes immutable JSONL then atomically saves its definition. Full-source mappings/culture/null/date conversions use the same streaming converter as preview. Desktop supports CSV/TSV/JSON/JSONL, UTF-8/UTF-16 LE/Windows-1252, explicit case-ID addition, cancellation and stale-preview rejection. Source changes after preparation cannot alter accepted rows. Release solution build succeeded; 62 dataset/persistence tests passed, 0 skipped. Desktop dataset smoke passed and screenshot inspected (`artifacts/dataset-ui-smoke/dataset-import.png`). A smoke-only compile error referencing the wrong tab name was corrected and the desktop rebuild/smoke passed. Changed-file formatting only afterward; no broad retest. Prior unverified notes below are superseded. Next: inspect PR #69 review/CI, resolve findings; do not mark P4.1 Done until acceptance and merge. P4 epic stays In progress; then continue P4.2 (#21) grid/clipboard work. Preserve 14 unrelated whitespace edits. No external blocker. Limits and crash-orphan behavior: `docs/dataset-import.md`.
