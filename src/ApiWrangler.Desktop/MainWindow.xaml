@@ -21,7 +21,7 @@
             <TabItem Header="Project assets">
                 <Grid Margin="12" DataContext="{Binding ProjectEditor}">
                     <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
-                    <DockPanel Margin="0,0,0,8">
+                    <DockPanel Grid.Row="1" Margin="0,0,0,8">
                         <Button DockPanel.Dock="Right" Content="_Open project" Command="{Binding OpenProjectCommand}" Margin="8,0,0,0" />
                         <Label DockPanel.Dock="Left" Content="_Project path" Target="{Binding ElementName=ProjectPathBox}" VerticalAlignment="Center" Padding="0" Margin="0,0,8,0" />
                         <TextBox x:Name="ProjectPathBox" Text="{Binding ProjectPath, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Project directory or manifest path" />
@@ -263,6 +263,71 @@
                     <StackPanel Grid.Row="3" Margin="0,8,0,0">
                         <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite" Foreground="DarkSlateGray" />
                         <TextBlock Text="{Binding ClipboardSummary}" TextWrapping="Wrap" Margin="0,2,0,0" Foreground="DimGray" />
+                    </StackPanel>
+                </Grid>
+            </TabItem>
+            <TabItem Header="Git collaboration">
+                <Grid Margin="12" DataContext="{Binding Git}">
+                    <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                    <DockPanel Margin="0,0,0,8">
+                        <TextBlock DockPanel.Dock="Left" Text="Git executable" VerticalAlignment="Center" Margin="0,0,8,0" />
+                        <TextBox Text="{Binding GitExecutable, UpdateSourceTrigger=PropertyChanged}" ToolTip="Executable path or command name" AutomationProperties.Name="Git executable path" />
+                    </DockPanel>
+                    <DockPanel Grid.Row="1" Margin="0,0,0,8">
+                        <Button DockPanel.Dock="Right" Content="_Refresh" Command="{Binding RefreshCommand}" Margin="8,0,0,0" />
+                        <Button DockPanel.Dock="Right" Content="_Initialize" Command="{Binding InitializeCommand}" Margin="8,0,0,0" />
+                        <TextBox Text="{Binding RepositoryPath, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Git repository path" />
+                    </DockPanel>
+                    <DockPanel Grid.Row="2" Margin="0,0,0,8">
+                        <Button DockPanel.Dock="Right" Content="_Clone" Command="{Binding CloneCommand}" Margin="8,0,0,0" />
+                        <TextBox Text="{Binding RemoteUrl, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Git clone URL or remote URL" />
+                    </DockPanel>
+                    <DockPanel Grid.Row="3" Margin="0,0,0,8">
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                            <Button Content="Add remote" Command="{Binding AddRemoteCommand}" Margin="4,0,0,0" />
+                            <Button Content="Select" Command="{Binding SelectRemoteCommand}" Margin="4,0,0,0" />
+                            <Button Content="Fetch" Command="{Binding FetchCommand}" Margin="4,0,0,0" />
+                            <Button Content="Push" Command="{Binding PushCommand}" Margin="4,0,0,0" />
+                        </StackPanel>
+                        <TextBox Text="{Binding RemoteName, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Git remote name" />
+                    </DockPanel>
+                    <DockPanel Grid.Row="4" Margin="0,0,0,8">
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                            <Button Content="New branch" Command="{Binding CreateBranchCommand}" Margin="4,0,0,0" />
+                            <Button Content="Switch" Command="{Binding SwitchBranchCommand}" Margin="4,0,0,0" />
+                            <Button Content="Fast-forward" Command="{Binding FastForwardCommand}" Margin="4,0,0,0" />
+                            <Button Content="History" Command="{Binding LoadHistoryCommand}" Margin="4,0,0,0" />
+                        </StackPanel>
+                        <ComboBox ItemsSource="{Binding Branches}" Text="{Binding BranchName, UpdateSourceTrigger=PropertyChanged}" IsEditable="True" AutomationProperties.Name="Git branch" />
+                    </DockPanel>
+                    <DockPanel Grid.Row="5" Margin="0,0,0,8">
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                            <Button Content="Merge" Command="{Binding MergeCommand}" Margin="4,0,0,0" />
+                            <Button Content="Rebase" Command="{Binding RebaseCommand}" Margin="4,0,0,0" />
+                        </StackPanel>
+                        <TextBox Text="{Binding Revision, UpdateSourceTrigger=PropertyChanged}" ToolTip="Revision or branch for merge, rebase, or restore" AutomationProperties.Name="Git integration revision" />
+                    </DockPanel>
+                    <Grid Grid.Row="6">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="8" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                        <DockPanel>
+                            <TextBlock DockPanel.Dock="Top" Text="Working-tree changes" Margin="0,0,0,4" />
+                            <ListBox ItemsSource="{Binding Changes}" AutomationProperties.Name="Git working-tree changes" />
+                        </DockPanel>
+                        <GridSplitter Grid.Column="1" Width="8" HorizontalAlignment="Stretch" />
+                        <DockPanel Grid.Column="2">
+                            <TextBlock DockPanel.Dock="Top" Text="Recent commits" Margin="0,0,0,4" />
+                            <ListBox ItemsSource="{Binding History}" AutomationProperties.Name="Git commit history">
+                                <ListBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding Subject}" ToolTip="{Binding Hash}" TextTrimming="CharacterEllipsis" /></DataTemplate></ListBox.ItemTemplate>
+                            </ListBox>
+                        </DockPanel>
+                    </Grid>
+                    <StackPanel Grid.Row="7" Margin="0,8,0,0">
+                        <TextBlock Text="{Binding Summary}" TextWrapping="Wrap" />
+                        <DockPanel Margin="0,4,0,0">
+                            <Button DockPanel.Dock="Right" Content="Restore path" Command="{Binding RestoreCommand}" Margin="8,0,0,0" />
+                            <TextBox Text="{Binding AssetPath, UpdateSourceTrigger=PropertyChanged}" ToolTip="Path under api-wrangler/" AutomationProperties.Name="Asset path to restore" />
+                        </DockPanel>
+                        <TextBlock Text="{Binding OperationStatus}" TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite" Margin="0,4,0,0" />
                     </StackPanel>
                 </Grid>
             </TabItem>

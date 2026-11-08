@@ -19,6 +19,7 @@ public partial class MainViewModel(
     public ProjectEditorViewModel ProjectEditor { get; } = projectEditor;
     public DatasetImportViewModel DatasetImport { get; } = new(() => projectEditor.CurrentSession);
     public DatasetGridViewModel DatasetGrid { get; } = new();
+    public GitWorkbenchViewModel Git { get; } = new();
 
     [ObservableProperty] private string requestName = "Untitled request";
     [ObservableProperty] private string requestDescription = "";

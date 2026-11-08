@@ -1,5 +1,15 @@
 # Implementation status
 
+## Phase 5.1 Git workflow checkpoint (2026-11-08 16:10 IST)
+
+P5.1 has started on `phase5-repository-workflows`:
+- Added `GitRepositoryService` for Git executable discovery/version, repository discovery/init/clone, status facts (dirty paths, branch/upstream, independent ahead/behind, remotes, detached HEAD, linked worktree, write access, merge/rebase/sequencer state), branch listing/history, remote add/select, fetch/push, branch creation/switch, fast-forward, explicit merge/rebase, and scoped `api-wrangler/` asset restore.
+- Added a desktop Git collaboration workbench exposing repository open/status, clone/init, remote operations, branch operations, integration, history, and asset restore. Git runs through argument arrays and configured Git authentication; the UI does not embed credentials. Branch/integration operations require a clean whole working tree; there is no automatic stash, force push, or hard reset.
+- Existing `ProjectSession` guards continue to suspend writes during index locks and merge/rebase markers; snapshots compare Git identity across capture. No new cache was added.
+- Verification: `dotnet build ApiWrangler.slnx -c Release --no-restore` succeeded (0 warnings/errors). Two focused local bare-remote integration tests passed (0 failed/skipped), covering fetch immutability, ahead/behind and unrelated dirt, rejected push preservation, clean fast-forward, branch switch/create, history, scoped restore, detached HEAD, linked worktree, and dirty-switch refusal.
+
+P5.1 remains In progress. Remaining: exercise offline/auth failures and interrupted integration recovery; verify external branch changes against open editors/snapshots; complete desktop interaction acceptance; continue the issue's open/clone/init/standalone and repository-selection flows. P5.2 scoped reviewed commits and P5.3 semantic conflict handling have not started. See `docs/phase-5.1-progress.md` and the Restart bookmark in the product spec.
+
 ## Phase 4 color-highlighted preview checkpoint (2026-11-08 11:51 IST)
 
 P4.3 implemented and verified on branch `phase4-preview-highlighting`:
@@ -71,7 +81,7 @@ Measurement host: Windows x64, AMD Ryzen 7 6800H, eight physical cores, about 21
 | 2 | In progress: P2.1 and P2.2 implemented on `phase2-variables-and-secrets`. Request workbench with full lifecycle controls, repeated headers/query params, multipart/urlencoded/file-backed bodies, automatic decompression, cookies, explicit TLS override, cross-origin redirect auth stripping, and non-idempotent retry protection. P2.2 delivered variable resolution with documented precedence (RequestLocal > Dataset > RunOverride > LocalEnvironment > Environment > Collection > ProjectDefault), bounded nesting ($\le 10$), circular reference detection with cycle trace, non-shadowed explicit `{{secret:...}}` namespace, Windows DPAPI secret store (`LocalSecretStore`), deterministic dynamic helpers, and redaction engine across headers, logs, and execution previews. Release build, 44 integration tests, and desktop smoke pass. |
 | 3 | Not started: collections, assertions, lifecycle, isolated iteration execution, reports, final CLI contracts |
 | 4 | Only the read-only grid probe exists; imports, editing, type/null semantics, stable cases, and export remain |
-| 5 | Only Git status/fetch probe exists; scoped commit, branching, integration, and conflict resolution remain |
+| 5 | P5.1 Git service and desktop workflow checkpoint started; acceptance remains in progress. P5.2 scoped commits and P5.3 conflict resolution remain |
 | 6 | Only framed IPC/process probe exists; script execution, trust policy, packages, imports, and compatibility remain |
 | 7–9 | Not started: additional protocols, mocks, webhook gateway, local performance engine |
 | 10–11 | Not started: control plane, runners, scheduler, distributed load, hosted mocks; do not start before foundation decisions settle |
