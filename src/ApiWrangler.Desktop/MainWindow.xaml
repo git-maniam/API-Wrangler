@@ -259,15 +259,34 @@
                         <TextBlock DockPanel.Dock="Top" Text="GraphQL Operations" FontWeight="Bold" Margin="0,0,0,6" />
                         <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,6">
                             <TextBlock Text="Endpoint: " VerticalAlignment="Center" />
-                            <TextBox Width="180" Text="{Binding GraphQLEndpoint, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="GraphQL endpoint" />
-                            <Button Content="Execute" Command="{Binding ExecuteGraphQLCommand}" Margin="8,0" />
+                            <TextBox Width="140" Text="{Binding GraphQLEndpoint, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="GraphQL endpoint" />
+                            <Button Content="Execute" Command="{Binding ExecuteGraphQLCommand}" Margin="4,0" />
+                            <Button Content="Format" Command="{Binding FormatGraphQLDocumentCommand}" Margin="4,0" />
                         </WrapPanel>
-                        <TextBlock DockPanel.Dock="Top" Text="Query / Mutation:" Margin="0,4,0,2" />
-                        <TextBox DockPanel.Dock="Top" Height="140" Text="{Binding GraphQLQuery, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" FontFamily="{Binding DataContext.EditorFontFamily, RelativeSource={RelativeSource AncestorType=Window}}" FontSize="{Binding DataContext.EditorFontSize, RelativeSource={RelativeSource AncestorType=Window}}" AutomationProperties.Name="GraphQL query text" />
+                        <TextBlock DockPanel.Dock="Top" Text="Query / Mutation (GraphQL syntax highlighted):" Margin="0,4,0,2" />
+                        <editor:TextEditor DockPanel.Dock="Top" Height="140"
+                            local:EditorBinding.Text="{Binding GraphQLQuery}"
+                            local:EditorBinding.SyntaxHighlighting="GraphQL"
+                            ShowLineNumbers="True"
+                            FontFamily="{Binding DataContext.EditorFontFamily, RelativeSource={RelativeSource AncestorType=Window}}"
+                            FontSize="{Binding DataContext.EditorFontSize, RelativeSource={RelativeSource AncestorType=Window}}"
+                            AutomationProperties.Name="GraphQL query text" />
                         <TextBlock DockPanel.Dock="Top" Text="Variables (JSON):" Margin="0,4,0,2" />
-                        <TextBox DockPanel.Dock="Top" Height="50" Text="{Binding GraphQLVariables, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" FontFamily="{Binding DataContext.EditorFontFamily, RelativeSource={RelativeSource AncestorType=Window}}" FontSize="{Binding DataContext.EditorFontSize, RelativeSource={RelativeSource AncestorType=Window}}" AutomationProperties.Name="GraphQL variables text" />
+                        <editor:TextEditor DockPanel.Dock="Top" Height="50"
+                            local:EditorBinding.Text="{Binding GraphQLVariables}"
+                            local:EditorBinding.SyntaxHighlighting="Json"
+                            ShowLineNumbers="True"
+                            FontFamily="{Binding DataContext.EditorFontFamily, RelativeSource={RelativeSource AncestorType=Window}}"
+                            FontSize="{Binding DataContext.EditorFontSize, RelativeSource={RelativeSource AncestorType=Window}}"
+                            AutomationProperties.Name="GraphQL variables text" />
                         <TextBlock DockPanel.Dock="Top" Text="{Binding GraphQLStatus}" FontWeight="SemiBold" Margin="0,6,0,2" />
-                        <TextBox Text="{Binding GraphQLResponse, Mode=OneWay}" IsReadOnly="True" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" FontFamily="{Binding DataContext.EditorFontFamily, RelativeSource={RelativeSource AncestorType=Window}}" FontSize="{Binding DataContext.EditorFontSize, RelativeSource={RelativeSource AncestorType=Window}}" AutomationProperties.Name="GraphQL response preview" />
+                        <editor:TextEditor
+                            local:EditorBinding.Text="{Binding GraphQLResponse, Mode=OneWay}"
+                            local:EditorBinding.SyntaxHighlighting="Json"
+                            IsReadOnly="True" ShowLineNumbers="True"
+                            FontFamily="{Binding DataContext.EditorFontFamily, RelativeSource={RelativeSource AncestorType=Window}}"
+                            FontSize="{Binding DataContext.EditorFontSize, RelativeSource={RelativeSource AncestorType=Window}}"
+                            AutomationProperties.Name="GraphQL response preview" />
                     </DockPanel>
                     <!-- Center: gRPC -->
                     <DockPanel Grid.Column="1" Margin="4,0,4,0">

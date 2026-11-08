@@ -1,5 +1,18 @@
 # Implementation status
 
+## Phase 7 complete: GraphQL, gRPC, and streaming (2026-11-08 23:00 IST)
+
+Phase 7 is fully implemented and verified on branch `phase7-graphql-highlighting`:
+- P7.3 (Issue #56):
+  - GraphQL Formatting Engine (`GraphQLService.cs`):
+    - `FormatDocument`: parses operations, selections, arguments, block strings, and comments, applying uniform indentation and brace structuring. Non-destructive; returns actionable diagnostics on invalid syntax / mismatched braces without mutating document text.
+  - AvalonEdit Highlighting (`DatasetHighlightingDefinitions.cs`):
+    - Added `GraphQL` syntax definition (.graphql, .gql) highlighting operations (`query`, `mutation`, `subscription`, `fragment`), SDL types (`type`, `interface`, `union`, `enum`, `scalar`, `input`), scalars (`Int`, `Float`, `String`, `Boolean`, `ID`), variables (`$var`), directives (`@dir`), block strings (`"""`), and punctuation.
+  - Desktop integration: converted query/variables/response editors in "Protocols & Streaming" tab to AvalonEdit with syntax highlighting and added "Format" action button.
+  - Integration tests (`GraphQLAndGrpcTests.cs`): added tests verifying document formatting indentation and mismatched brace diagnostic preservation.
+  - Verification: 241 tests passed, 0 failed, 0 skipped. `scripts/Test-Desktop.ps1` passed cleanly. `dotnet format --verify-no-changes` passed.
+  - Documentation: Verified in `docs/phase-7.3-progress.md` and `docs/phase-7-exit-review.md`.
+
 ## Phase 7.2 complete: WebSocket and SSE sessions and bounded transcripts (2026-11-08 22:45 IST)
 
 Phase 7.2 is implemented and verified on branch `phase7-websocket-sse`:
