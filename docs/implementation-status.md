@@ -1,5 +1,22 @@
 # Implementation status
 
+## Phase 13 complete: Contracts, optional AI, and release hardening — Milestone B (2026-11-09 02:03 IST)
+
+Phase 13 is fully implemented and verified on branch `phase13-installer-milestone-b`:
+- P13.3 (Issue #52):
+  - Installer and packaging (`scripts/Install-ApiWrangler.ps1`, `scripts/Uninstall-ApiWrangler.ps1`, `scripts/Package-Release.ps1`):
+    - Per-user PowerShell installer deploying to `%LOCALAPPDATA%\Programs\ApiWrangler\`.
+    - User data invariance guarantee: User projects and SQLite operational storage under `%LOCALAPPDATA%\ApiWrangler\` remain isolated and strictly preserved across installation, upgrade, and uninstallation.
+    - Release packaging: Generates Windows x64 self-contained desktop zip, Windows x64 CLI zip, and Linux x64 CLI zip.
+    - Supply chain integrity: Generates SHA256 checksums (`SHA256SUMS.txt`), CycloneDX SBOM (`sbom.json`), and Third-Party Notices (`THIRD_PARTY_NOTICES.md`).
+  - Icon pipeline (`scripts/Generate-AppIcon.ps1`): Generates multi-resolution icon frames (16 to 256px) from `App-Icon.png` into `src/ApiWrangler.Desktop/Resources/app-icon.ico`. Embedded as `<ApplicationIcon>` in `ApiWrangler.Desktop.csproj` and `Icon` in `MainWindow.xaml`.
+  - Operational manuals: `docs/operations/installation-and-updates.md`, `docs/operations/operational-verification-manual.md`, and `docs/milestone-b-acceptance-review.md`.
+  - Integration tests (`PackagingAndLifecycleTests.cs`): 4 tests verifying multi-resolution icon frames, user data preservation across upgrade/uninstall, zero critical placeholders in production code, and SBOM/checksum format compliance.
+- P13.2 (Issue #51): Optional AI assistance with explicit context, Git credential redaction gate, and reviewable unified diffs.
+- P13.1 (Issue #50): OpenAPI breaking change detection, secret-free static documentation generation, 10,000-request catalog search, and multi-language client SDK generation.
+- Full automated test suite: 306 passed, 0 failed, 0 skipped. `scripts/Test-Desktop.ps1` passed cleanly. `dotnet format --verify-no-changes` passed.
+- Documentation: Verified in `docs/phase-13.3-progress.md`, `docs/phase-13-exit-review.md`, and `docs/milestone-b-acceptance-review.md`.
+
 ## Phase 13.2 complete: Optional AI with explicit context and reviewable changes (2026-11-09 01:52 IST)
 
 Phase 13.2 is implemented and verified on branch `phase13-optional-ai-reviewable-changes`:

@@ -5,8 +5,13 @@
     <UseWPF>true</UseWPF>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Resources/app-icon.ico</ApplicationIcon>
     <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
   </PropertyGroup>
+  <ItemGroup>
+    <Resource Include="Resources/app-icon.ico" />
+    <Resource Include="Resources/App-Icon.png" />
+  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../ApiWrangler.Execution/ApiWrangler.Execution.csproj" />
     <ProjectReference Include="../ApiWrangler.Storage/ApiWrangler.Storage.csproj" />

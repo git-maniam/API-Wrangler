@@ -3,7 +3,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="clr-namespace:ApiWrangler.Desktop"
     xmlns:editor="http://icsharpcode.net/sharpdevelop/avalonedit"
-    Title="API Wrangler — Workbench" Width="1180" Height="800" MinWidth="800" MinHeight="600">
+    Title="API Wrangler — Workbench" Icon="Resources/App-Icon.png" Width="1180" Height="800" MinWidth="800" MinHeight="600">
     <Window.InputBindings><KeyBinding Key="Enter" Modifiers="Control" Command="{Binding SendCommand}" /></Window.InputBindings>
     <Grid Margin="20" Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}">
         <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
