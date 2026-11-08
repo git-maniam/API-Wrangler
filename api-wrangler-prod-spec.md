@@ -2534,7 +2534,7 @@ Do not begin distributed infrastructure before these decisions are settled.
 
 #### Restart bookmark (updated 2026-11-08 17:47 IST)
 
-Current checkpoint: Phase 5.1 Git workflow implementation on `phase5-repository-workflows`. Code commit `873b53e` and bookmark commit `2d8b969` are pushed to `origin/phase5-repository-workflows`. Before this documentation refresh, the working tree was clean.
+Current checkpoint: Phase 5.1 Git workflow implementation on `phase5-repository-workflows`. Code commit `873b53e` and the latest bookmark/project refresh are pushed to `origin/phase5-repository-workflows`. Before this documentation refresh, the working tree was clean.
 Status:
 - Live Project 4 synchronization refreshed at 17:47 IST: Phase 5 epic #22 and P5.1 #23 are both In progress. Executed evidence was posted to both issues; no Done or review status was applied.
 - The 15:57 bookmark's issue #26 was stale. Ticket mapping confirms #22 is the epic and #23 is P5.1.
