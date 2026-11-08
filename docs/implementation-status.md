@@ -1,5 +1,9 @@
 # Implementation status
 
+## Phase 4 JSON admission checkpoint (2026-11-08 10:09 IST)
+
+JSON-array reads enforce a configurable per-record byte budget (default 1 MiB) before deserialization using a bounded-read stream wrapper. Record boundaries respect nesting and escaped strings; UTF-8 bytes are counted, total dataset length is not constrained by the record budget, and the caller's stream remains open. Batched dataset/rollback verification passed 46 tests with no failures/skips in one invocation; no standalone build. File-backed import/publication, full-import conversion integration and UI remain; P4/P4.1 stay In progress.
+
 ## Phase 4 inline import checkpoint (2026-11-08 09:00 IST)
 
 `DatasetImport` prepares bounded inline datasets without touching assets and returns an immutable `PreparedDatasetImport` for explicit acceptance. Existing string case IDs are preserved; duplicate/invalid IDs fail, and missing IDs require explicit addition preview. Commit reuses journaled `IProjectSession.SaveAsync` with expected-hash conflict checks and existing schema/path/writer validation. Persisted inline sources are included in project snapshots. One batched invocation (`dotnet test tests/ApiWrangler.IntegrationTests -c Release --no-restore --filter 'FullyQualifiedName~Dataset|FullyQualifiedName~Save_ReplacementFailure_RollsBackAllFiles' --verbosity minimal`) passed 43 tests, none skipped. No standalone build. P4/P4.1 remain In progress: large file-backed imports, JSON-array admission bounds, full-import conversion integration, flattening/dates, encoding selection and UI remain. Existing unrelated edits preserved.

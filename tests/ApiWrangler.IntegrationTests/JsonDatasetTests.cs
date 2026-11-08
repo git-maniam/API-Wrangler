@@ -6,6 +6,48 @@ namespace ApiWrangler.IntegrationTests;
 
 public sealed class JsonDatasetTests
 {
+    [Fact]
+    public async Task ReadArray_RejectsOversizedRecordBeforeReadingWholeSource()
+    {
+        using var stream = new MemoryStream(Encoding.UTF8.GetBytes("[{\"value\":\"" + new string('a', 100_000) + "\"}]"));
+        await Assert.ThrowsAsync<FormatException>(async () =>
+        {
+            await foreach (var row in JsonDatasetReader.ReadArrayAsync(stream, maxRecordBytes: 100)) { }
+        });
+        Assert.True(stream.Position <= 4096);
+        Assert.True(stream.CanRead);
+    }
+
+    [Fact]
+    public async Task ReadArray_BoundResetsPerRecordAndIgnoresDelimitersInsideStrings()
+    {
+        const string record = "{\"nested\":[{\"text\":\"comma,bracket]quote\\\"slash\\\\\"}]}";
+        using var stream = new MemoryStream(Encoding.UTF8.GetBytes("[" + string.Join(',', Enumerable.Repeat(record, 1000)) + "]"));
+        var count = 0;
+        await foreach (var row in JsonDatasetReader.ReadArrayAsync(stream, maxRecordBytes: Encoding.UTF8.GetByteCount(record)))
+        {
+            count++;
+            Assert.Equal(JsonValueKind.Array, row["nested"].ValueKind);
+        }
+        Assert.Equal(1000, count);
+    }
+
+    [Fact]
+    public async Task ReadArray_CountsUtf8BytesAndHonorsExactLimit()
+    {
+        const string record = "{\"value\":\"é漢\"}";
+        var bytes = Encoding.UTF8.GetBytes("[" + record + "]");
+        using var accepted = new MemoryStream(bytes);
+        var count = 0;
+        await foreach (var row in JsonDatasetReader.ReadArrayAsync(accepted, maxRecordBytes: bytes.Length - 2)) { count++; }
+        Assert.Equal(1, count);
+        using var rejected = new MemoryStream(bytes);
+        await Assert.ThrowsAsync<FormatException>(async () =>
+        {
+            await foreach (var row in JsonDatasetReader.ReadArrayAsync(rejected, maxRecordBytes: bytes.Length - 3)) { }
+        });
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]

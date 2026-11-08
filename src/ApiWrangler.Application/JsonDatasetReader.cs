@@ -8,11 +8,14 @@ namespace ApiWrangler.Application;
 public static class JsonDatasetReader
 {
     public static async IAsyncEnumerable<IReadOnlyDictionary<string, JsonElement>> ReadArrayAsync(
-        Stream stream, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        Stream stream, [EnumeratorCancellation] CancellationToken cancellationToken = default,
+        int maxRecordBytes = 1_048_576)
     {
         ArgumentNullException.ThrowIfNull(stream);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxRecordBytes);
+        using var bounded = new JsonRecordBoundStream(stream, maxRecordBytes);
         await foreach (var element in JsonSerializer.DeserializeAsyncEnumerable<JsonElement>(
-            stream, cancellationToken: cancellationToken).ConfigureAwait(false))
+            bounded, cancellationToken: cancellationToken).ConfigureAwait(false))
         {
             cancellationToken.ThrowIfCancellationRequested();
             yield return ReadRecord(element);

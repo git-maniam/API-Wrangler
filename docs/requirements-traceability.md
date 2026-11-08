@@ -2,6 +2,7 @@
 
 | Specification | Current implementation | Evidence / gap |
 |---|---|---|
+| 10.3, 27 | JSON-array record admission bound before deserialization | 46 dataset/rollback tests pass; oversized source is rejected within 4 KiB read-ahead, exact UTF-8 limits and 1,000 nested/escaped records verified. File-backed import publication remains pending. |
 | 7.2, 10.1, Phase 4 import integrity | Prepared inline dataset imports, preserved case IDs, explicit missing-ID addition, duplicate rejection and journaled commit | 43 dataset/rollback tests pass; stale writes, late parse failure, cancellation and snapshot bytes verified. Large file-backed import and UI integration remain in #20. |
 | 10.2-10.3 | Typed streaming JSON-array/JSONL readers and bounded headless mapping/conversion preview | 31 combined dataset tests pass, including nested JSON, missing/null, duplicate properties, explicit culture/null conversions, cancellation and preview limits. Transactional import, stable case IDs, array record admission bounds and UI remain in #20. |
 | 10.2 | Streaming raw delimited dataset reader with explicit delimiter and bounded records | 11 focused tests pass for multiline/escaped values, leading zeros, BOM, malformed headers/rows, buffer boundaries, bounds, and cancellation. Preview/conversion, encoding UI, and transactional import remain in #20. |
