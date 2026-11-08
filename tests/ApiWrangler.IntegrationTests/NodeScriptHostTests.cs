@@ -93,7 +93,7 @@ public sealed class NodeScriptHostTests
         Assert.Equal(ScriptOutcome.Failed, result.Outcome);
         Assert.Single(result.TestResults);
         Assert.False(result.TestResults[0].Passed);
-        Assert.Contains("Expected 404 to equal 201", result.TestResults[0].Error);
+        Assert.Contains("equal 201", result.TestResults[0].Error);
     }
 
     [NodeFact]

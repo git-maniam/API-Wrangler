@@ -67,6 +67,7 @@ public sealed record ScriptExecutionResult(
     IReadOnlyList<ScriptTestResult> TestResults,
     IReadOnlyList<ScriptVariableMutation> VariableMutations,
     IReadOnlyList<ScriptConsoleLog> ConsoleLogs,
+    string? NextRequest,
     string? Error,
     TimeSpan Duration
 );
@@ -222,12 +223,15 @@ public sealed class NodeScriptHost
                 }
             }
 
+            string? nextRequest = root.TryGetProperty("nextRequest", out var nr) && nr.ValueKind == JsonValueKind.String ? nr.GetString() : null;
+
             return new ScriptExecutionResult(
                 Success: success && outcome == ScriptOutcome.Passed,
                 Outcome: outcome,
                 TestResults: testResults,
                 VariableMutations: mutations,
                 ConsoleLogs: consoleLogs,
+                NextRequest: nextRequest,
                 Error: error,
                 Duration: sw.Elapsed
             );
@@ -242,6 +246,7 @@ public sealed class NodeScriptHost
                 TestResults: Array.Empty<ScriptTestResult>(),
                 VariableMutations: Array.Empty<ScriptVariableMutation>(),
                 ConsoleLogs: Array.Empty<ScriptConsoleLog>(),
+                NextRequest: null,
                 Error: $"Script execution timed out after {timeout.TotalSeconds:F1} seconds. The worker process tree was terminated.",
                 Duration: sw.Elapsed
             );
@@ -256,6 +261,7 @@ public sealed class NodeScriptHost
                 TestResults: Array.Empty<ScriptTestResult>(),
                 VariableMutations: Array.Empty<ScriptVariableMutation>(),
                 ConsoleLogs: Array.Empty<ScriptConsoleLog>(),
+                NextRequest: null,
                 Error: "Script execution was cancelled.",
                 Duration: sw.Elapsed
             );

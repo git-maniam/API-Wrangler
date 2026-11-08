@@ -1,5 +1,8 @@
 import { createRequire } from "node:module";
 import { resolve } from "node:path";
+import * as http from "node:http";
+import * as https from "node:https";
+import { URL } from "node:url";
 
 const defaultRequire = createRequire(import.meta.url);
 
@@ -57,6 +60,7 @@ interface ExecuteResponse {
   testResults: TestResult[];
   variableMutations: VariableMutation[];
   consoleLogs: ConsoleLogEntry[];
+  nextRequest?: string | null;
   error?: string;
   durationMs: number;
 }
@@ -102,6 +106,7 @@ async function handleRequest(payload: Buffer): Promise<void> {
     const consoleLogs: ConsoleLogEntry[] = [];
     let logBytes = 0;
     const maxLogBytes = 64 * 1024;
+    let nextRequest: string | null = null;
 
     function addLog(level: "log" | "info" | "warn" | "error", args: any[]) {
       const msg = args.map(a => typeof a === "object" ? JSON.stringify(a) : String(a)).join(" ");
@@ -134,6 +139,15 @@ async function handleRequest(payload: Buffer): Promise<void> {
         unset(key: string): void {
           store.delete(key);
           variableMutations.push({ scope: name, key, value: null, action: "unset" });
+        },
+        clear(): void {
+          for (const k of store.keys()) {
+            variableMutations.push({ scope: name, key: k, value: null, action: "unset" });
+          }
+          store.clear();
+        },
+        toObject(): Record<string, any> {
+          return Object.fromEntries(store);
         }
       };
     }
@@ -144,7 +158,8 @@ async function handleRequest(payload: Buffer): Promise<void> {
     const iterationDataMap = new Map<string, any>(Object.entries(req.iterationData || {}));
     const iterationData = {
       get(key: string) { return iterationDataMap.get(key); },
-      has(key: string) { return iterationDataMap.has(key); }
+      has(key: string) { return iterationDataMap.has(key); },
+      toObject() { return Object.fromEntries(iterationDataMap); }
     };
 
     const requestContext = {
@@ -175,57 +190,155 @@ async function handleRequest(payload: Buffer): Promise<void> {
       }
     } : null;
 
-    function createExpect(actual: any) {
-      return {
-        toBe(expected: any) {
-          if (actual !== expected) {
-            throw new Error(`Expected ${JSON.stringify(actual)} to be ${JSON.stringify(expected)}`);
+    // Chai-compatible Expect assertion builder
+    function createExpect(actual: any, inverted = false): any {
+      const chain: any = {
+        get not() {
+          return createExpect(actual, !inverted);
+        },
+        get to() { return chain; },
+        get be() { return chain; },
+        get been() { return chain; },
+        get is() { return chain; },
+        get that() { return chain; },
+        get which() { return chain; },
+        get and() { return chain; },
+        get has() { return chain; },
+        get have() { return chain; },
+        get with() { return chain; },
+        get at() { return chain; },
+        get of() { return chain; },
+        get same() { return chain; },
+        get deep() { return chain; },
+
+        equal(expected: any) {
+          const pass = actual === expected;
+          if (inverted ? pass : !pass) {
+            throw new Error(`Expected ${JSON.stringify(actual)} ${inverted ? "not " : ""}to equal ${JSON.stringify(expected)}`);
           }
         },
-        toEqual(expected: any) {
-          if (JSON.stringify(actual) !== JSON.stringify(expected)) {
-            throw new Error(`Expected ${JSON.stringify(actual)} to equal ${JSON.stringify(expected)}`);
+        eql(expected: any) {
+          const pass = JSON.stringify(actual) === JSON.stringify(expected);
+          if (inverted ? pass : !pass) {
+            throw new Error(`Expected ${JSON.stringify(actual)} ${inverted ? "not " : ""}to deeply equal ${JSON.stringify(expected)}`);
           }
         },
-        toBeTruthy() {
-          if (!actual) throw new Error(`Expected ${JSON.stringify(actual)} to be truthy`);
+        ok() {
+          const pass = Boolean(actual);
+          if (inverted ? pass : !pass) {
+            throw new Error(`Expected ${JSON.stringify(actual)} ${inverted ? "not " : ""}to be truthy`);
+          }
         },
-        toBeFalsy() {
-          if (actual) throw new Error(`Expected ${JSON.stringify(actual)} to be falsy`);
+        true() {
+          const pass = actual === true;
+          if (inverted ? pass : !pass) {
+            throw new Error(`Expected ${actual} ${inverted ? "not " : ""}to be true`);
+          }
         },
-        toBeNull() {
-          if (actual !== null) throw new Error(`Expected ${JSON.stringify(actual)} to be null`);
+        false() {
+          const pass = actual === false;
+          if (inverted ? pass : !pass) {
+            throw new Error(`Expected ${actual} ${inverted ? "not " : ""}to be false`);
+          }
         },
-        toBeDefined() {
-          if (actual === undefined) throw new Error("Expected value to be defined, but was undefined");
+        null() {
+          const pass = actual === null;
+          if (inverted ? pass : !pass) {
+            throw new Error(`Expected ${actual} ${inverted ? "not " : ""}to be null`);
+          }
         },
-        toBeUndefined() {
-          if (actual !== undefined) throw new Error(`Expected ${JSON.stringify(actual)} to be undefined`);
+        undefined() {
+          const pass = actual === undefined;
+          if (inverted ? pass : !pass) {
+            throw new Error(`Expected ${actual} ${inverted ? "not " : ""}to be undefined`);
+          }
         },
-        toContain(item: any) {
+        property(name: string, value?: any) {
+          const hasProp = actual !== null && actual !== undefined && typeof actual === "object" && name in actual;
+          if (inverted ? hasProp : !hasProp) {
+            throw new Error(`Expected object ${inverted ? "not " : ""}to have property '${name}'`);
+          }
+          if (arguments.length > 1) {
+            const valPass = JSON.stringify(actual[name]) === JSON.stringify(value);
+            if (inverted ? valPass : !valPass) {
+              throw new Error(`Expected property '${name}' ${inverted ? "not " : ""}to equal ${JSON.stringify(value)}, but found ${JSON.stringify(actual[name])}`);
+            }
+          }
+        },
+        include(item: any) {
+          let pass = false;
           if (typeof actual === "string" || Array.isArray(actual)) {
-            if (!actual.includes(item)) throw new Error(`Expected ${JSON.stringify(actual)} to contain ${JSON.stringify(item)}`);
-          } else {
-            throw new Error(`toContain requires array or string, received ${typeof actual}`);
+            pass = actual.includes(item);
+          } else if (actual && typeof actual === "object") {
+            pass = Object.values(actual).includes(item) || (typeof item === "string" && item in actual);
+          }
+          if (inverted ? pass : !pass) {
+            throw new Error(`Expected ${JSON.stringify(actual)} ${inverted ? "not " : ""}to include ${JSON.stringify(item)}`);
           }
         },
-        toBeGreaterThan(n: number) {
-          if (!(actual > n)) throw new Error(`Expected ${actual} > ${n}`);
+        contain(item: any) {
+          return chain.include(item);
         },
-        toBeLessThan(n: number) {
-          if (!(actual < n)) throw new Error(`Expected ${actual} < ${n}`);
+        above(n: number) {
+          const pass = actual > n;
+          if (inverted ? pass : !pass) {
+            throw new Error(`Expected ${actual} ${inverted ? "not " : ""}to be above ${n}`);
+          }
         },
-        toBeGreaterThanOrEqual(n: number) {
-          if (!(actual >= n)) throw new Error(`Expected ${actual} >= ${n}`);
+        below(n: number) {
+          const pass = actual < n;
+          if (inverted ? pass : !pass) {
+            throw new Error(`Expected ${actual} ${inverted ? "not " : ""}to be below ${n}`);
+          }
         },
-        toBeLessThanOrEqual(n: number) {
-          if (!(actual <= n)) throw new Error(`Expected ${actual} <= ${n}`);
+        least(n: number) {
+          const pass = actual >= n;
+          if (inverted ? pass : !pass) {
+            throw new Error(`Expected ${actual} ${inverted ? "not " : ""}to be at least ${n}`);
+          }
         },
-        toMatch(pattern: RegExp | string) {
+        most(n: number) {
+          const pass = actual <= n;
+          if (inverted ? pass : !pass) {
+            throw new Error(`Expected ${actual} ${inverted ? "not " : ""}to be at most ${n}`);
+          }
+        },
+        match(pattern: RegExp | string) {
           const re = typeof pattern === "string" ? new RegExp(pattern) : pattern;
-          if (!re.test(String(actual))) throw new Error(`Expected '${actual}' to match pattern ${pattern}`);
-        }
+          const pass = re.test(String(actual));
+          if (inverted ? pass : !pass) {
+            throw new Error(`Expected '${actual}' ${inverted ? "not " : ""}to match ${pattern}`);
+          }
+        },
+        a(expectedType: string) {
+          let pass = false;
+          if (expectedType === "array") pass = Array.isArray(actual);
+          else if (expectedType === "null") pass = actual === null;
+          else pass = typeof actual === expectedType;
+          if (inverted ? pass : !pass) {
+            throw new Error(`Expected ${JSON.stringify(actual)} ${inverted ? "not " : ""}to be a ${expectedType}`);
+          }
+        },
+        an(expectedType: string) {
+          return chain.a(expectedType);
+        },
+        // Direct wrangler method compatibility aliases
+        toBe(expected: any) { return chain.equal(expected); },
+        toEqual(expected: any) { return chain.eql(expected); },
+        toBeTruthy() { return chain.ok(); },
+        toBeFalsy() { return chain.not.ok(); },
+        toBeNull() { return chain.null(); },
+        toBeDefined() { return chain.not.undefined(); },
+        toBeUndefined() { return chain.undefined(); },
+        toContain(item: any) { return chain.include(item); },
+        toBeGreaterThan(n: number) { return chain.above(n); },
+        toBeLessThan(n: number) { return chain.below(n); },
+        toBeGreaterThanOrEqual(n: number) { return chain.least(n); },
+        toBeLessThanOrEqual(n: number) { return chain.most(n); },
+        toMatch(pattern: RegExp | string) { return chain.match(pattern); }
       };
+
+      return chain;
     }
 
     const wrangler = {
@@ -250,6 +363,252 @@ async function handleRequest(payload: Buffer): Promise<void> {
 
     const asyncTests: Promise<void>[] = [];
 
+    // Helper to make secondary HTTP requests (pm.sendRequest)
+    function executeSecondaryRequest(
+      options: string | { url: string; method?: string; headers?: Record<string, string>; body?: string },
+      callback?: (error: Error | null, response: any) => void
+    ): Promise<any> {
+      return new Promise((resolvePromise, rejectPromise) => {
+        try {
+          const targetUrl = typeof options === "string" ? options : options.url;
+          const parsed = new URL(targetUrl);
+          const method = typeof options === "string" ? "GET" : (options.method || "GET");
+          const headers = typeof options === "string" ? {} : (options.headers || {});
+          const body = typeof options === "string" ? undefined : options.body;
+
+          const client = parsed.protocol === "https:" ? https : http;
+          const clientReq = client.request(parsed, { method, headers }, (clientRes) => {
+            let resBody = "";
+            clientRes.setEncoding("utf8");
+            clientRes.on("data", chunk => { resBody += chunk; });
+            clientRes.on("end", () => {
+              const resHeaders: Record<string, string> = {};
+              for (const [k, v] of Object.entries(clientRes.headers)) {
+                if (v !== undefined) resHeaders[k.toLowerCase()] = Array.isArray(v) ? v.join(", ") : v;
+              }
+              const responseObj = {
+                code: clientRes.statusCode || 0,
+                status: clientRes.statusMessage || "",
+                headers: {
+                  get: (name: string) => resHeaders[name.toLowerCase()],
+                  has: (name: string) => name.toLowerCase() in resHeaders
+                },
+                text: () => resBody,
+                json: () => JSON.parse(resBody)
+              };
+
+              if (callback) callback(null, responseObj);
+              resolvePromise(responseObj);
+            });
+          });
+
+          clientReq.on("error", (err) => {
+            if (callback) callback(err, null);
+            rejectPromise(err);
+          });
+
+          if (body) clientReq.write(body);
+          clientReq.end();
+        } catch (ex: any) {
+          if (callback) callback(ex, null);
+          rejectPromise(ex);
+        }
+      });
+    }
+
+    // Postman `pm.*` adapter
+    const pm = {
+      test: wrangler.test,
+      expect: createExpect,
+
+      variables: {
+        get(key: string): any {
+          if (iterationData.has(key)) return iterationData.get(key);
+          if (environment.has(key)) return environment.get(key);
+          if (collectionVariables.has(key)) return collectionVariables.get(key);
+          return variables.get(key);
+        },
+        set(key: string, value: any): void {
+          variables.set(key, value);
+        },
+        has(key: string): boolean {
+          return iterationData.has(key) || environment.has(key) || collectionVariables.has(key) || variables.has(key);
+        }
+      },
+
+      environment,
+      collectionVariables,
+      iterationData,
+
+      request: {
+        url: {
+          toString() { return requestContext.url; },
+          getPath() {
+            try { return new URL(requestContext.url).pathname; } catch { return ""; }
+          }
+        },
+        method: requestContext.method,
+        headers: {
+          get(name: string) {
+            const lower = name.toLowerCase();
+            for (const [k, v] of Object.entries(requestContext.headers)) {
+              if (k.toLowerCase() === lower) return v;
+            }
+            return undefined;
+          },
+          has(name: string) {
+            const lower = name.toLowerCase();
+            return Object.keys(requestContext.headers).some(k => k.toLowerCase() === lower);
+          }
+        },
+        body: {
+          raw: requestContext.body,
+          json() { return requestContext.json(); }
+        }
+      },
+
+      response: responseContext ? {
+        code: responseContext.status,
+        status: responseContext.statusText,
+        responseTime: responseContext.responseTime,
+        responseSize: responseContext.size,
+        headers: {
+          get(name: string) {
+            const lower = name.toLowerCase();
+            for (const [k, v] of Object.entries(responseContext.headers)) {
+              if (k.toLowerCase() === lower) return v;
+            }
+            return undefined;
+          },
+          has(name: string) {
+            const lower = name.toLowerCase();
+            return Object.keys(responseContext.headers).some(k => k.toLowerCase() === lower);
+          }
+        },
+        text() { return responseContext.text(); },
+        json() { return responseContext.json(); },
+        to: {
+          have: {
+            status(code: number) {
+              if (responseContext.status !== code) {
+                throw new Error(`Expected response status code ${responseContext.status} to equal ${code}`);
+              }
+            },
+            header(name: string, value?: string) {
+              const lower = name.toLowerCase();
+              let foundVal: string | undefined;
+              for (const [k, v] of Object.entries(responseContext.headers)) {
+                if (k.toLowerCase() === lower) { foundVal = v; break; }
+              }
+              if (foundVal === undefined) {
+                throw new Error(`Expected response to have header '${name}'`);
+              }
+              if (value !== undefined && foundVal !== value) {
+                throw new Error(`Expected response header '${name}' to equal '${value}', found '${foundVal}'`);
+              }
+            },
+            jsonBody(path?: string) {
+              const body = responseContext.json();
+              if (path) {
+                if (!(path in body)) throw new Error(`Expected json body to have property '${path}'`);
+              }
+            }
+          },
+          be: {
+            get ok() {
+              if (responseContext.status < 200 || responseContext.status >= 300) {
+                throw new Error(`Expected response status ${responseContext.status} to be 2xx (OK)`);
+              }
+              return true;
+            },
+            get success() { return this.ok; },
+            get clientError() {
+              if (responseContext.status < 400 || responseContext.status >= 500) {
+                throw new Error(`Expected response status ${responseContext.status} to be 4xx (Client Error)`);
+              }
+              return true;
+            },
+            get serverError() {
+              if (responseContext.status < 500 || responseContext.status >= 600) {
+                throw new Error(`Expected response status ${responseContext.status} to be 5xx (Server Error)`);
+              }
+              return true;
+            },
+            get info() {
+              if (responseContext.status < 100 || responseContext.status >= 200) {
+                throw new Error(`Expected response status ${responseContext.status} to be 1xx (Informational)`);
+              }
+              return true;
+            }
+          }
+        }
+      } : null,
+
+      sendRequest(options: any, callback?: any) {
+        const p = executeSecondaryRequest(options, callback);
+        asyncTests.push(p.then(() => { }));
+        return p;
+      },
+
+      // Unsupported API traps producing clear, actionable errors
+      get visualizer() {
+        throw new Error("pm.visualizer is not supported in API Wrangler. Use the structured viewer tab in the workbench.");
+      },
+      get cookies() {
+        throw new Error("pm.cookies programmatic jar is not supported. Use the request/response cookie inspector.");
+      },
+      get execution() {
+        return {
+          skipRequest() {
+            throw new Error("pm.execution.skipRequest is not supported. Configure folder/request lifecycle selection.");
+          }
+        };
+      }
+    };
+
+    // Legacy Postman `postman.*` object
+    const postman = {
+      setNextRequest(target: string | null) {
+        nextRequest = target;
+      },
+      setEnvironmentVariable(key: string, value: any) {
+        environment.set(key, value);
+      },
+      getEnvironmentVariable(key: string) {
+        return environment.get(key);
+      },
+      clearEnvironmentVariable(key: string) {
+        environment.unset(key);
+      },
+      clearEnvironmentVariables() {
+        environment.clear();
+      },
+      setGlobalVariable(key: string, value: any) {
+        collectionVariables.set(key, value);
+      },
+      getGlobalVariable(key: string) {
+        return collectionVariables.get(key);
+      },
+      clearGlobalVariable(key: string) {
+        collectionVariables.unset(key);
+      },
+      clearGlobalVariables() {
+        collectionVariables.clear();
+      }
+    };
+
+    // Legacy `tests` dictionary
+    const legacyTests: Record<string, boolean> = {};
+    const testsProxy = new Proxy(legacyTests, {
+      set(target, prop, value) {
+        const name = String(prop);
+        const passed = Boolean(value);
+        target[name] = passed;
+        testResults.push({ name, passed, error: passed ? undefined : `Legacy test '${name}' evaluated to false` });
+        return true;
+      }
+    });
+
     // Support require from project path if specified
     const projectRequire = req.projectPath
       ? createRequire(resolve(req.projectPath, "package.json"))
@@ -257,6 +616,13 @@ async function handleRequest(payload: Buffer): Promise<void> {
 
     const context = {
       wrangler,
+      pm,
+      postman,
+      tests: testsProxy,
+      responseCode: responseContext ? { code: responseContext.status, name: responseContext.statusText } : null,
+      responseBody: responseContext?.body || null,
+      responseTime: responseContext?.responseTime || 0,
+      responseHeaders: responseContext?.headers || {},
       request: requestContext,
       response: responseContext,
       variables,
@@ -290,6 +656,7 @@ async function handleRequest(payload: Buffer): Promise<void> {
       testResults,
       variableMutations,
       consoleLogs,
+      nextRequest,
       durationMs: Date.now() - startTime
     });
   } catch (err: any) {
