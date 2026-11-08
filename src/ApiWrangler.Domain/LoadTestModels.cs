@@ -30,7 +30,8 @@ public sealed record LoadTestConfiguration(
     int MaxConsecutiveErrors = 20,
     double MaxErrorRateThreshold = 0.5, // Stop test if error rate exceeds 50%
     bool RequireTargetConfirmation = true,
-    bool Confirmed = false
+    bool Confirmed = false,
+    LoadThresholdPolicy? Thresholds = null
 );
 
 public sealed record LoadIterationMetric(
@@ -54,6 +55,18 @@ public sealed record LatencyHistogram(
     double P99Ms
 );
 
+public sealed record LoadThresholdPolicy(
+    double? MaxP95LatencyMs = null,
+    double? MaxP99LatencyMs = null,
+    double? MaxErrorRatePercent = null,
+    double? MinThroughputRps = null
+);
+
+public sealed record LoadThresholdEvaluation(
+    bool Passed,
+    IReadOnlyList<string> Violations
+);
+
 public sealed record LoadTestReport(
     string TargetUrl,
     LoadModelType ModelType,
@@ -70,6 +83,7 @@ public sealed record LoadTestReport(
     bool GeneratorSaturated,
     string? AbortReason,
     IReadOnlyDictionary<string, int> ErrorCategories,
-    LatencyHistogram Latency
+    LatencyHistogram Latency,
+    LoadThresholdEvaluation? ThresholdEvaluation = null
 );
 

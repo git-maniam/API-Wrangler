@@ -1,5 +1,21 @@
 # Implementation status
 
+## Phase 9 complete: Local performance testing (2026-11-08 23:58 IST)
+
+Phase 9 is fully implemented and certified complete on branch `phase9-histograms-reports`:
+- P9.2 (Issue #38):
+  - Domain models (`LoadTestModels.cs`): added `LoadThresholdPolicy` (`MaxP95LatencyMs`, `MaxP99LatencyMs`, `MaxErrorRatePercent`, `MinThroughputRps`) and `LoadThresholdEvaluation` (`Passed`, `Violations`).
+  - Application services (`LoadExecutionEngine.cs`):
+    - True histogram percentile calculations (min, mean, max, p50, p90, p95, p99) derived directly from sorted measurement pools.
+    - Multi-worker histogram merging (`MergeHistograms`) pooling sample sets and recalculating percentiles across the whole distribution.
+    - Monotonic duration measurement via `Stopwatch.GetTimestamp()` high-resolution counters.
+    - Threshold evaluation (`EvaluateThresholds`) reporting distinct violations.
+    - Distinct categorization of functional HTTP status codes (e.g. `HTTP 500`), transport/network exceptions (e.g. `HttpRequestException`, connection termination), and threshold policy failures.
+  - Desktop integration: added threshold settings (`MaxP95LatencyMs`, `MaxErrorRatePercent`) in `LoadTestingViewModel` and `MainWindow.xaml`, and integrated threshold pass/fail violations into report summaries.
+  - Integration tests (`LoadExecutionEngineTests.cs`): 8 tests passing, verifying histogram calculations, multi-worker histogram pooling, threshold evaluations, distinct failure categorization, target safety gates, VU execution, consecutive error aborts, and clean cancellation.
+  - Full automated test suite: 257 passed, 0 failed, 0 skipped. `scripts/Test-Desktop.ps1` passed cleanly. `dotnet format --verify-no-changes` passed.
+  - Documentation: Verified in `docs/phase-9.2-progress.md` and `docs/phase-9-exit-review.md`.
+
 ## Phase 9.1 complete: Closed-loop and open-loop load execution (2026-11-08 23:34 IST)
 
 Phase 9.1 is implemented and verified on branch `phase9-load-execution`:

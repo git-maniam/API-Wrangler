@@ -466,6 +466,13 @@
                             </ComboBox>
                         </WrapPanel>
 
+                        <WrapPanel DockPanel.Dock="Top" Margin="0,2,0,6">
+                            <TextBlock Text="Max p95 (ms): " VerticalAlignment="Center" />
+                            <TextBox Width="45" Text="{Binding MaxP95LatencyMs, UpdateSourceTrigger=PropertyChanged}" />
+                            <TextBlock Text=" Max Err (%): " VerticalAlignment="Center" Margin="6,0,0,0" />
+                            <TextBox Width="40" Text="{Binding MaxErrorRatePercent, UpdateSourceTrigger=PropertyChanged}" />
+                        </WrapPanel>
+
                         <CheckBox DockPanel.Dock="Top" Content="Explicit target confirmation acknowledged" IsChecked="{Binding Confirmed}" Margin="0,4,0,8" />
 
                         <WrapPanel DockPanel.Dock="Top" Margin="0,4,0,8">

@@ -156,5 +156,144 @@ public sealed class LoadExecutionEngineTests
             await mock.StopAsync();
         }
     }
+
+    [Fact]
+    public void LoadEngine_MergeHistograms_MergesAccuratePercentilesFromCombinedPool()
+    {
+        var h1 = LoadExecutionEngine.CalculateHistogram(Enumerable.Repeat(TimeSpan.FromMilliseconds(10), 50).ToList());
+        var h2 = LoadExecutionEngine.CalculateHistogram(Enumerable.Repeat(TimeSpan.FromMilliseconds(100), 50).ToList());
+
+        var merged = LoadExecutionEngine.MergeHistograms(new[] { h1, h2 });
+
+        Assert.Equal(100, merged.LatenciesMs.Count);
+        Assert.Equal(10, merged.MinMs);
+        Assert.Equal(100, merged.MaxMs);
+        Assert.Equal(55, merged.MeanMs);
+        Assert.Equal(10, merged.P50Ms);
+        Assert.Equal(100, merged.P90Ms);
+        Assert.Equal(100, merged.P95Ms);
+        Assert.Equal(100, merged.P99Ms);
+    }
+
+    [Fact]
+    public void LoadEngine_EvaluateThresholds_EvaluatesPassAndDistinctViolations()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var sampleReport = new LoadTestReport(
+            TargetUrl: "http://127.0.0.1:5000/api",
+            ModelType: LoadModelType.ClosedLoopVirtualUsers,
+            ProfileType: LoadProfileType.FixedUsers,
+            StartedAt: now.AddSeconds(-4),
+            CompletedAt: now,
+            TotalDuration: TimeSpan.FromSeconds(4),
+            TotalRequests: 100,
+            SuccessfulRequests: 90,
+            FailedRequests: 10,
+            AchievedRps: 25.0,
+            TargetRps: 50.0,
+            TargetLoadAchieved: false,
+            GeneratorSaturated: false,
+            AbortReason: null,
+            ErrorCategories: new Dictionary<string, int> { ["HTTP 500"] = 10 },
+            Latency: new LatencyHistogram(
+                LatenciesMs: Array.Empty<long>(),
+                MinMs: 10,
+                MeanMs: 50,
+                MaxMs: 250,
+                P50Ms: 40,
+                P90Ms: 120,
+                P95Ms: 180,
+                P99Ms: 240
+            )
+        );
+
+        // Case 1: All thresholds satisfied
+        var passingPolicy = new LoadThresholdPolicy(
+            MaxP95LatencyMs: 200,
+            MaxP99LatencyMs: 300,
+            MaxErrorRatePercent: 15.0,
+            MinThroughputRps: 20.0
+        );
+        var passEval = LoadExecutionEngine.EvaluateThresholds(passingPolicy, sampleReport);
+        Assert.True(passEval.Passed);
+        Assert.Empty(passEval.Violations);
+
+        // Case 2: All thresholds violated
+        var strictPolicy = new LoadThresholdPolicy(
+            MaxP95LatencyMs: 100, // actual 180
+            MaxP99LatencyMs: 200, // actual 240
+            MaxErrorRatePercent: 5.0, // actual 10%
+            MinThroughputRps: 30.0 // actual 25
+        );
+        var failEval = LoadExecutionEngine.EvaluateThresholds(strictPolicy, sampleReport);
+        Assert.False(failEval.Passed);
+        Assert.Equal(4, failEval.Violations.Count);
+        Assert.Contains(failEval.Violations, v => v.Contains("p95 latency threshold exceeded"));
+        Assert.Contains(failEval.Violations, v => v.Contains("p99 latency threshold exceeded"));
+        Assert.Contains(failEval.Violations, v => v.Contains("Error rate threshold exceeded"));
+        Assert.Contains(failEval.Violations, v => v.Contains("Minimum throughput threshold failed"));
+    }
+
+    [Fact]
+    public async Task LoadEngine_FailureCategorization_DistinguishesFunctionalVsTransportVsThresholdFailures()
+    {
+        await using var mock = new MockEngine();
+        mock.AddRule(new MockRule(
+            Id: "err-500",
+            Name: "Error 500",
+            Method: "GET",
+            PathPattern: "/api/fault500",
+            ResponseStatusCode: 500,
+            ResponseBody: "{\"error\":\"Internal Server Error\"}"
+        ));
+        mock.AddRule(new MockRule(
+            Id: "abort-conn",
+            Name: "Abort Connection",
+            Method: "GET",
+            PathPattern: "/api/abort",
+            FaultType: MockFaultType.ConnectionTermination
+        ));
+        await mock.StartAsync();
+
+        try
+        {
+            var engine = new LoadExecutionEngine();
+
+            // 1. Functional HTTP 500 error & Threshold test
+            var funcConfig = new LoadTestConfiguration(
+                TargetUrl: mock.ListeningUrl + "/api/fault500",
+                VirtualUsers: 1,
+                Duration: TimeSpan.FromMilliseconds(300),
+                RequireTargetConfirmation: true,
+                Confirmed: true,
+                Thresholds: new LoadThresholdPolicy(MaxErrorRatePercent: 0) // zero tolerance threshold
+            );
+
+            var funcReport = await engine.ExecuteAsync(funcConfig);
+            Assert.True(funcReport.FailedRequests > 0);
+            Assert.Contains("HTTP 500", funcReport.ErrorCategories.Keys);
+            Assert.NotNull(funcReport.ThresholdEvaluation);
+            Assert.False(funcReport.ThresholdEvaluation.Passed);
+            Assert.Contains(funcReport.ThresholdEvaluation.Violations, v => v.Contains("Error rate threshold exceeded"));
+
+            // 2. Transport connection termination test
+            var transportConfig = new LoadTestConfiguration(
+                TargetUrl: mock.ListeningUrl + "/api/abort",
+                VirtualUsers: 1,
+                Duration: TimeSpan.FromMilliseconds(300),
+                RequireTargetConfirmation: true,
+                Confirmed: true
+            );
+
+            var transportReport = await engine.ExecuteAsync(transportConfig);
+            Assert.True(transportReport.FailedRequests > 0);
+            Assert.Contains(transportReport.ErrorCategories.Keys, k => k.Contains("Http") || k.Contains("Socket") || k.Contains("IO"));
+            Assert.DoesNotContain("HTTP 500", transportReport.ErrorCategories.Keys);
+        }
+        finally
+        {
+            await mock.StopAsync();
+        }
+    }
 }
 
