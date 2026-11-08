@@ -2532,12 +2532,16 @@ Do not begin distributed infrastructure before these decisions are settled.
 
 **Implementation checkpoint (2026-11-07):** Phase 1 project discovery, versioned schemas, canonical assets, journaled persistence, watcher/recovery behavior, snapshots, local settings, and a desktop asset editor are implemented in PR #57. The five Phase 1 exit checks pass locally. After the Linux writer-lease fix, hosted Windows and Linux headless jobs each passed 30 tests with zero skipped; desktop build, format, and publish passed. ADR-0002 defines version 1 as the first supported format. P1.1-P1.3 are In review; P1.4 manual project-editor accessibility acceptance is In progress. The phase epic remains In progress until review, acceptance, and merge. See docs/implementation-status.md and docs/phase-1-exit-review.md.
 
-#### Restart bookmark (updated 2026-11-08 11:48 IST)
+#### Restart bookmark (updated 2026-11-08 11:55 IST)
 
-P4.1 (#20) and P4.2 (#21) are 100% complete, verified, merged into `main` (PR #69 `e99db25` and PR #70 `c0eabd2`), and marked `Done` in GitHub Project 4.
-Branch `phase4-preview-highlighting` active for P4.3 (#55: "Color-highlighted CSV and JSON dataset previews"). P4.3 set to `In progress` in Project 4; Phase 4 epic (#19) remains `In progress`.
-Active work: implementing color-highlighted and token-aware previews for CSV, TSV, JSON, and JSON Lines datasets in import, mapping, and source preview editors using AvalonEdit syntax highlighting definitions with persisted font/theme settings.
-Verified: 145 automated tests passed; Desktop smoke passed; all CI checks passed on PR #69 and PR #70. Next: implement P4.3 token-aware dataset preview highlighting, verify bounded execution, run batched test suite, open PR, and complete Phase 4 exit review.
+Phase 4 (Datasets, Data-driven runs, and Clipboard operations) is 100% complete, fully verified, and merged into `main`.
+- All Phase 4 sub-issues are complete and marked `Done` in Project 4:
+  - P4.1 (Issue #20, PR #69, commit `e99db25`): Streaming file-backed CSV/TSV/JSON/JSONL imports, stable case identity, `_caseId` duplicate detection, explicit missing ID addition, bounded headless preview, and transactional publication into project snapshots.
+  - P4.2 (Issue #21, PR #70, commit `c0eabd2`): Virtualized 100,000-row editable grid, multi-cell editing, Undo/Redo history stack, Fill Down, Duplicate Case, Insert/Delete row, non-mutating View Sort & Filter, clipboard format detection (TSV, CSV, JSON, JSONL, HTTP request, plain text, and cURL commands with execution strictly prohibited), spreadsheet-safe CSV export neutralizing formula triggers (`=`, `+`, `-`, `@`), and external result attachments with provenance tracking (`IsWranglerExecution = false`).
+  - P4.3 (Issue #55, PR #71, commit `9cb8268`): AvalonEdit syntax highlighting definitions for CSV, TSV, JSON, and JSON Lines dataset previews, with dynamic format switching and persisted typography bindings.
+- Parent Epic [Issue #19](https://github.com/git-maniam/API-Wrangler/issues/19) is verified and marked `Done` in Project 4 with `docs/phase-4-exit-review.md`.
+- Next work: Phase 5 (Issue #26: Git collaboration and conflicts — branch management, status, merge conflict detection, and worktree isolation).
+- Verification: 151 automated tests passed, 0 failed, 4 skipped; Desktop smoke passed; all CI checks passed on PR #69, PR #70, and PR #71. Working tree clean.
 
 Published checkpoint: implementation `9156d80` pushed; PR #69 is now non-draft and P4.1 (#20) is In review. P4 (#19) remains In progress. Hosted desktop/Windows/Linux checks were pending at 11:25 IST. Resume by checking those results and PR review before merge/completion; local evidence is 62 passing tests and the passing desktop dataset smoke described below. No tests/builds rerun for this final metadata refresh. Next 30-minute refresh is due by 11:55 IST if execution is active.
 
