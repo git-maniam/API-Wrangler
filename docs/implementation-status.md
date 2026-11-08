@@ -1,5 +1,21 @@
 # Implementation status
 
+## Phase 13.2 complete: Optional AI with explicit context and reviewable changes (2026-11-09 01:52 IST)
+
+Phase 13.2 is implemented and verified on branch `phase13-optional-ai-reviewable-changes`:
+- P13.2 (Issue #51):
+  - Domain models (`AiModels.cs`): `AiProviderKind`, `AiConfiguration`, `AiContextItemKind`, `AiContextItem`, `AiSanitizedContext`, `AiProposalKind`, `AiReviewStatus`, and `AiProposalDiff`.
+  - Application services (`AiAssistanceService.cs`):
+    - `AiConfiguration`: Defaults `IsEnabled = false` and `ProviderKind = AiProviderKind.Disabled`. AI assistance remains completely optional and disabled until explicitly configured. The product remains fully functional without it.
+    - `AiContextSanitizer`: Context sanitization gate. Redacts Git credentials (personal access tokens `ghp_`, `github_pat_`, embedded URL credentials `https://user:pat@github.com`, and SSH/RSA private keys) and HTTP Authorization headers/secrets, guaranteeing that Git authentication tokens NEVER enter prompt payloads under any circumstance.
+    - `AiAssistanceService`: Supports compatible hosted endpoints, local models (Ollama/vLLM), and user-provided API keys. Implements test drafting, response explanation, dataset generation, import repair suggestions, and script refactoring.
+    - `AiProposalDiff`: All generated changes require user review (`RequiresUserReview = true`). Enforces safety constraints blocking automatic execution (`CanAutoExecute = false`) and automatic committing (`CanAutoCommit = false`), throwing `InvalidOperationException` if auto-execution or auto-committing is attempted.
+    - `UnifiedDiffBuilder`: Generates standard unified diffs for interactive user review.
+  - CLI operations: Added `ai draft`, `ai explain`, and `ai dataset` subcommands to `api-wrangler` CLI (`Program.cs`).
+  - Integration tests (`AiAssistanceTests.cs`): 5 tests covering disabled state enforcement without network calls, Git credential and secret redaction verification in captured prompt payloads, user review requirements and auto-execute/commit blocking, dataset generation and response explanation, and import repair / script refactoring diff proposals.
+  - Automated test suite: 302 passed, 0 failed, 0 skipped. `scripts/Test-Desktop.ps1` passed cleanly. `dotnet format --verify-no-changes` passed.
+  - Documentation: Verified in `docs/phase-13.2-progress.md`.
+
 ## Phase 13.1 complete: Contracts, static documentation, catalog, and SDK generation (2026-11-09 01:36 IST)
 
 Phase 13.1 is implemented and verified on branch `phase13-contracts-docs-catalog`:
