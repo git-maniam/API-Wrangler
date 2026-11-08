@@ -247,6 +247,49 @@
                     <TextBlock Grid.Row="5" Text="{Binding Status}" TextWrapping="Wrap" Margin="0,8" AutomationProperties.LiveSetting="Polite" />
                 </Grid>
             </TabItem>
+            <TabItem Header="GraphQL &amp; gRPC">
+                <Grid Margin="12" DataContext="{Binding Protocol}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <!-- Left: GraphQL -->
+                    <DockPanel Grid.Column="0" Margin="0,0,8,0">
+                        <TextBlock DockPanel.Dock="Top" Text="GraphQL Operations" FontWeight="Bold" Margin="0,0,0,6" />
+                        <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,6">
+                            <TextBlock Text="Endpoint: " VerticalAlignment="Center" />
+                            <TextBox Width="260" Text="{Binding GraphQLEndpoint, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="GraphQL endpoint" />
+                            <Button Content="Execute" Command="{Binding ExecuteGraphQLCommand}" Margin="8,0" />
+                        </WrapPanel>
+                        <TextBlock DockPanel.Dock="Top" Text="Query / Mutation:" Margin="0,4,0,2" />
+                        <TextBox DockPanel.Dock="Top" Height="140" Text="{Binding GraphQLQuery, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" FontFamily="{Binding DataContext.EditorFontFamily, RelativeSource={RelativeSource AncestorType=Window}}" FontSize="{Binding DataContext.EditorFontSize, RelativeSource={RelativeSource AncestorType=Window}}" AutomationProperties.Name="GraphQL query text" />
+                        <TextBlock DockPanel.Dock="Top" Text="Variables (JSON):" Margin="0,4,0,2" />
+                        <TextBox DockPanel.Dock="Top" Height="50" Text="{Binding GraphQLVariables, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" FontFamily="{Binding DataContext.EditorFontFamily, RelativeSource={RelativeSource AncestorType=Window}}" FontSize="{Binding DataContext.EditorFontSize, RelativeSource={RelativeSource AncestorType=Window}}" AutomationProperties.Name="GraphQL variables text" />
+                        <TextBlock DockPanel.Dock="Top" Text="{Binding GraphQLStatus}" FontWeight="SemiBold" Margin="0,6,0,2" />
+                        <TextBox Text="{Binding GraphQLResponse, Mode=OneWay}" IsReadOnly="True" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" FontFamily="{Binding DataContext.EditorFontFamily, RelativeSource={RelativeSource AncestorType=Window}}" FontSize="{Binding DataContext.EditorFontSize, RelativeSource={RelativeSource AncestorType=Window}}" AutomationProperties.Name="GraphQL response preview" />
+                    </DockPanel>
+                    <!-- Right: gRPC -->
+                    <DockPanel Grid.Column="1" Margin="8,0,0,0">
+                        <TextBlock DockPanel.Dock="Top" Text="gRPC Operations &amp; Streaming Transcript" FontWeight="Bold" Margin="0,0,0,6" />
+                        <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,6">
+                            <TextBlock Text="Endpoint: " VerticalAlignment="Center" />
+                            <TextBox Width="140" Text="{Binding GrpcEndpoint, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="gRPC endpoint" />
+                            <TextBlock Text=" Method: " VerticalAlignment="Center" />
+                            <TextBox Width="180" Text="{Binding GrpcMethod, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="gRPC method path" />
+                        </WrapPanel>
+                        <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,6">
+                            <Button Content="Parse Proto" Command="{Binding ParseProtoCommand}" Margin="0,0,8,0" />
+                            <Button Content="Simulate Call" Command="{Binding SimulateGrpcCallCommand}" />
+                        </WrapPanel>
+                        <TextBlock DockPanel.Dock="Top" Text="Protobuf Definition:" Margin="0,4,0,2" />
+                        <TextBox DockPanel.Dock="Top" Height="100" Text="{Binding ProtoContent, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" FontFamily="{Binding DataContext.EditorFontFamily, RelativeSource={RelativeSource AncestorType=Window}}" FontSize="{Binding DataContext.EditorFontSize, RelativeSource={RelativeSource AncestorType=Window}}" AutomationProperties.Name="Proto file content" />
+                        <TextBlock DockPanel.Dock="Top" Text="Request Payload (JSON):" Margin="0,4,0,2" />
+                        <TextBox DockPanel.Dock="Top" Height="50" Text="{Binding GrpcPayload, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" FontFamily="{Binding DataContext.EditorFontFamily, RelativeSource={RelativeSource AncestorType=Window}}" FontSize="{Binding DataContext.EditorFontSize, RelativeSource={RelativeSource AncestorType=Window}}" AutomationProperties.Name="gRPC payload JSON" />
+                        <TextBlock DockPanel.Dock="Top" Text="{Binding GrpcStatus}" FontWeight="SemiBold" Margin="0,6,0,2" />
+                        <TextBox Text="{Binding GrpcTranscript, Mode=OneWay}" IsReadOnly="True" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" FontFamily="{Binding DataContext.EditorFontFamily, RelativeSource={RelativeSource AncestorType=Window}}" FontSize="{Binding DataContext.EditorFontSize, RelativeSource={RelativeSource AncestorType=Window}}" AutomationProperties.Name="gRPC streaming transcript" />
+                    </DockPanel>
+                </Grid>
+            </TabItem>
             <TabItem Header="Dataset feasibility">
                 <DockPanel Margin="12">
                     <TextBlock DockPanel.Dock="Top" Text="100,000 synthetic cases · paged rows · read-only feasibility fixture" Margin="0,0,0,12" />
