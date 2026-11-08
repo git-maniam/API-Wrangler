@@ -4,6 +4,8 @@ A local-first Windows API testing workbench with a shared headless engine. The P
 
 ## Current status
 
+- Phase 4 dataset import is available for review in [PR #69](https://github.com/git-maniam/API-Wrangler/pull/69): CSV/TSV/JSON/JSONL, explicit mappings and conversions, case IDs, prepared previews and file-backed publication. See [dataset import](docs/dataset-import.md) for usage and limits. Phase 4 remains In progress.
+
 - The WPF desktop shell features a persistent HTTP request workbench, project asset editor with draft recovery and conflict decisions, variable resolution, and a read-only 100,000-case grid. The CLI has `send`, `git-probe`, and `node-probe` commands.
 - Phase 1 core storage (version-1 project schemas, discovery, canonical JSON, journaled saves, writer ownership, recovery, watching, local settings, immutable snapshots, and desktop asset editor) is verified and merged into `main` ([PR #57](https://github.com/git-maniam/API-Wrangler/pull/57)). P1.1–P1.3 are **Done**; manual accessibility acceptance remains open in [#58](https://github.com/git-maniam/API-Wrangler/issues/58).
 - Phase 2 HTTP workbench is **In progress**:

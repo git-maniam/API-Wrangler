@@ -17,6 +17,7 @@ public partial class MainViewModel(
 {
     private readonly LocalSettingsStore settingsStore = settingsStore ?? new LocalSettingsStore();
     public ProjectEditorViewModel ProjectEditor { get; } = projectEditor;
+    public DatasetImportViewModel DatasetImport { get; } = new(() => projectEditor.CurrentSession);
 
     [ObservableProperty] private string requestName = "Untitled request";
     [ObservableProperty] private string requestDescription = "";

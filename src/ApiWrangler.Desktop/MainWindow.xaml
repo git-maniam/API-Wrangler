@@ -177,6 +177,33 @@
                     </TabControl>
                 </Grid>
             </TabItem>
+            <TabItem Header="Import dataset">
+                <Grid Margin="12" DataContext="{Binding DatasetImport}">
+                    <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                    <DockPanel IsEnabled="{Binding IsIdle}">
+                        <Button DockPanel.Dock="Right" Content="Browse..." Command="{Binding BrowseCommand}" Margin="8,0,0,0" />
+                        <TextBox Text="{Binding SourcePath, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Dataset source file" />
+                    </DockPanel>
+                    <WrapPanel Grid.Row="1" Margin="0,8" IsEnabled="{Binding IsIdle}">
+                        <TextBlock Text="Name " VerticalAlignment="Center" /><TextBox Width="180" Text="{Binding DatasetName, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Dataset name" />
+                        <TextBlock Text=" Format " VerticalAlignment="Center" /><ComboBox Width="90" ItemsSource="{Binding Formats}" SelectedItem="{Binding Format}" AutomationProperties.Name="Dataset format" />
+                        <TextBlock Text=" Encoding " VerticalAlignment="Center" /><ComboBox Width="140" ItemsSource="{Binding Encodings}" SelectedItem="{Binding EncodingName}" AutomationProperties.Name="Dataset encoding" />
+                        <TextBlock Text=" Delimiter " VerticalAlignment="Center" /><TextBox Width="35" Text="{Binding Delimiter, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Dataset delimiter" />
+                        <TextBlock Text=" Culture " VerticalAlignment="Center" /><TextBox Width="85" Text="{Binding CultureName, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Conversion culture, blank for invariant" />
+                    </WrapPanel>
+                    <TextBlock Grid.Row="2" TextWrapping="Wrap" Text="Column mappings (JSON array): [] preserves all columns. Example: [{&quot;Source&quot;:&quot;amount&quot;,&quot;Target&quot;:&quot;price&quot;,&quot;Type&quot;:&quot;Decimal&quot;}]. Types: Preserve, String, Decimal, Boolean, Date. EmptyStringAsNull is opt-in. Nested JSON stays nested." />
+                    <TextBox Grid.Row="3" Height="65" Margin="0,6" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" Text="{Binding Mappings, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding IsIdle}" AutomationProperties.Name="Dataset column mappings" />
+                    <WrapPanel Grid.Row="4" Margin="0,6">
+                        <CheckBox Content="Add missing case IDs (review before accepting)" IsChecked="{Binding AddCaseIds}" IsEnabled="{Binding IsIdle}" VerticalAlignment="Center" />
+                        <Button Content="Prepare preview" Command="{Binding PrepareCommand}" IsEnabled="{Binding IsIdle}" Margin="12,0" />
+                        <Button Content="Accept import" Command="{Binding AcceptCommand}" IsEnabled="{Binding IsIdle}" Margin="0,0,12,0" />
+                        <Button Content="Cancel preparation" Command="{Binding PrepareCancelCommand}" />
+                        <Button Content="Cancel import" Command="{Binding AcceptCancelCommand}" Margin="8,0" />
+                    </WrapPanel>
+                    <TextBox Grid.Row="5" Text="{Binding PreviewText, Mode=OneWay}" IsReadOnly="True" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" FontFamily="Consolas" AutomationProperties.Name="Prepared dataset preview" />
+                    <TextBlock Grid.Row="6" Text="{Binding Status}" TextWrapping="Wrap" Margin="0,8" AutomationProperties.LiveSetting="Polite" />
+                </Grid>
+            </TabItem>
             <TabItem Header="Dataset feasibility">
                 <DockPanel Margin="12">
                     <TextBlock DockPanel.Dock="Top" Text="100,000 synthetic cases · paged rows · read-only feasibility fixture" Margin="0,0,0,12" />

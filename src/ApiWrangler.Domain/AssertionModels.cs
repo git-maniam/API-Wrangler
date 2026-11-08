@@ -19,3 +19,4 @@ public sealed record AssertionResult(
     string? ActualValue,
     string? ExpectedValue,
     string? Message);
+

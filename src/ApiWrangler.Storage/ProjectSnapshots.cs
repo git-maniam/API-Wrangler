@@ -83,12 +83,28 @@ internal static class ProjectSnapshots
             {
                 var metadata = JsonSerializer.SerializeToUtf8Bytes(new { schemaVersion = 1, id, files = entries });
                 await FileTransactions.WriteDurableAsync(Path.Combine(temporary, "snapshot.json"), metadata, token).ConfigureAwait(false);
-                Directory.Move(temporary, final);
+                MoveDirectoryWithRetry(temporary, final);
             }
             bool isDirty = (afterGit.Dirty ?? false) || draftMap.Count > 0;
             return new(id, final, entries.Count, afterGit.Commit, isDirty);
         }
         finally { if (Directory.Exists(temporary)) Directory.Delete(temporary, recursive: true); }
+    }
+
+    private static void MoveDirectoryWithRetry(string source, string destination)
+    {
+        for (var attempt = 0; attempt < 5; attempt++)
+        {
+            try
+            {
+                Directory.Move(source, destination);
+                return;
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException && attempt < 4)
+            {
+                Thread.Sleep(25 * (attempt + 1));
+            }
+        }
     }
 
     private static async Task<(string? Commit, bool? Dirty)> GitInfoAsync(string root, CancellationToken token)

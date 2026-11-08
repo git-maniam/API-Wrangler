@@ -106,6 +106,14 @@
           "xunit.extensibility.core": "[2.9.3]"
         }
       },
+      "api-wrangler": {
+        "type": "Project",
+        "dependencies": {
+          "ApiWrangler.Execution": "[1.0.0, )",
+          "ApiWrangler.Storage": "[1.0.0, )",
+          "System.CommandLine": "[2.0.14, )"
+        }
+      },
       "apiwrangler.application": {
         "type": "Project",
         "dependencies": {
@@ -136,6 +144,12 @@
         "dependencies": {
           "JsonPointer.Net": "7.0.4"
         }
+      },
+      "System.CommandLine": {
+        "type": "CentralTransitive",
+        "requested": "[2.0.14, )",
+        "resolved": "2.0.14",
+        "contentHash": "15fyVO4aG6poR6IKmhM74zf7PUzaU6FZAGm2d3SQSO9yIyGAeo44e6t9qeKjjaqyMEqYdqcb2G1B0gpLoDU2cA=="
       }
     },
     "net10.0/linux-x64": {},

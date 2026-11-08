@@ -17,6 +17,48 @@ namespace ApiWrangler.Desktop;
 
 internal static class DesktopDiagnostics
 {
+    public static async Task TestDatasetAsync(MainWindow window, MainViewModel model, string directory)
+    {
+        Directory.CreateDirectory(directory);
+        var project = Path.Combine(directory, "project-" + Guid.NewGuid().ToString("N"));
+        await using (var initial = await new ProjectRepository(Path.Combine(directory, "state")).InitializeAsync(project, "Dataset smoke")) { }
+        model.ProjectEditor.ProjectPath = project;
+        await model.ProjectEditor.OpenProjectCommand.ExecuteAsync(null);
+        var importer = model.DatasetImport;
+        var input = Path.Combine(directory, "input.csv");
+        await File.WriteAllTextAsync(input, "id;amount\n001;1,25\n002;2,50\n");
+        importer.SourcePath = input;
+        importer.Delimiter = ";";
+        importer.CultureName = "fr-FR";
+        importer.Mappings = "[{\"Source\":\"id\",\"Target\":\"_caseId\"},{\"Source\":\"amount\",\"Target\":\"price\",\"Type\":\"Decimal\"}]";
+        await importer.PrepareCommand.ExecuteAsync(null);
+        if (!importer.Status.StartsWith("Prepared 2", StringComparison.Ordinal)) throw new InvalidOperationException(importer.Status);
+        importer.DatasetName = "Changed after preview";
+        await importer.AcceptCommand.ExecuteAsync(null);
+        if (!importer.Status.StartsWith("Prepare a fresh", StringComparison.Ordinal)) throw new InvalidOperationException("Stale options were accepted.");
+        importer.DatasetName = "Imported dataset";
+        await File.WriteAllTextAsync(input, "changed after preview");
+        await importer.AcceptCommand.ExecuteAsync(null);
+        if (!importer.Status.StartsWith("Imported 2", StringComparison.Ordinal)) throw new InvalidOperationException(importer.Status);
+        var session = model.ProjectEditor.CurrentSession!;
+        var asset = (await session.ReadAsync()).Assets.Single(a => a.Kind == ApiWrangler.Domain.AssetKind.Dataset);
+        var path = Path.Combine(session.Root, Path.GetDirectoryName(asset.Path)!, asset.Content["source"]!["path"]!.GetValue<string>());
+        var saved = await File.ReadAllTextAsync(path);
+        if (!saved.Contains("001", StringComparison.Ordinal) || !saved.Contains("1.25", StringComparison.Ordinal))
+            throw new InvalidOperationException("Accepted data differs from prepared rows.");
+        window.MainTabs.SelectedIndex = 2;
+        window.UpdateLayout();
+        Capture(window, Path.Combine(directory, "dataset-import.png"));
+        await File.WriteAllTextAsync(Path.Combine(directory, "dataset-smoke.json"), JsonSerializer.Serialize(new
+        {
+            passed = true,
+            rows = 2,
+            explicitConversion = true,
+            staleOptionsRejected = true,
+            preparedSourcePreserved = true
+        }));
+    }
+
     public static async Task TestProjectAsync(MainWindow window, MainViewModel model, string directory)
     {
         Directory.CreateDirectory(directory);
@@ -185,7 +227,7 @@ internal static class DesktopDiagnostics
         var privateBytes = Process.GetCurrentProcess().PrivateMemorySize64;
         Capture(window, Path.Combine(directory, "workbench.png"));
         var watch = Stopwatch.StartNew();
-        window.MainTabs.SelectedIndex = 2;
+        window.MainTabs.SelectedIndex = 3;
         await window.Dispatcher.InvokeAsync(() => window.UpdateLayout(), DispatcherPriority.ApplicationIdle);
         var datasetMs = watch.Elapsed.TotalMilliseconds;
         var realizedRows = CountRows(window.FixtureGrid);

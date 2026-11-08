@@ -1,5 +1,25 @@
 # Implementation status
 
+## Phase 4 file-backed import and desktop checkpoint (2026-11-08 11:24 IST)
+
+P4.1 is ready for review in PR #69: streaming file-backed JSONL preparation/publication with hash checking, stable case identity, full-import conversions, and desktop source/encoding/mapping/preview/accept/cancellation flow. Input source changes after preview do not alter accepted content. Existing project transactions protect definitions and stale writes; immutable source files participate in project snapshots. Release solution build passed; 62 dataset/persistence tests passed without skips. Desktop dataset smoke verified explicit conversion, stale-options rejection, and exact prepared-source import; screenshot inspected. A diagnostic tab-name compile error was fixed before the successful desktop rebuild/smoke. See `docs/dataset-import.md` for limits and remaining polish. P4 stays In progress; P4.1 is not Done before review/acceptance/merge. Existing unrelated edits preserved.
+
+## Phase 4 JSON admission checkpoint (2026-11-08 10:09 IST)
+
+JSON-array reads enforce a configurable per-record byte budget (default 1 MiB) before deserialization using a bounded-read stream wrapper. Record boundaries respect nesting and escaped strings; UTF-8 bytes are counted, total dataset length is not constrained by the record budget, and the caller's stream remains open. Batched dataset/rollback verification passed 46 tests with no failures/skips in one invocation; no standalone build. File-backed import/publication, full-import conversion integration and UI remain; P4/P4.1 stay In progress.
+
+## Phase 4 inline import checkpoint (2026-11-08 09:00 IST)
+
+`DatasetImport` prepares bounded inline datasets without touching assets and returns an immutable `PreparedDatasetImport` for explicit acceptance. Existing string case IDs are preserved; duplicate/invalid IDs fail, and missing IDs require explicit addition preview. Commit reuses journaled `IProjectSession.SaveAsync` with expected-hash conflict checks and existing schema/path/writer validation. Persisted inline sources are included in project snapshots. One batched invocation (`dotnet test tests/ApiWrangler.IntegrationTests -c Release --no-restore --filter 'FullyQualifiedName~Dataset|FullyQualifiedName~Save_ReplacementFailure_RollsBackAllFiles' --verbosity minimal`) passed 43 tests, none skipped. No standalone build. P4/P4.1 remain In progress: large file-backed imports, JSON-array admission bounds, full-import conversion integration, flattening/dates, encoding selection and UI remain. Existing unrelated edits preserved.
+
+## Phase 4 JSON and preview continuation (2026-11-08 08:57 IST)
+
+Added streaming JSON-array/JSONL object readers preserving nested JSON, missing fields, and explicit nulls; duplicate properties are rejected recursively. JSONL supports BOM, CRLF, cancellation, and bounded records. Added a headless preview capped at 1,000 rows (100 default), column mapping, explicit culture-aware decimal/boolean/string conversions, and opt-in empty-string-to-null mapping. Source assets remain untouched. JSON-array per-record admission limits, stable case IDs, transactional import/snapshots, flattening/date conversion, and import UI/encoding selection remain in P4.1. Batched verification: delimited, JSON, and preview suites passed 31 tests (0 skipped); two initial failures were exact-exception test assertions, corrected before the single rerun. No standalone build or broad test suite. Draft PR #69; P4/P4.1 remain In progress.
+
+## Phase 4 continuation (2026-11-07 22:46 IST)
+
+P4 and P4.1 (#19/#20) are In progress. `DelimitedDatasetReader` streams raw CSV/TSV/custom-delimited records with quoted multiline fields, escaped quotes, BOM handling, leading-zero and empty-string preservation, duplicate/empty-header and record-width validation, cancellation, and per-record bounds. One necessary focused invocation (`dotnet test tests/ApiWrangler.IntegrationTests -c Release --no-restore --filter FullyQualifiedName~DelimitedDatasetTests --verbosity minimal`) compiled affected projects and passed 11 tests, none skipped. No separate build or broad suite run. JSON/JSONL, preview/mapping, explicit conversion/null policies, stable case IDs, and transactional import remain; no Phase 4 acceptance claim. Existing unrelated whitespace changes are preserved.
+
 This is a working foundation increment, not completion of the full implementation plan. Neither Milestone A nor Milestone B has been reached.
 
 ## Completed behavior

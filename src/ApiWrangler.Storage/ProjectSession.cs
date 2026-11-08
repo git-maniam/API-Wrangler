@@ -115,55 +115,112 @@ internal sealed class ProjectSession : IProjectSession
     public async Task SaveAsync(IReadOnlyList<AssetEdit> edits, CancellationToken token = default)
     {
         await gate.WaitAsync(token).ConfigureAwait(false);
+        try { await SaveCoreAsync(edits, token).ConfigureAwait(false); }
+        finally { gate.Release(); }
+    }
+
+    private async Task SaveCoreAsync(IReadOnlyList<AssetEdit> edits, CancellationToken token)
+    {
+        EnsureWritable();
+        EnsureNoGitIntegration();
+        var view = await ReadAsync(token).ConfigureAwait(false);
+        var newerVersion = view.Assets.FirstOrDefault(asset =>
+            asset.Content["schemaVersion"] is JsonValue version &&
+            version.TryGetValue<int>(out var schemaVersion) && schemaVersion > 1);
+        if (newerVersion is not null)
+            throw new ProjectValidationException([new(newerVersion.Path, "/schemaVersion",
+                    "This asset uses a newer schema version and is read-only in this application.", newerVersion.Id)]);
+        if (!view.IsValid) throw new ProjectValidationException(view.Diagnostics);
+        var manifest = view.Assets.Single(a => a.Kind == AssetKind.Manifest).Content;
+        var updated = view.Assets.ToDictionary(a => a.Path, StringComparer.OrdinalIgnoreCase);
+        var unique = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var files = new List<FileChange>();
+        foreach (var edit in edits)
+        {
+            if (!unique.Add(edit.Path)) throw new ArgumentException("A transaction cannot edit the same file twice.", nameof(edits));
+            var kind = AssetValidator.KindFor(edit.Path) ?? throw new ArgumentException("Only supported project asset definitions can be saved.", nameof(edits));
+            ProjectPaths.Resolve(Root, edit.Path);
+            var baseDirectory = kind switch
+            {
+                AssetKind.Collection or AssetKind.Folder or AssetKind.Request => manifest["paths"]!["collections"]!.GetValue<string>(),
+                AssetKind.Environment => manifest["paths"]!["environments"]!.GetValue<string>(),
+                AssetKind.Dataset => manifest["paths"]!["datasets"]!.GetValue<string>(),
+                _ => null
+            };
+            if (baseDirectory is not null && !edit.Path.StartsWith(baseDirectory + "/", StringComparison.Ordinal))
+                throw new ArgumentException("Asset location does not match its configured project directory.", nameof(edits));
+            updated.TryGetValue(edit.Path, out var old);
+            if (old?.Hash != edit.ExpectedHash) throw new ProjectConflictException(edit.Path);
+            if (old is not null)
+            {
+                var field = kind == AssetKind.Manifest ? "projectId" : "id";
+                if (!JsonNode.DeepEquals(old.Content[field], edit.Content[field])) throw new ArgumentException("An entity's immutable ID cannot change.", nameof(edits));
+                if (JsonNode.DeepEquals(old.Content, edit.Content)) continue;
+            }
+            var bytes = CanonicalJson.Serialize(edit.Content);
+            if (bytes.Length > MaxDefinitionBytes) throw new IOException("Definition exceeds 16 MiB. Use file-backed bodies/datasets.");
+            updated[edit.Path] = new(edit.Path, kind, (JsonObject)edit.Content.DeepClone(), CanonicalJson.Hash(bytes));
+            files.Add(new(edit.Path, bytes, edit.ExpectedHash));
+        }
+        var problems = validator.Validate(Root, updated.Values.ToArray());
+        if (problems.Count != 0) throw new ProjectValidationException(problems);
+        EnsureNoGitIntegration();
+        await Transactions.ApplyAsync(files, token).ConfigureAwait(false);
+    }
+
+    public async Task ImportDatasetFileAsync(AssetEdit definition, Stream source, string sha256, CancellationToken token = default)
+    {
+        await gate.WaitAsync(token).ConfigureAwait(false);
+        string? stage = null;
         try
         {
             EnsureWritable();
             EnsureNoGitIntegration();
             var view = await ReadAsync(token).ConfigureAwait(false);
-            var newerVersion = view.Assets.FirstOrDefault(asset =>
-                asset.Content["schemaVersion"] is JsonValue version &&
-                version.TryGetValue<int>(out var schemaVersion) && schemaVersion > 1);
-            if (newerVersion is not null)
-                throw new ProjectValidationException([new(newerVersion.Path, "/schemaVersion",
-                    "This asset uses a newer schema version and is read-only in this application.", newerVersion.Id)]);
             if (!view.IsValid) throw new ProjectValidationException(view.Diagnostics);
-            var manifest = view.Assets.Single(a => a.Kind == AssetKind.Manifest).Content;
-            var updated = view.Assets.ToDictionary(a => a.Path, StringComparer.OrdinalIgnoreCase);
-            var unique = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            var files = new List<FileChange>();
-            foreach (var edit in edits)
+            var directory = view.Assets.Single(a => a.Kind == AssetKind.Manifest).Content["paths"]!["datasets"]!.GetValue<string>();
+            if (AssetValidator.KindFor(definition.Path) != AssetKind.Dataset || !definition.Path.StartsWith(directory + "/", StringComparison.Ordinal))
+                throw new ArgumentException("Dataset must be stored under the configured dataset directory.", nameof(definition));
+            if (view.Assets.FirstOrDefault(a => a.Path == definition.Path)?.Hash != definition.ExpectedHash)
+                throw new ProjectConflictException(definition.Path);
+            var target = ProjectPaths.Resolve(Root, definition.Path);
+            var parent = Path.GetDirectoryName(target)!;
+            Directory.CreateDirectory(parent);
+            var fileName = $"source-{Guid.NewGuid():N}.jsonl";
+            var published = Path.Combine(parent, fileName);
+            stage = published + ".tmp";
+            using var hash = System.Security.Cryptography.IncrementalHash.CreateHash(System.Security.Cryptography.HashAlgorithmName.SHA256);
+            await using (var output = new FileStream(stage, FileMode.CreateNew, FileAccess.Write, FileShare.None, 65536, FileOptions.Asynchronous))
             {
-                if (!unique.Add(edit.Path)) throw new ArgumentException("A transaction cannot edit the same file twice.", nameof(edits));
-                var kind = AssetValidator.KindFor(edit.Path) ?? throw new ArgumentException("Only supported project asset definitions can be saved.", nameof(edits));
-                ProjectPaths.Resolve(Root, edit.Path);
-                var baseDirectory = kind switch
+                var buffer = new byte[65536];
+                long total = 0;
+                int count;
+                while ((count = await source.ReadAsync(buffer, token).ConfigureAwait(false)) > 0)
                 {
-                    AssetKind.Collection or AssetKind.Folder or AssetKind.Request => manifest["paths"]!["collections"]!.GetValue<string>(),
-                    AssetKind.Environment => manifest["paths"]!["environments"]!.GetValue<string>(),
-                    AssetKind.Dataset => manifest["paths"]!["datasets"]!.GetValue<string>(),
-                    _ => null
-                };
-                if (baseDirectory is not null && !edit.Path.StartsWith(baseDirectory + "/", StringComparison.Ordinal))
-                    throw new ArgumentException("Asset location does not match its configured project directory.", nameof(edits));
-                updated.TryGetValue(edit.Path, out var old);
-                if (old?.Hash != edit.ExpectedHash) throw new ProjectConflictException(edit.Path);
-                if (old is not null)
-                {
-                    var field = kind == AssetKind.Manifest ? "projectId" : "id";
-                    if (!JsonNode.DeepEquals(old.Content[field], edit.Content[field])) throw new ArgumentException("An entity's immutable ID cannot change.", nameof(edits));
-                    if (JsonNode.DeepEquals(old.Content, edit.Content)) continue;
+                    total += count;
+                    if (total > 1024L * 1024 * 1024) throw new IOException("Dataset exceeds the 1 GiB import limit.");
+                    hash.AppendData(buffer, 0, count);
+                    await output.WriteAsync(buffer.AsMemory(0, count), token).ConfigureAwait(false);
                 }
-                var bytes = CanonicalJson.Serialize(edit.Content);
-                if (bytes.Length > MaxDefinitionBytes) throw new IOException("Definition exceeds 16 MiB. Use file-backed bodies/datasets.");
-                updated[edit.Path] = new(edit.Path, kind, (JsonObject)edit.Content.DeepClone(), CanonicalJson.Hash(bytes));
-                files.Add(new(edit.Path, bytes, edit.ExpectedHash));
+                await output.FlushAsync(token).ConfigureAwait(false);
+                output.Flush(flushToDisk: true);
             }
-            var problems = validator.Validate(Root, updated.Values.ToArray());
-            if (problems.Count != 0) throw new ProjectValidationException(problems);
-            EnsureNoGitIntegration();
-            await Transactions.ApplyAsync(files, token).ConfigureAwait(false);
+            if (!string.Equals(Convert.ToHexStringLower(hash.GetHashAndReset()), sha256, StringComparison.Ordinal))
+                throw new IOException("Prepared dataset content changed; preview again.");
+            token.ThrowIfCancellationRequested();
+            File.Move(stage, published);
+            stage = null;
+            var content = (JsonObject)definition.Content.DeepClone();
+            content["source"] = new JsonObject { ["type"] = "jsonl", ["path"] = fileName, ["sha256"] = sha256 };
+            // Publish immutable content first, then atomically publish its reference. A crash may
+            // leave an unreferenced source, but cannot alter the previous definition or source.
+            await SaveCoreAsync([definition with { Content = content }], token).ConfigureAwait(false);
         }
-        finally { gate.Release(); }
+        finally
+        {
+            try { if (stage is not null && File.Exists(stage)) File.Delete(stage); }
+            finally { gate.Release(); }
+        }
     }
 
     public async Task<SnapshotInfo> SnapshotAsync(CancellationToken token = default) =>
