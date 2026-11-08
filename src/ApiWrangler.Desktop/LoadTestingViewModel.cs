@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Net.Http;
 using ApiWrangler.Application;
 using ApiWrangler.Domain;
 using CommunityToolkit.Mvvm.ComponentModel;
