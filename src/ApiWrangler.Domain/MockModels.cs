@@ -48,7 +48,20 @@ public sealed record MockServerConfiguration(
     string Host = "127.0.0.1",
     int Port = 0, // 0 = dynamic
     bool AllowExternalBinding = false,
-    string? DefaultNotFoundMessage = "No matching mock rule found."
+    string? DefaultNotFoundMessage = "No matching mock rule found.",
+    string? AuthToken = null,
+    string? AdminApiKey = null,
+    bool RequireAuthentication = false,
+    int MaxLogRetention = 1000
+);
+
+public sealed record HostedMockDeploymentStatus(
+    bool IsListening,
+    string? ListeningUrl,
+    int ActiveRulesCount,
+    int RecordedLogCount,
+    bool ExternalBindingEnabled,
+    bool AuthenticationEnforced
 );
 
 public sealed record MockMatchResult(
