@@ -1,6 +1,6 @@
 # Phase 5.1 progress
 
-Checkpoint: 2026-11-08 16:10 IST, branch `phase5-repository-workflows`.
+Implementation and verification checkpoint: 2026-11-08 16:10 IST, branch `phase5-repository-workflows`, commit `873b53e`. Tracking refresh: 2026-11-08 17:47 IST; no code changes or tests were run in this refresh. P5 #22 and P5.1 #23 remain In progress; evidence was resynchronized to both Project 4 tickets.
 
 ## Implemented in this checkpoint
 
