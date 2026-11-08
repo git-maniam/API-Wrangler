@@ -22,6 +22,7 @@ public partial class DatasetImportViewModel(Func<IProjectSession?> getSession) :
     [ObservableProperty] private string mappings = "[]";
     [ObservableProperty] private bool addCaseIds;
     [ObservableProperty] private string previewText = "";
+    [ObservableProperty] private string previewHighlighting = "CSV";
     [ObservableProperty] private string status = "Choose a source, prepare a preview, then accept the import.";
     [ObservableProperty, NotifyPropertyChangedFor(nameof(IsIdle))] private bool isBusy;
     public bool IsIdle => !IsBusy;
@@ -34,6 +35,11 @@ public partial class DatasetImportViewModel(Func<IProjectSession?> getSession) :
     private string preparedName = "";
     private Guid datasetId;
     private string Options => JsonSerializer.Serialize(new { SourcePath, DatasetName, Format, EncodingName, Delimiter, CultureName, Mappings, AddCaseIds });
+
+    partial void OnFormatChanged(string value)
+    {
+        PreviewHighlighting = DatasetPreviewFormatting.DetectHighlighting(value);
+    }
 
     [RelayCommand]
     private void Browse()

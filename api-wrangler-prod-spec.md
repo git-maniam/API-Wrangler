@@ -2532,11 +2532,12 @@ Do not begin distributed infrastructure before these decisions are settled.
 
 **Implementation checkpoint (2026-11-07):** Phase 1 project discovery, versioned schemas, canonical assets, journaled persistence, watcher/recovery behavior, snapshots, local settings, and a desktop asset editor are implemented in PR #57. The five Phase 1 exit checks pass locally. After the Linux writer-lease fix, hosted Windows and Linux headless jobs each passed 30 tests with zero skipped; desktop build, format, and publish passed. ADR-0002 defines version 1 as the first supported format. P1.1-P1.3 are In review; P1.4 manual project-editor accessibility acceptance is In progress. The phase epic remains In progress until review, acceptance, and merge. See docs/implementation-status.md and docs/phase-1-exit-review.md.
 
-#### Restart bookmark (updated 2026-11-08 11:40 IST)
+#### Restart bookmark (updated 2026-11-08 11:48 IST)
 
-Resumed autonomously. P4.1 (#20) is complete, verified, merged into `main` via PR #69 (`e99db25`), and closed with `Done` status in GitHub Project 4. Branch `phase4-editable-grid` active for P4.2 (#21: "Editable virtualized grid, clipboard workflows, and export"). P4.2 status set to `In progress` in Project 4; P4 epic (#19) remains `In progress`.
-Active work: implementing virtualized grid editing (cell edit, undo/redo stack, fill down, duplicate case, row insertion/deletion), clipboard parsing and pasting (TSV/CSV/JSON/cURL recognition, non-execution of commands), spreadsheet-safe CSV export (neutralizing formula prefixes `=`, `+`, `-`, `@`), and external result attachments with provenance tracking.
-Verified: 139 automated tests passed in Release configuration; CI checks on PR #69 passed cleanly across Ubuntu, Windows headless, and Desktop smoke. Next: execute P4.2 implementation plan, write integration/unit tests, perform batched verification, open PR, and synchronize project status.
+P4.1 (#20) and P4.2 (#21) are 100% complete, verified, merged into `main` (PR #69 `e99db25` and PR #70 `c0eabd2`), and marked `Done` in GitHub Project 4.
+Branch `phase4-preview-highlighting` active for P4.3 (#55: "Color-highlighted CSV and JSON dataset previews"). P4.3 set to `In progress` in Project 4; Phase 4 epic (#19) remains `In progress`.
+Active work: implementing color-highlighted and token-aware previews for CSV, TSV, JSON, and JSON Lines datasets in import, mapping, and source preview editors using AvalonEdit syntax highlighting definitions with persisted font/theme settings.
+Verified: 145 automated tests passed; Desktop smoke passed; all CI checks passed on PR #69 and PR #70. Next: implement P4.3 token-aware dataset preview highlighting, verify bounded execution, run batched test suite, open PR, and complete Phase 4 exit review.
 
 Published checkpoint: implementation `9156d80` pushed; PR #69 is now non-draft and P4.1 (#20) is In review. P4 (#19) remains In progress. Hosted desktop/Windows/Linux checks were pending at 11:25 IST. Resume by checking those results and PR review before merge/completion; local evidence is 62 passing tests and the passing desktop dataset smoke described below. No tests/builds rerun for this final metadata refresh. Next 30-minute refresh is due by 11:55 IST if execution is active.
 

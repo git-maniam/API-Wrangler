@@ -200,7 +200,12 @@
                         <Button Content="Cancel preparation" Command="{Binding PrepareCancelCommand}" />
                         <Button Content="Cancel import" Command="{Binding AcceptCancelCommand}" Margin="8,0" />
                     </WrapPanel>
-                    <TextBox Grid.Row="5" Text="{Binding PreviewText, Mode=OneWay}" IsReadOnly="True" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" FontFamily="Consolas" AutomationProperties.Name="Prepared dataset preview" />
+                    <editor:TextEditor Grid.Row="5" local:EditorBinding.Text="{Binding PreviewText, Mode=OneWay}"
+                        local:EditorBinding.SyntaxHighlighting="{Binding PreviewHighlighting}"
+                        IsReadOnly="True" ShowLineNumbers="True"
+                        FontFamily="{Binding DataContext.EditorFontFamily, RelativeSource={RelativeSource AncestorType=Window}}"
+                        FontSize="{Binding DataContext.EditorFontSize, RelativeSource={RelativeSource AncestorType=Window}}"
+                        AutomationProperties.Name="Prepared dataset preview" />
                     <TextBlock Grid.Row="6" Text="{Binding Status}" TextWrapping="Wrap" Margin="0,8" AutomationProperties.LiveSetting="Polite" />
                 </Grid>
             </TabItem>

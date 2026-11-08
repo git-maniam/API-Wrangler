@@ -6,6 +6,11 @@ namespace ApiWrangler.Desktop;
 
 public static class EditorBinding
 {
+    static EditorBinding()
+    {
+        DatasetHighlightingDefinitions.RegisterAll();
+    }
+
     public static readonly DependencyProperty TextProperty = DependencyProperty.RegisterAttached("Text", typeof(string),
         typeof(EditorBinding), new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, Changed));
     private static readonly DependencyProperty AttachedProperty = DependencyProperty.RegisterAttached("Attached", typeof(bool),
