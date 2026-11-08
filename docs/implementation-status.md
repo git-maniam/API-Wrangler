@@ -1,5 +1,17 @@
 # Implementation status
 
+## Phase 11.1 complete: Distributed worker coordination and truthful aggregation (2026-11-09 00:41 IST)
+
+Phase 11.1 is implemented and verified on branch `phase11-distributed-coordination`:
+- P11.1 (Issue #44):
+  - Domain models (`DistributedLoadModels.cs`): `DistributedWorkerAssignment`, `DistributedLoadPlan`, `DistributedWorkerReport`, and `DistributedLoadSummary`.
+  - Application services (`DistributedLoadCoordinator.cs`):
+    - `PlanDistribution`: Multi-worker partitioning of virtual users, target arrival rate (RPS), and contiguous input slice boundaries (`InputSliceStartIndex`, `InputSliceCount`), with coordinated synchronized start timestamps.
+    - `AggregateResults`: Strict snapshot hash matching (rejects unaligned or mismatched worker snapshots), truthful multi-worker histogram pooling via `LoadExecutionEngine.MergeHistograms` to prevent percentile averaging corruption, missing worker loss tracking (`PartialWorkerLoss`, `MissingWorkerIds`), unskewed achieved throughput reporting, error categorization pooling, and multi-worker threshold evaluation.
+  - Integration tests (`DistributedLoadTests.cs`): 5 tests verifying even input slice and VU allocation, rejection of mismatched worker snapshots, truthful histogram aggregation without averaging, worker loss visibility, and multi-worker threshold evaluation.
+  - Full automated test suite: 278 passed, 0 failed, 0 skipped. `scripts/Test-Desktop.ps1` passed cleanly (`{"editorRoundTrip":true,"httpRoundTrip":true,"cancellation":true,"dispatcherTicksDuringRequest":9}`). `dotnet format --verify-no-changes` passed.
+  - Documentation: Verified in `docs/phase-11.1-progress.md`.
+
 ## Phase 10 complete: Unattended execution and monitoring (2026-11-09 00:30 IST)
 
 Phase 10 is fully implemented and certified complete on branch `phase10-scheduler-notifications`:
