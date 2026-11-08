@@ -2532,27 +2532,27 @@ Do not begin distributed infrastructure before these decisions are settled.
 
 **Implementation checkpoint (2026-11-07):** Phase 1 project discovery, versioned schemas, canonical assets, journaled persistence, watcher/recovery behavior, snapshots, local settings, and a desktop asset editor are implemented in PR #57. The five Phase 1 exit checks pass locally. After the Linux writer-lease fix, hosted Windows and Linux headless jobs each passed 30 tests with zero skipped; desktop build, format, and publish passed. ADR-0002 defines version 1 as the first supported format. P1.1-P1.3 are In review; P1.4 manual project-editor accessibility acceptance is In progress. The phase epic remains In progress until review, acceptance, and merge. See docs/implementation-status.md and docs/phase-1-exit-review.md.
 
-#### Restart bookmark (updated 2026-11-09 00:52 IST)
+#### Restart bookmark (updated 2026-11-09 01:05 IST)
 
-Phase 11 (Distributed load and hosted mocks) is fully implemented and certified complete on branch `phase11-hosted-mocks`:
-- P11.2 (Issue #45):
-  - Domain models (`MockModels.cs`): Enhanced `MockServerConfiguration` (`AuthToken`, `AdminApiKey`, `RequireAuthentication`, `MaxLogRetention`) and added `HostedMockDeploymentStatus`.
-  - Application services (`MockEngine.cs`):
-    - Mandatory authentication for remote exposure: `AllowExternalBinding` requires `AuthToken` or startup is aborted with `InvalidOperationException`.
-    - Token authentication: Constant-time validation (`CryptographicOperations.FixedTimeEquals`) supporting both `Authorization: Bearer <token>` and `X-Api-Key: <token>`, returning 401 Unauthorized on invalid/missing credentials.
-    - Administrative control plane: `GET /__admin/health` (public readiness probe), `GET /__admin/rules`, `GET /__admin/logs`, and `POST /__admin/state/reset` for test isolation.
-    - Bounded log retention: In-memory logs capped at `MaxLogRetention` using FIFO eviction to prevent memory leakage in long-running services.
-    - Semantic equivalence: Local loopback and remote hosted mock deployments execute identical rules, deterministic precedence, scenario state transitions, and fault simulations.
-  - CLI operations: Added `mock serve` command to `api-wrangler` CLI (`Program.cs`) for headless mock hosting in Docker/Linux/Windows containers.
-  - Operational documentation: Published `docs/operations/hosted-mock-deployment.md`.
-  - Integration tests (`HostedMockTests.cs`): 5 tests verifying mandatory authentication on external binding, unauthorized request rejection, semantic equivalence between local and hosted mocks, administrative endpoints and state reset, and bounded log retention.
-- P11.1 (Issue #44):
-  - Domain models (`DistributedLoadModels.cs`): `DistributedWorkerAssignment`, `DistributedLoadPlan`, `DistributedWorkerReport`, and `DistributedLoadSummary`.
-  - Application services (`DistributedLoadCoordinator.cs`): Multi-worker partitioning, synchronized start, strict snapshot hash matching, truthful histogram pooling without percentile averaging corruption, missing worker loss tracking, and multi-worker threshold evaluation.
-  - Integration tests (`DistributedLoadTests.cs`): 5 tests passed.
-- Full automated test suite: 283 passed, 0 failed, 0 skipped. `scripts/Test-Desktop.ps1` passed cleanly. `dotnet format --verify-no-changes` passed.
-- Documentation: Verified in `docs/phase-11.1-progress.md`, `docs/phase-11.2-progress.md`, and `docs/phase-11-exit-review.md`.
-- Next work: push branch `phase11-hosted-mocks`, open PR for Issue #45, move ticket in Project 4 to In review, await CI checks, squash-merge into `main`, update Issue #45 and Phase Epic #43 to Done in Project 4, and advance to Phase 12 (Playwright and visual workflows).
+Phase 12.1 (Playwright package, traffic matching, and combined results) is implemented and verified on branch `phase12-playwright-traffic`:
+- P12.1 (Issue #47):
+  - Domain models (`PlaywrightModels.cs`): `CapturedTrafficRecord`, `TrafficMatchResult`, `TrafficAssertionRule`, `CapturedTrafficValidationResult`, `DependencyEdge`, `TrafficDependencyMap`, `PlaywrightCombinedScenarioResult`, and `PlaywrightSummaryReport`.
+  - TypeScript integration (`workers/node/src/playwright.ts`):
+    - `PlaywrightTrafficCollector`: Listens to `page.on('request')` and `page.on('response')`, calculates request durations, redacts credentials and sensitive JSON values, bounds body payloads (default 256 KiB), flags service workers, cached responses, and WebSocket upgrades, and writes capture files.
+    - `attachApiWranglerCollector`: Helper for one-line attachment to Playwright pages.
+  - Application services (`PlaywrightTrafficService.cs`):
+    - `RedactTraffic`: Redacts headers (`Authorization`, `Cookie`, `Set-Cookie`, `X-Api-Key`, etc.) and sensitive JSON keys (`password`, `token`, `secret`, `apiKey`), truncating payloads exceeding size limits.
+    - `MatchTraffic`: Specificity scoring for origins, methods, exact/parameterized/wildcard path templates, and headers, with deterministic precedence and ambiguity detection.
+    - `ValidateTrafficRecord`: Evaluates response status codes, headers, and body JSON properties (`Equals`, `LessThan`, `GreaterThan`, `Contains`, `Regex`).
+    - `EvaluateScenario`: Unifies UI and API assertion outcomes. When a UI scenario passes but an API assertion fails, marks combined outcome as `Failed`, designates failure source as `API`, and explicitly names the failing browser scenario. Discloses encountered browser limitations (`BrowserHttpCache`, `ServiceWorkerInterception`, `WebSocketTraffic`, `BoundedPayloadLimit`).
+    - `BuildDependencyMap`: Generates sequential API dependency graph and call frequency maps.
+    - `GenerateDraftRequests`: Bootstraps draft `HttpRequestDefinition` assets from unmatched traffic.
+    - `GenerateCiArtifacts`: Emits machine-readable `playwright-api-report.json` and formatted `playwright-api-summary.md` with scenario breakdown tables.
+  - CLI operations: Added `playwright evaluate` command to `api-wrangler` CLI (`Program.cs`) for headless CI evaluation of captured test traffic.
+  - Integration tests (`PlaywrightTrafficTests.cs`): 4 tests verifying passing UI with failing API assertion naming the scenario, ambiguous/unmatched traffic surfacing and secret redaction, explicit limitation disclosure and CI artifact generation, and dependency mapping/draft request generation.
+  - Full automated test suite: 288 passed, 0 failed, 0 skipped. `scripts/Test-Desktop.ps1` passed cleanly. `dotnet format --verify-no-changes` passed.
+  - Documentation: Verified in `docs/phase-12.1-progress.md`.
+- Next work: push branch `phase12-playwright-traffic`, open PR for Issue #47, move ticket in Project 4 to In review, await CI checks, squash-merge into `main`, mark Issue #47 Done in Project 4, and advance to P12.2 (Issue #48: Text-backed visual flows using shared execution primitives).
 Published checkpoint: implementation `9156d80` pushed; PR #69 is now non-draft and P4.1 (#20) is In review. P4 (#19) remains In progress. Hosted desktop/Windows/Linux checks were pending at 11:25 IST. Resume by checking those results and PR review before merge/completion; local evidence is 62 passing tests and the passing desktop dataset smoke described below. No tests/builds rerun for this final metadata refresh. Next 30-minute refresh is due by 11:55 IST if execution is active.
 
 Current verified handoff: P4.1 file-backed import and desktop prepare/accept workflow implemented on `phase4-delimited-reader`, PR #69 being submitted for review. `PreparedDatasetFile` streams validated rows to a temporary spool; `ImportDatasetFileAsync` holds the project writer gate, verifies the prepared hash, publishes immutable JSONL then atomically saves its definition. Full-source mappings/culture/null/date conversions use the same streaming converter as preview. Desktop supports CSV/TSV/JSON/JSONL, UTF-8/UTF-16 LE/Windows-1252, explicit case-ID addition, cancellation and stale-preview rejection. Source changes after preparation cannot alter accepted rows. Release solution build succeeded; 62 dataset/persistence tests passed, 0 skipped. Desktop dataset smoke passed and screenshot inspected (`artifacts/dataset-ui-smoke/dataset-import.png`). A smoke-only compile error referencing the wrong tab name was corrected and the desktop rebuild/smoke passed. Changed-file formatting only afterward; no broad retest. Prior unverified notes below are superseded. Next: inspect PR #69 review/CI, resolve findings; do not mark P4.1 Done until acceptance and merge. P4 epic stays In progress; then continue P4.2 (#21) grid/clipboard work. Preserve 14 unrelated whitespace edits. No external blocker. Limits and crash-orphan behavior: `docs/dataset-import.md`.
