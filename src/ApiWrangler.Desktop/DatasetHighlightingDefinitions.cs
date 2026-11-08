@@ -87,3 +87,4 @@ public static class DatasetHighlightingDefinitions
         </SyntaxDefinition>
         """;
 }
+

@@ -45,3 +45,4 @@ public sealed record SpreadsheetExportOptions(
     bool SpreadsheetSafe = true,
     char Delimiter = ',',
     bool IncludeHeaders = true);
+

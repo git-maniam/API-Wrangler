@@ -274,3 +274,4 @@ public static class ClipboardFormatDetector
         return cells;
     }
 }
+
