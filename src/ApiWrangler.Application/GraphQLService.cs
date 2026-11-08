@@ -458,4 +458,146 @@ public sealed class GraphQLService
             Duration: sw.Elapsed
         );
     }
+
+    public static GraphQLFormatResult FormatDocument(string document)
+    {
+        if (string.IsNullOrWhiteSpace(document))
+        {
+            return new GraphQLFormatResult(true, document, Array.Empty<string>());
+        }
+
+        try
+        {
+            var sb = new StringBuilder();
+            int indent = 0;
+            bool inString = false;
+            bool inComment = false;
+            bool isEscaped = false;
+            char stringChar = '"';
+            var lines = document.Replace("\r\n", "\n").Split('\n');
+            var errors = new List<string>();
+
+            // Clean, format, and indent tokens
+            for (int l = 0; l < lines.Length; l++)
+            {
+                string line = lines[l].Trim();
+                if (string.IsNullOrEmpty(line)) continue;
+
+                // Handle comments
+                if (line.StartsWith('#'))
+                {
+                    sb.Append(new string(' ', indent * 2));
+                    sb.AppendLine(line);
+                    continue;
+                }
+
+                var lineBuilder = new StringBuilder();
+                for (int i = 0; i < line.Length; i++)
+                {
+                    char c = line[i];
+
+                    if (inComment)
+                    {
+                        lineBuilder.Append(c);
+                        continue;
+                    }
+
+                    if (inString)
+                    {
+                        lineBuilder.Append(c);
+                        if (c == '\\' && !isEscaped)
+                        {
+                            isEscaped = true;
+                        }
+                        else
+                        {
+                            if (c == stringChar && !isEscaped)
+                            {
+                                inString = false;
+                            }
+                            isEscaped = false;
+                        }
+                        continue;
+                    }
+
+                    if (c == '"')
+                    {
+                        inString = true;
+                        stringChar = '"';
+                        lineBuilder.Append(c);
+                        continue;
+                    }
+
+                    if (c == '#')
+                    {
+                        inComment = true;
+                        lineBuilder.Append(c);
+                        continue;
+                    }
+
+                    if (c == '{')
+                    {
+                        if (lineBuilder.Length > 0 && lineBuilder[^1] != ' ')
+                        {
+                            lineBuilder.Append(' ');
+                        }
+                        lineBuilder.Append("{\n");
+                        indent++;
+                        sb.Append(new string(' ', Math.Max(0, indent - 1) * 2));
+                        sb.Append(lineBuilder.ToString());
+                        lineBuilder.Clear();
+                        sb.Append(new string(' ', indent * 2));
+                        continue;
+                    }
+
+                    if (c == '}')
+                    {
+                        if (lineBuilder.Length > 0 && !string.IsNullOrWhiteSpace(lineBuilder.ToString()))
+                        {
+                            sb.Append(new string(' ', indent * 2));
+                            sb.AppendLine(lineBuilder.ToString().Trim());
+                            lineBuilder.Clear();
+                        }
+                        indent = Math.Max(0, indent - 1);
+                        sb.Append(new string(' ', indent * 2));
+                        sb.AppendLine("}");
+                        continue;
+                    }
+
+                    lineBuilder.Append(c);
+                }
+
+                inComment = false;
+                string remaining = lineBuilder.ToString().Trim();
+                if (!string.IsNullOrEmpty(remaining))
+                {
+                    sb.Append(new string(' ', indent * 2));
+                    sb.AppendLine(remaining);
+                }
+            }
+
+            if (inString)
+            {
+                errors.Add("Unterminated string literal in GraphQL document.");
+            }
+
+            if (indent != 0)
+            {
+                errors.Add($"Mismatched braces: nesting level ended at {indent}.");
+            }
+
+            string formatted = sb.ToString().TrimEnd() + Environment.NewLine;
+            return new GraphQLFormatResult(errors.Count == 0, errors.Count == 0 ? formatted : document, errors);
+        }
+        catch (Exception ex)
+        {
+            return new GraphQLFormatResult(false, document, [$"Formatting failed: {ex.Message}"]);
+        }
+    }
 }
+
+public sealed record GraphQLFormatResult(
+    bool Success,
+    string FormattedText,
+    IReadOnlyList<string> Diagnostics
+);

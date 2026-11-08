@@ -85,6 +85,21 @@ public partial class ProtocolExpansionViewModel : ObservableObject
     }
 
     [RelayCommand]
+    public void FormatGraphQLDocument()
+    {
+        var result = GraphQLService.FormatDocument(GraphQLQuery);
+        if (result.Success)
+        {
+            GraphQLQuery = result.FormattedText;
+            GraphQLStatus = "Document formatted.";
+        }
+        else
+        {
+            GraphQLStatus = $"Formatting warning: {string.Join("; ", result.Diagnostics)}";
+        }
+    }
+
+    [RelayCommand]
     public void ParseProto()
     {
         try

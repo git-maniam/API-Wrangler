@@ -317,5 +317,33 @@ public sealed class GraphQLAndGrpcTests
         Assert.Equal("Deadline exceeded by client timeout.", result.StatusDetail);
         Assert.Equal(GrpcTranscriptEventType.Cancelled, result.Transcript[^1].EventType);
     }
+
+    [Fact]
+    public void GraphQL_FormatDocument_FormatsIndentationAndBraces()
+    {
+        string raw = "query GetUser($id: ID!) { user(id: $id) { id name email } }";
+        var result = GraphQLService.FormatDocument(raw);
+
+        Assert.True(result.Success);
+        Assert.Empty(result.Diagnostics);
+        Assert.Contains("query GetUser($id: ID!) {", result.FormattedText);
+        Assert.Contains("  user(id: $id) {", result.FormattedText);
+        Assert.Contains("    id name email", result.FormattedText);
+        Assert.Contains("  }", result.FormattedText);
+        Assert.Contains("}", result.FormattedText);
+    }
+
+    [Fact]
+    public void GraphQL_FormatDocument_MismatchedBraces_ReturnsDiagnostic()
+    {
+        string invalid = "query GetUser { user { id name }";
+        var result = GraphQLService.FormatDocument(invalid);
+
+        Assert.False(result.Success);
+        Assert.NotEmpty(result.Diagnostics);
+        Assert.Contains("Mismatched braces", result.Diagnostics[0]);
+        // Formatter preserves original text if invalid
+        Assert.Equal(invalid, result.FormattedText);
+    }
 }
 
