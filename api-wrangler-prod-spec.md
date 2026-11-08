@@ -2532,24 +2532,20 @@ Do not begin distributed infrastructure before these decisions are settled.
 
 **Implementation checkpoint (2026-11-07):** Phase 1 project discovery, versioned schemas, canonical assets, journaled persistence, watcher/recovery behavior, snapshots, local settings, and a desktop asset editor are implemented in PR #57. The five Phase 1 exit checks pass locally. After the Linux writer-lease fix, hosted Windows and Linux headless jobs each passed 30 tests with zero skipped; desktop build, format, and publish passed. ADR-0002 defines version 1 as the first supported format. P1.1-P1.3 are In review; P1.4 manual project-editor accessibility acceptance is In progress. The phase epic remains In progress until review, acceptance, and merge. See docs/implementation-status.md and docs/phase-1-exit-review.md.
 
-#### Restart bookmark (updated 2026-11-08 22:08 IST)
+#### Restart bookmark (updated 2026-11-08 22:20 IST)
 
-Phase 6.2 (Postman compatibility adapter and fixtures) is 100% complete, verified on CI, and merged into `main` via PR #74 (`c698e1e`). Issue #28 is closed and marked Done in GitHub Project 4.
-
-Phase 6.3 (Transactional Postman/OpenAPI/cURL/HAR import and supported exports) is In progress on branch `phase6-import-export`:
+Phase 6.3 (Transactional Postman/OpenAPI/cURL/HAR import and supported exports) is complete and verified on branch `phase6-import-export`:
 - P6.3 (Issue #29):
-  - In progress in GitHub Project 4.
-  - Implemented:
-    - `CurlParser`: safe argument tokenization, parses methods, URLs, headers, bodies (raw & formdata), basic auth, redirect/TLS options without invoking any shell or subprocess.
-    - `PostmanImporter`: imports Postman Collection v2.1 and Environments, recurses folder hierarchies, maps query/headers/auth/bodies/scripts, detects sensitive variables for `.local/` secret extraction guidance, and flags unsupported Postman features.
-    - `PostmanExporter`: exports API Wrangler collections and environments to compatible Postman v2.1 format, with secret redaction and export reporting.
-    - `OpenApiImporter`: parses OpenAPI 3.0/3.1 specs, groups endpoints into folders by tags, creates requests with query/header/schema parameters, extracts server URLs into baseUrl collection variable, and generates entity counts.
-  - Verification: Clean compilation with 0 warnings/errors (`dotnet build`). All changes committed (`e87eb9a`) and pushed to `origin/phase6-import-export`.
-  - Remaining work for P6.3:
-    1. Implement `HarImporter` for HTTP Archive 1.2 files.
-    2. Implement `ProjectImportService` for transactional preview, temporary staging, schema/reference validation, atomic publication into `ProjectSession`, and `reports/import-report-*.json` generation.
-    3. Add integration test suite (`ProjectImportExportTests.cs`) covering Postman v2.1 round-trip fidelity, cURL parsing, OpenAPI/HAR imports, secret extraction guidance, transactional failure rollback, and desktop import integration.
-    4. Verify full test suite, format verification, PR creation, CI verification, merge, close Issue #29 and Epic #26, certify Milestone B.
+  - `CurlParser`: pure argument string tokenization parsing methods, URLs, headers, bodies (raw & form-data), basic auth, redirect/TLS options without invoking any shell or subprocess.
+  - `PostmanImporter`: imports Postman Collection v2.1 and Environments, recurses folder hierarchies, maps query/headers/auth/bodies/scripts, detects sensitive variables for `.local/` secret extraction guidance, and flags unsupported Postman features.
+  - `PostmanExporter`: exports API Wrangler collections and environments to compatible Postman v2.1 format, with secret redaction and export reporting.
+  - `OpenApiImporter`: parses OpenAPI 3.0/3.1 specs, groups endpoints into folders by tags, creates requests with query/header/schema parameters, extracts server URLs into baseUrl collection variable, and generates entity counts.
+  - `HarImporter`: parses HTTP Archive 1.2 entries into collection requests with methods, URLs, headers, query params, and postData.
+  - `ProjectImportService`: 10-step transactional import preview, isolated staging, schema/reference validation via `AssetValidator`, atomic publication via `IProjectSession.SaveAsync`, and saving `reports/import-report-<id>.json`. Guarantees failed imports never partially overwrite or corrupt valid project assets.
+  - Desktop integration: Added `ProjectImportViewModel` and "Import & export" tab in `MainWindow.xaml`.
+  - Documentation: Verified in `docs/phase-6.3-progress.md`.
+- Automated test suite: 227 passed, 0 failed, 0 skipped (`ProjectImportExportTests`, `PostmanCompatibilityAdapterTests`, `NodeScriptHostTests`, and all Phase 0-5 tests). Desktop smoke (`scripts/Test-Desktop.ps1`) passed cleanly (`{"editorRoundTrip":true,"httpRoundTrip":true,"cancellation":true,"dispatcherTicksDuringRequest":9}`). Solution builds cleanly in Release configuration with zero warnings/errors. Format verification passed (`dotnet format --verify-no-changes`).
+- Next work: push branch `phase6-import-export`, open PR for Issue #29, await CI checks, squash-merge into `main`, update Issue #29 to Done and close Phase 6 Epic #26 in Project 4, certifying Milestone B (Complete required platform).
 Published checkpoint: implementation `9156d80` pushed; PR #69 is now non-draft and P4.1 (#20) is In review. P4 (#19) remains In progress. Hosted desktop/Windows/Linux checks were pending at 11:25 IST. Resume by checking those results and PR review before merge/completion; local evidence is 62 passing tests and the passing desktop dataset smoke described below. No tests/builds rerun for this final metadata refresh. Next 30-minute refresh is due by 11:55 IST if execution is active.
 
 Current verified handoff: P4.1 file-backed import and desktop prepare/accept workflow implemented on `phase4-delimited-reader`, PR #69 being submitted for review. `PreparedDatasetFile` streams validated rows to a temporary spool; `ImportDatasetFileAsync` holds the project writer gate, verifies the prepared hash, publishes immutable JSONL then atomically saves its definition. Full-source mappings/culture/null/date conversions use the same streaming converter as preview. Desktop supports CSV/TSV/JSON/JSONL, UTF-8/UTF-16 LE/Windows-1252, explicit case-ID addition, cancellation and stale-preview rejection. Source changes after preparation cannot alter accepted rows. Release solution build succeeded; 62 dataset/persistence tests passed, 0 skipped. Desktop dataset smoke passed and screenshot inspected (`artifacts/dataset-ui-smoke/dataset-import.png`). A smoke-only compile error referencing the wrong tab name was corrected and the desktop rebuild/smoke passed. Changed-file formatting only afterward; no broad retest. Prior unverified notes below are superseded. Next: inspect PR #69 review/CI, resolve findings; do not mark P4.1 Done until acceptance and merge. P4 epic stays In progress; then continue P4.2 (#21) grid/clipboard work. Preserve 14 unrelated whitespace edits. No external blocker. Limits and crash-orphan behavior: `docs/dataset-import.md`.

@@ -1,5 +1,19 @@
 # Implementation status
 
+## Phase 6.3 complete: Transactional Postman/OpenAPI/cURL/HAR import and supported exports (2026-11-08 22:18 IST)
+
+Phase 6.3 is implemented and verified on branch `phase6-import-export`:
+- P6.3 (Issue #29):
+  - `CurlParser`: string tokenizer parsing methods, URLs, headers, bodies (raw & form-data), basic auth, redirect/TLS options without invoking any shell or subprocess.
+  - `PostmanImporter`: imports Postman Collection v2.1 and Environments, recurses folder hierarchies, maps query/headers/auth/bodies/scripts, detects sensitive variables for `.local/` secret extraction guidance, and flags unsupported Postman features.
+  - `PostmanExporter`: exports API Wrangler collections and environments to compatible Postman v2.1 format, with secret redaction and export reporting.
+  - `OpenApiImporter`: parses OpenAPI 3.0/3.1 specs, groups endpoints into folders by tags, creates requests with query/header/schema parameters, extracts server URLs into baseUrl collection variable, and generates entity counts.
+  - `HarImporter`: parses HTTP Archive 1.2 entries into collection requests with methods, URLs, headers, query params, and postData.
+  - `ProjectImportService`: 10-step transactional import preview, isolated staging, schema/reference validation via `AssetValidator`, atomic publication via `IProjectSession.SaveAsync`, and saving `reports/import-report-<id>.json`. Guarantees failed imports never partially overwrite or corrupt valid project assets.
+  - Desktop integration: Added `ProjectImportViewModel` and "Import & export" tab in `MainWindow.xaml`.
+  - Documentation: Verified in `docs/phase-6.3-progress.md`.
+- Automated test suite: 227 passed, 0 failed, 0 skipped (`ProjectImportExportTests`, `PostmanCompatibilityAdapterTests`, `NodeScriptHostTests`, and all Phase 0-5 tests). Desktop smoke (`scripts/Test-Desktop.ps1`) passed cleanly. Solution builds cleanly in Release configuration with zero warnings/errors. Format verification passed (`dotnet format --verify-no-changes`).
+
 ## Phase 6.2 complete: Postman compatibility adapter and fixtures (2026-11-08 21:58 IST)
 
 Phase 6.2 is implemented and verified on branch `phase6-postman-adapter`:

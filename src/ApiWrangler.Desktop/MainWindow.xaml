@@ -209,6 +209,44 @@
                     <TextBlock Grid.Row="6" Text="{Binding Status}" TextWrapping="Wrap" Margin="0,8" AutomationProperties.LiveSetting="Polite" />
                 </Grid>
             </TabItem>
+            <TabItem Header="Import &amp; export">
+                <Grid Margin="12" DataContext="{Binding ProjectImport}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="120" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <DockPanel Grid.Row="0" IsEnabled="{Binding IsIdle}">
+                        <Button DockPanel.Dock="Right" Content="Browse..." Command="{Binding BrowseCommand}" Margin="8,0,0,0" />
+                        <TextBox Text="{Binding SourcePath, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Import source file" />
+                    </DockPanel>
+                    <WrapPanel Grid.Row="1" Margin="0,8" IsEnabled="{Binding IsIdle}">
+                        <TextBlock Text="Format: " VerticalAlignment="Center" />
+                        <ComboBox Width="180" ItemsSource="{Binding Formats}" SelectedItem="{Binding SelectedFormat}" AutomationProperties.Name="Import format" />
+                        <Button Content="Preview Import" Command="{Binding PreviewCommand}" Margin="12,0" />
+                        <Button Content="Publish to Project" Command="{Binding PublishCommand}" IsEnabled="{Binding CanPublish}" Margin="0,0,12,0" />
+                    </WrapPanel>
+                    <TextBox Grid.Row="2" Text="{Binding SourceText, UpdateSourceTrigger=PropertyChanged}"
+                             AcceptsReturn="True" VerticalScrollBarVisibility="Auto"
+                             FontFamily="{Binding DataContext.EditorFontFamily, RelativeSource={RelativeSource AncestorType=Window}}"
+                             FontSize="{Binding DataContext.EditorFontSize, RelativeSource={RelativeSource AncestorType=Window}}"
+                             AutomationProperties.Name="Import source content or cURL command" />
+                    <StackPanel Grid.Row="3" Margin="0,6">
+                        <TextBlock Text="{Binding EntityCountsText}" FontWeight="SemiBold" Margin="0,2" />
+                        <TextBlock Text="{Binding DetectedSecretsText}" Foreground="DarkOrange" TextWrapping="Wrap" Margin="0,2" />
+                        <TextBlock Text="{Binding UnsupportedFeaturesText}" Foreground="Gray" TextWrapping="Wrap" Margin="0,2" />
+                    </StackPanel>
+                    <TextBox Grid.Row="4" Text="{Binding PreviewSummary, Mode=OneWay}" IsReadOnly="True"
+                             AcceptsReturn="True" VerticalScrollBarVisibility="Auto"
+                             FontFamily="{Binding DataContext.EditorFontFamily, RelativeSource={RelativeSource AncestorType=Window}}"
+                             FontSize="{Binding DataContext.EditorFontSize, RelativeSource={RelativeSource AncestorType=Window}}"
+                             AutomationProperties.Name="Import preview summary" />
+                    <TextBlock Grid.Row="5" Text="{Binding Status}" TextWrapping="Wrap" Margin="0,8" AutomationProperties.LiveSetting="Polite" />
+                </Grid>
+            </TabItem>
             <TabItem Header="Dataset feasibility">
                 <DockPanel Margin="12">
                     <TextBlock DockPanel.Dock="Top" Text="100,000 synthetic cases · paged rows · read-only feasibility fixture" Margin="0,0,0,12" />
