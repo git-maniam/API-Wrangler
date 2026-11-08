@@ -218,3 +218,4 @@ public sealed class AssertionAndReporterTests
         Assert.DoesNotContain("super_secret_token_12345", htmlOutput);
     }
 }
+

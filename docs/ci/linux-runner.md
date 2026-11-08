@@ -34,3 +34,4 @@ docker run --rm \
     --report-dir /artifacts/reports \
     --output /artifacts/runs
 ```
+
