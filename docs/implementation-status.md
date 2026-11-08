@@ -1,13 +1,13 @@
 # Implementation status
 
-## Phase 5 complete: Git collaboration, reviewed commits, and semantic conflict resolution (2026-11-08 20:34 IST)
+## Phase 5 complete: Git collaboration, reviewed commits, and semantic conflict resolution (2026-11-08 20:48 IST)
 
-Phase 5 is complete on branch `phase5-repository-workflows`:
+Phase 5 is complete, fully verified, and merged into `main` via PR #72 (commit `74e0719`). Milestone A (Team HTTP regression) is accepted. All Phase 5 sub-issues (#23, #24, #25) and parent Epic #22 are closed and marked `Done` in GitHub Project 4.
 - P5.1: `GitRepositoryService` with branch creation/switching, detached HEAD, worktree rejection, clean status facts, fetch without changing working files, fast-forward, explicit merge/rebase, and scoped restore.
 - P5.2: `GitCommitReviewService` with scoped `api-wrangler/` file staging, complete cached diff review up to 4 Mi characters, high-confidence secret scanning, commit message review, and explicit push.
 - P5.3: `GitConflictResolutionService`, `ProjectProposalValidator`, and `GitConflictWorkbenchViewModel`. Three-way semantic JSON proposal engine (independent object/ID-keyed row edits, ordered headers, preserving unknown fields, unilateral reordering, reporting same-field, delete/edit, duplicate-ID, and incompatible reorder conflicts). Bounded final diff review, explicit choices (Edited, Local, Incoming, Delete, Save Both), schema and reference validation before staging, recovery snapshots, and staging without losing unrelated work.
 - Two-clone acceptance: verified across two independent clones with simultaneous conflicting JSON edits, resolution, commit, push, and fast-forward pull.
-- Verification: 188 automated tests passed (0 failed, 4 skipped). Desktop smoke passed (`scripts/Test-Desktop.ps1`). Desktop Git smoke passed (`--git-smoke artifacts/git-smoke`). Format verification passed (`dotnet format --verify-no-changes`). Solution builds cleanly in Release configuration with zero warnings/errors.
+- Verification: 188 automated tests passed (0 failed, 4 skipped). Desktop smoke passed (`scripts/Test-Desktop.ps1`). Desktop Git smoke passed (`--git-smoke artifacts/git-smoke`). Format verification passed (`dotnet format --verify-no-changes`). Solution builds cleanly in Release configuration with zero warnings/errors. All hosted CI checks on PR #72 passed (`desktop`, `headless (ubuntu-latest)`, `headless (windows-latest)`).
 
 ## Phase 5 parallel Git work checkpoint (2026-11-08 19:32 IST)
 
