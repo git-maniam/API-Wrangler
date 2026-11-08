@@ -247,9 +247,10 @@
                     <TextBlock Grid.Row="5" Text="{Binding Status}" TextWrapping="Wrap" Margin="0,8" AutomationProperties.LiveSetting="Polite" />
                 </Grid>
             </TabItem>
-            <TabItem Header="GraphQL &amp; gRPC">
+            <TabItem Header="Protocols &amp; Streaming">
                 <Grid Margin="12" DataContext="{Binding Protocol}">
                     <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
@@ -258,7 +259,7 @@
                         <TextBlock DockPanel.Dock="Top" Text="GraphQL Operations" FontWeight="Bold" Margin="0,0,0,6" />
                         <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,6">
                             <TextBlock Text="Endpoint: " VerticalAlignment="Center" />
-                            <TextBox Width="260" Text="{Binding GraphQLEndpoint, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="GraphQL endpoint" />
+                            <TextBox Width="180" Text="{Binding GraphQLEndpoint, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="GraphQL endpoint" />
                             <Button Content="Execute" Command="{Binding ExecuteGraphQLCommand}" Margin="8,0" />
                         </WrapPanel>
                         <TextBlock DockPanel.Dock="Top" Text="Query / Mutation:" Margin="0,4,0,2" />
@@ -268,14 +269,14 @@
                         <TextBlock DockPanel.Dock="Top" Text="{Binding GraphQLStatus}" FontWeight="SemiBold" Margin="0,6,0,2" />
                         <TextBox Text="{Binding GraphQLResponse, Mode=OneWay}" IsReadOnly="True" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" FontFamily="{Binding DataContext.EditorFontFamily, RelativeSource={RelativeSource AncestorType=Window}}" FontSize="{Binding DataContext.EditorFontSize, RelativeSource={RelativeSource AncestorType=Window}}" AutomationProperties.Name="GraphQL response preview" />
                     </DockPanel>
-                    <!-- Right: gRPC -->
-                    <DockPanel Grid.Column="1" Margin="8,0,0,0">
-                        <TextBlock DockPanel.Dock="Top" Text="gRPC Operations &amp; Streaming Transcript" FontWeight="Bold" Margin="0,0,0,6" />
+                    <!-- Center: gRPC -->
+                    <DockPanel Grid.Column="1" Margin="4,0,4,0">
+                        <TextBlock DockPanel.Dock="Top" Text="gRPC Operations" FontWeight="Bold" Margin="0,0,0,6" />
                         <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,6">
                             <TextBlock Text="Endpoint: " VerticalAlignment="Center" />
-                            <TextBox Width="140" Text="{Binding GrpcEndpoint, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="gRPC endpoint" />
+                            <TextBox Width="120" Text="{Binding GrpcEndpoint, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="gRPC endpoint" />
                             <TextBlock Text=" Method: " VerticalAlignment="Center" />
-                            <TextBox Width="180" Text="{Binding GrpcMethod, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="gRPC method path" />
+                            <TextBox Width="120" Text="{Binding GrpcMethod, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="gRPC method path" />
                         </WrapPanel>
                         <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,6">
                             <Button Content="Parse Proto" Command="{Binding ParseProtoCommand}" Margin="0,0,8,0" />
@@ -287,6 +288,23 @@
                         <TextBox DockPanel.Dock="Top" Height="50" Text="{Binding GrpcPayload, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" FontFamily="{Binding DataContext.EditorFontFamily, RelativeSource={RelativeSource AncestorType=Window}}" FontSize="{Binding DataContext.EditorFontSize, RelativeSource={RelativeSource AncestorType=Window}}" AutomationProperties.Name="gRPC payload JSON" />
                         <TextBlock DockPanel.Dock="Top" Text="{Binding GrpcStatus}" FontWeight="SemiBold" Margin="0,6,0,2" />
                         <TextBox Text="{Binding GrpcTranscript, Mode=OneWay}" IsReadOnly="True" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" FontFamily="{Binding DataContext.EditorFontFamily, RelativeSource={RelativeSource AncestorType=Window}}" FontSize="{Binding DataContext.EditorFontSize, RelativeSource={RelativeSource AncestorType=Window}}" AutomationProperties.Name="gRPC streaming transcript" />
+                    </DockPanel>
+                    <!-- Right: WebSocket & SSE -->
+                    <DockPanel Grid.Column="2" Margin="8,0,0,0">
+                        <TextBlock DockPanel.Dock="Top" Text="WebSocket &amp; SSE Streaming" FontWeight="Bold" Margin="0,0,0,6" />
+                        <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,6">
+                            <TextBlock Text="URL: " VerticalAlignment="Center" />
+                            <TextBox Width="180" Text="{Binding StreamingEndpoint, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Streaming endpoint URL" />
+                        </WrapPanel>
+                        <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,6">
+                            <Button Content="Connect" Command="{Binding ConnectStreamingCommand}" Margin="0,0,6,0" />
+                            <Button Content="Disconnect" Command="{Binding DisconnectStreamingCommand}" Margin="0,0,6,0" />
+                            <Button Content="Send (WS)" Command="{Binding SendWebSocketMessageCommand}" />
+                        </WrapPanel>
+                        <TextBlock DockPanel.Dock="Top" Text="Outbound Message (WS):" Margin="0,4,0,2" />
+                        <TextBox DockPanel.Dock="Top" Height="60" Text="{Binding StreamingMessage, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" FontFamily="{Binding DataContext.EditorFontFamily, RelativeSource={RelativeSource AncestorType=Window}}" FontSize="{Binding DataContext.EditorFontSize, RelativeSource={RelativeSource AncestorType=Window}}" AutomationProperties.Name="Outbound streaming message" />
+                        <TextBlock DockPanel.Dock="Top" Text="{Binding StreamingStatus}" FontWeight="SemiBold" Margin="0,6,0,2" />
+                        <TextBox Text="{Binding StreamingTranscript, Mode=OneWay}" IsReadOnly="True" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" FontFamily="{Binding DataContext.EditorFontFamily, RelativeSource={RelativeSource AncestorType=Window}}" FontSize="{Binding DataContext.EditorFontSize, RelativeSource={RelativeSource AncestorType=Window}}" AutomationProperties.Name="Streaming transcript" />
                     </DockPanel>
                 </Grid>
             </TabItem>
