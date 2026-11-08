@@ -1,3 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <ItemGroup><ProjectReference Include="../ApiWrangler.Domain/ApiWrangler.Domain.csproj" /></ItemGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <ProjectReference Include="../ApiWrangler.Domain/ApiWrangler.Domain.csproj" />
+  </ItemGroup>
 </Project>

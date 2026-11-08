@@ -20,6 +20,7 @@ public partial class MainViewModel(
     public DatasetImportViewModel DatasetImport { get; } = new(() => projectEditor.CurrentSession);
     public ProjectImportViewModel ProjectImport { get; } = new(() => projectEditor.CurrentSession);
     public ProtocolExpansionViewModel Protocol { get; } = new();
+    public MockServerViewModel Mocks { get; } = new();
     public DatasetGridViewModel DatasetGrid { get; } = new();
     public GitWorkbenchViewModel Git { get; } = new();
 

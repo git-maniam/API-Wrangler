@@ -1,5 +1,21 @@
 # Implementation status
 
+## Phase 8.1 complete: Local mock engine, deterministic matching, and fault scenarios (2026-11-08 23:12 IST)
+
+Phase 8.1 is implemented and verified on branch `phase8-local-mock-engine`:
+- P8.1 (Issue #34):
+  - Domain models (`MockModels.cs`): `MockRule`, `MockFaultType`, `MockServerLogEntry`, `MockServerConfiguration`, and `MockMatchResult`.
+  - Application services (`MockEngine.cs`, `MockExampleGenerator.cs`):
+    - `MockEngine`: In-process loopback ASP.NET Core server (`127.0.0.1` enforced unless explicitly opted into external binding).
+    - Deterministic matching: specificity scoring combining rule priority, exact vs parameterized vs wildcard paths, query parameter checks, header checks, and body regex matching. Ambiguity detection and detailed match explanations.
+    - Stateful scenarios: state machine prerequisites (`ScenarioStateRequired`) and transitions (`ScenarioStateTransition`), with manual and automated state reset.
+    - Fault simulations: delays, HTTP status codes, malformed payloads, rate-limiting (429 with `Retry-After`), connection abortions (`context.Abort()`), and seeded intermittent failure rates.
+    - Example generator: generates mock rules from OpenAPI schemas and saved responses.
+  - Desktop integration: added `MockServerViewModel` and "Mocks & Webhooks" tab in `MainWindow.xaml` featuring rule configuration, start/stop controls, and real-time request audit logs.
+  - Integration tests (`MockEngineTests.cs`): 5 tests covering matching specificity, scenario transitions, HTTP server hosting, fault simulations, and loopback binding enforcement.
+  - Automated test suite: 246 passed, 0 failed, 0 skipped. `scripts/Test-Desktop.ps1` passed cleanly. `dotnet format --verify-no-changes` passed.
+  - Documentation: Verified in `docs/phase-8.1-progress.md`.
+
 ## Phase 7 complete: GraphQL, gRPC, and streaming (2026-11-08 23:00 IST)
 
 Phase 7 is fully implemented and verified on branch `phase7-graphql-highlighting`:
