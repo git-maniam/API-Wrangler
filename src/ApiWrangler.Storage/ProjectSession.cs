@@ -121,51 +121,51 @@ internal sealed class ProjectSession : IProjectSession
 
     private async Task SaveCoreAsync(IReadOnlyList<AssetEdit> edits, CancellationToken token)
     {
-            EnsureWritable();
-            EnsureNoGitIntegration();
-            var view = await ReadAsync(token).ConfigureAwait(false);
-            var newerVersion = view.Assets.FirstOrDefault(asset =>
-                asset.Content["schemaVersion"] is JsonValue version &&
-                version.TryGetValue<int>(out var schemaVersion) && schemaVersion > 1);
-            if (newerVersion is not null)
-                throw new ProjectValidationException([new(newerVersion.Path, "/schemaVersion",
+        EnsureWritable();
+        EnsureNoGitIntegration();
+        var view = await ReadAsync(token).ConfigureAwait(false);
+        var newerVersion = view.Assets.FirstOrDefault(asset =>
+            asset.Content["schemaVersion"] is JsonValue version &&
+            version.TryGetValue<int>(out var schemaVersion) && schemaVersion > 1);
+        if (newerVersion is not null)
+            throw new ProjectValidationException([new(newerVersion.Path, "/schemaVersion",
                     "This asset uses a newer schema version and is read-only in this application.", newerVersion.Id)]);
-            if (!view.IsValid) throw new ProjectValidationException(view.Diagnostics);
-            var manifest = view.Assets.Single(a => a.Kind == AssetKind.Manifest).Content;
-            var updated = view.Assets.ToDictionary(a => a.Path, StringComparer.OrdinalIgnoreCase);
-            var unique = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            var files = new List<FileChange>();
-            foreach (var edit in edits)
+        if (!view.IsValid) throw new ProjectValidationException(view.Diagnostics);
+        var manifest = view.Assets.Single(a => a.Kind == AssetKind.Manifest).Content;
+        var updated = view.Assets.ToDictionary(a => a.Path, StringComparer.OrdinalIgnoreCase);
+        var unique = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var files = new List<FileChange>();
+        foreach (var edit in edits)
+        {
+            if (!unique.Add(edit.Path)) throw new ArgumentException("A transaction cannot edit the same file twice.", nameof(edits));
+            var kind = AssetValidator.KindFor(edit.Path) ?? throw new ArgumentException("Only supported project asset definitions can be saved.", nameof(edits));
+            ProjectPaths.Resolve(Root, edit.Path);
+            var baseDirectory = kind switch
             {
-                if (!unique.Add(edit.Path)) throw new ArgumentException("A transaction cannot edit the same file twice.", nameof(edits));
-                var kind = AssetValidator.KindFor(edit.Path) ?? throw new ArgumentException("Only supported project asset definitions can be saved.", nameof(edits));
-                ProjectPaths.Resolve(Root, edit.Path);
-                var baseDirectory = kind switch
-                {
-                    AssetKind.Collection or AssetKind.Folder or AssetKind.Request => manifest["paths"]!["collections"]!.GetValue<string>(),
-                    AssetKind.Environment => manifest["paths"]!["environments"]!.GetValue<string>(),
-                    AssetKind.Dataset => manifest["paths"]!["datasets"]!.GetValue<string>(),
-                    _ => null
-                };
-                if (baseDirectory is not null && !edit.Path.StartsWith(baseDirectory + "/", StringComparison.Ordinal))
-                    throw new ArgumentException("Asset location does not match its configured project directory.", nameof(edits));
-                updated.TryGetValue(edit.Path, out var old);
-                if (old?.Hash != edit.ExpectedHash) throw new ProjectConflictException(edit.Path);
-                if (old is not null)
-                {
-                    var field = kind == AssetKind.Manifest ? "projectId" : "id";
-                    if (!JsonNode.DeepEquals(old.Content[field], edit.Content[field])) throw new ArgumentException("An entity's immutable ID cannot change.", nameof(edits));
-                    if (JsonNode.DeepEquals(old.Content, edit.Content)) continue;
-                }
-                var bytes = CanonicalJson.Serialize(edit.Content);
-                if (bytes.Length > MaxDefinitionBytes) throw new IOException("Definition exceeds 16 MiB. Use file-backed bodies/datasets.");
-                updated[edit.Path] = new(edit.Path, kind, (JsonObject)edit.Content.DeepClone(), CanonicalJson.Hash(bytes));
-                files.Add(new(edit.Path, bytes, edit.ExpectedHash));
+                AssetKind.Collection or AssetKind.Folder or AssetKind.Request => manifest["paths"]!["collections"]!.GetValue<string>(),
+                AssetKind.Environment => manifest["paths"]!["environments"]!.GetValue<string>(),
+                AssetKind.Dataset => manifest["paths"]!["datasets"]!.GetValue<string>(),
+                _ => null
+            };
+            if (baseDirectory is not null && !edit.Path.StartsWith(baseDirectory + "/", StringComparison.Ordinal))
+                throw new ArgumentException("Asset location does not match its configured project directory.", nameof(edits));
+            updated.TryGetValue(edit.Path, out var old);
+            if (old?.Hash != edit.ExpectedHash) throw new ProjectConflictException(edit.Path);
+            if (old is not null)
+            {
+                var field = kind == AssetKind.Manifest ? "projectId" : "id";
+                if (!JsonNode.DeepEquals(old.Content[field], edit.Content[field])) throw new ArgumentException("An entity's immutable ID cannot change.", nameof(edits));
+                if (JsonNode.DeepEquals(old.Content, edit.Content)) continue;
             }
-            var problems = validator.Validate(Root, updated.Values.ToArray());
-            if (problems.Count != 0) throw new ProjectValidationException(problems);
-            EnsureNoGitIntegration();
-            await Transactions.ApplyAsync(files, token).ConfigureAwait(false);
+            var bytes = CanonicalJson.Serialize(edit.Content);
+            if (bytes.Length > MaxDefinitionBytes) throw new IOException("Definition exceeds 16 MiB. Use file-backed bodies/datasets.");
+            updated[edit.Path] = new(edit.Path, kind, (JsonObject)edit.Content.DeepClone(), CanonicalJson.Hash(bytes));
+            files.Add(new(edit.Path, bytes, edit.ExpectedHash));
+        }
+        var problems = validator.Validate(Root, updated.Values.ToArray());
+        if (problems.Count != 0) throw new ProjectValidationException(problems);
+        EnsureNoGitIntegration();
+        await Transactions.ApplyAsync(files, token).ConfigureAwait(false);
     }
 
     public async Task ImportDatasetFileAsync(AssetEdit definition, Stream source, string sha256, CancellationToken token = default)
@@ -218,8 +218,8 @@ internal sealed class ProjectSession : IProjectSession
         }
         finally
         {
-            if (stage is not null && File.Exists(stage)) File.Delete(stage);
-            gate.Release();
+            try { if (stage is not null && File.Exists(stage)) File.Delete(stage); }
+            finally { gate.Release(); }
         }
     }
 

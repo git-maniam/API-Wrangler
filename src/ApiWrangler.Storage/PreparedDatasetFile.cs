@@ -78,7 +78,10 @@ public sealed class PreparedDatasetFile : IAsyncDisposable
             spool.Position = 0;
             var definition = new JsonObject
             {
-                ["schemaVersion"] = 1, ["id"] = id.ToString(), ["name"] = name, ["rowIdColumn"] = "_caseId"
+                ["schemaVersion"] = 1,
+                ["id"] = id.ToString(),
+                ["name"] = name,
+                ["rowIdColumn"] = "_caseId"
             };
             await session.ImportDatasetFileAsync(new(path, definition, expectedHash), spool, Hash, token).ConfigureAwait(false);
         }

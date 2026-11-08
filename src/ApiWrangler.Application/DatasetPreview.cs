@@ -3,7 +3,7 @@ using System.Text.Json;
 
 namespace ApiWrangler.Application;
 
-public enum DatasetColumnType { Preserve, String, Decimal, Boolean }
+public enum DatasetColumnType { Preserve, String, Decimal, Boolean, Date }
 public sealed record DatasetColumnMapping(string Source, string Target,
     DatasetColumnType Type = DatasetColumnType.Preserve, bool EmptyStringAsNull = false);
 public sealed record DatasetPreviewResult(IReadOnlyList<IReadOnlyDictionary<string, JsonElement>> Rows, bool HasMore);
@@ -16,11 +16,25 @@ public static class DatasetPreview
         IReadOnlyList<DatasetColumnMapping> mappings, CultureInfo culture, int maxRows = 100,
         CancellationToken cancellationToken = default)
     {
+        ArgumentOutOfRangeException.ThrowIfLessThan(maxRows, 1);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(maxRows, 1000);
+        var rows = new List<IReadOnlyDictionary<string, JsonElement>>();
+        await foreach (var row in ConvertAsync(source, mappings, culture, cancellationToken).ConfigureAwait(false))
+        {
+            if (rows.Count == maxRows) return new(rows.AsReadOnly(), true);
+            rows.Add(row);
+        }
+        return new(rows.AsReadOnly(), false);
+    }
+
+    public static async IAsyncEnumerable<IReadOnlyDictionary<string, JsonElement>> ConvertAsync(
+        IAsyncEnumerable<IReadOnlyDictionary<string, JsonElement>> source,
+        IReadOnlyList<DatasetColumnMapping> mappings, CultureInfo culture,
+        [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
         ArgumentNullException.ThrowIfNull(source);
         ArgumentNullException.ThrowIfNull(mappings);
         ArgumentNullException.ThrowIfNull(culture);
-        ArgumentOutOfRangeException.ThrowIfLessThan(maxRows, 1);
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(maxRows, 1000);
         var columns = mappings.ToArray();
         var targets = new HashSet<string>(StringComparer.Ordinal);
         foreach (var mapping in columns)
@@ -32,11 +46,11 @@ public static class DatasetPreview
                 throw new ArgumentException("Mappings require valid sources, unique targets, and supported types.", nameof(mappings));
             }
         }
-        var rows = new List<IReadOnlyDictionary<string, JsonElement>>();
+        var rowIndex = 0;
         await foreach (var row in source.WithCancellation(cancellationToken).ConfigureAwait(false))
         {
             cancellationToken.ThrowIfCancellationRequested();
-            if (rows.Count == maxRows) { return new(rows.AsReadOnly(), true); }
+            rowIndex++;
             var converted = new Dictionary<string, JsonElement>(StringComparer.Ordinal);
             if (columns.Length == 0)
             {
@@ -51,13 +65,12 @@ public static class DatasetPreview
                     catch (Exception error) when (error is FormatException or InvalidOperationException or OverflowException)
                     {
                         // Do not put potentially sensitive cell values in diagnostics.
-                        throw new FormatException($"Preview row {rows.Count + 1}, column '{mapping.Target}' cannot convert to {mapping.Type}.");
+                        throw new FormatException($"Preview row {rowIndex}, column '{mapping.Target}' cannot convert to {mapping.Type}.");
                     }
                 }
             }
-            rows.Add(new System.Collections.ObjectModel.ReadOnlyDictionary<string, JsonElement>(converted));
+            yield return new System.Collections.ObjectModel.ReadOnlyDictionary<string, JsonElement>(converted);
         }
-        return new(rows.AsReadOnly(), false);
     }
 
     public static async IAsyncEnumerable<IReadOnlyDictionary<string, JsonElement>> FromDelimitedAsync(
@@ -87,6 +100,7 @@ public static class DatasetPreview
                 ? value.GetDecimal() : decimal.Parse(value.GetString()!, NumberStyles.Number, culture)),
             DatasetColumnType.Boolean => JsonSerializer.SerializeToElement(value.ValueKind is JsonValueKind.True or JsonValueKind.False
                 ? value.GetBoolean() : bool.Parse(value.GetString()!)),
+            DatasetColumnType.Date => JsonSerializer.SerializeToElement(DateOnly.Parse(value.GetString()!, culture).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)),
             _ => throw new ArgumentOutOfRangeException(nameof(mapping))
         };
     }

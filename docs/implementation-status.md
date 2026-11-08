@@ -1,5 +1,9 @@
 # Implementation status
 
+## Phase 4 file-backed import and desktop checkpoint (2026-11-08 11:24 IST)
+
+P4.1 is ready for review in PR #69: streaming file-backed JSONL preparation/publication with hash checking, stable case identity, full-import conversions, and desktop source/encoding/mapping/preview/accept/cancellation flow. Input source changes after preview do not alter accepted content. Existing project transactions protect definitions and stale writes; immutable source files participate in project snapshots. Release solution build passed; 62 dataset/persistence tests passed without skips. Desktop dataset smoke verified explicit conversion, stale-options rejection, and exact prepared-source import; screenshot inspected. A diagnostic tab-name compile error was fixed before the successful desktop rebuild/smoke. See `docs/dataset-import.md` for limits and remaining polish. P4 stays In progress; P4.1 is not Done before review/acceptance/merge. Existing unrelated edits preserved.
+
 ## Phase 4 JSON admission checkpoint (2026-11-08 10:09 IST)
 
 JSON-array reads enforce a configurable per-record byte budget (default 1 MiB) before deserialization using a bounded-read stream wrapper. Record boundaries respect nesting and escaped strings; UTF-8 bytes are counted, total dataset length is not constrained by the record budget, and the caller's stream remains open. Batched dataset/rollback verification passed 46 tests with no failures/skips in one invocation; no standalone build. File-backed import/publication, full-import conversion integration and UI remain; P4/P4.1 stay In progress.
