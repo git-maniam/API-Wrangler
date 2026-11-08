@@ -1,14 +1,14 @@
 # Implementation status
 
-## Phase 5.1 Git workflow checkpoint (2026-11-08 16:10 IST)
+## Phase 5.1 Git workflow checkpoint (2026-11-08 17:52 IST)
 
 P5.1 has started on `phase5-repository-workflows`:
 - Added `GitRepositoryService` for Git executable discovery/version, repository discovery/init/clone, status facts (dirty paths, branch/upstream, independent ahead/behind, remotes, detached HEAD, linked worktree, write access, merge/rebase/sequencer state), branch listing/history, remote add/select, fetch/push, branch creation/switch, fast-forward, explicit merge/rebase, and scoped `api-wrangler/` asset restore.
 - Added a desktop Git collaboration workbench exposing repository open/status, clone/init, remote operations, branch operations, integration, history, and asset restore. Git runs through argument arrays and configured Git authentication; the UI does not embed credentials. Branch/integration operations require a clean whole working tree; there is no automatic stash, force push, or hard reset.
 - Existing `ProjectSession` guards continue to suspend writes during index locks and merge/rebase markers; snapshots compare Git identity across capture. No new cache was added.
-- Verification: `dotnet build ApiWrangler.slnx -c Release --no-restore` succeeded (0 warnings/errors). Two focused local bare-remote integration tests passed (0 failed/skipped), covering fetch immutability, ahead/behind and unrelated dirt, rejected push preservation, clean fast-forward, branch switch/create, history, scoped restore, detached HEAD, linked worktree, and dirty-switch refusal.
+- Verification: `dotnet build ApiWrangler.slnx -c Release --no-restore` succeeded (0 warnings/errors). Four focused tests passed (0 failed/skipped), covering offline/rejected operations, real merge/rebase conflicts and recovery, external branch changes with an open project session, snapshots, index-lock write suspension, fetch immutability, dirty/unrelated files, fast-forward, branch/history/restore, detached HEAD, and linked worktrees.
 
-P5.1 remains In progress. Remaining: exercise offline/auth failures and interrupted integration recovery; verify external branch changes against open editors/snapshots; complete desktop interaction acceptance; continue the issue's open/clone/init/standalone and repository-selection flows. P5.2 scoped reviewed commits and P5.3 semantic conflict handling have not started. See `docs/phase-5.1-progress.md` and the Restart bookmark in the product spec.
+P5.1 remains In progress. Remaining: exercise rejected authentication through configured desktop credential/SSH flows and complete desktop interaction acceptance for clone/open/init/standalone and remote selection. P5.2 scoped reviewed commits and P5.3 semantic conflict handling have not started. See `docs/phase-5.1-progress.md` and the Restart bookmark in the product spec.
 
 ## Phase 4 color-highlighted preview checkpoint (2026-11-08 11:51 IST)
 

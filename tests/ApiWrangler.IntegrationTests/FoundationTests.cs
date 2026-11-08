@@ -168,6 +168,75 @@ public sealed class FoundationTests
         }
     }
 
+    [Fact]
+    public async Task GitRepository_OfflineFetchAndActiveMergeRebasePreserveLocalState()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "Api Wrangler git recovery", Guid.NewGuid().ToString("N"));
+        var remote = Path.Combine(root, "remote.git");
+        var repo = Path.Combine(root, "working repo");
+        var file = "api-wrangler/change.txt";
+        var fullFile = Path.Combine(repo, file.Replace('/', Path.DirectorySeparatorChar));
+        Directory.CreateDirectory(root);
+        try
+        {
+            var service = new GitRepositoryService();
+            await service.InitializeAsync(remote, bare: true);
+            await service.CloneAsync(remote, repo);
+            Directory.CreateDirectory(Path.GetDirectoryName(fullFile)!);
+            await File.WriteAllTextAsync(fullFile, "base");
+            await Git(repo, "add", file);
+            await CommitFixture(repo, "Base");
+            await Git(repo, "push", "-u", "origin", "HEAD");
+            string mainBranch = await Git(repo, "branch", "--show-current");
+
+            string initialHead = await Git(repo, "rev-parse", "HEAD");
+            await Git(repo, "remote", "set-url", "origin", Path.Combine(root, "unavailable-remote.git"));
+            await Assert.ThrowsAsync<IOException>(() => service.FetchAsync(repo, "origin"));
+            Assert.Equal(initialHead, await Git(repo, "rev-parse", "HEAD"));
+            Assert.Equal("base", await File.ReadAllTextAsync(fullFile));
+            await Git(repo, "remote", "set-url", "origin", remote);
+
+            await Git(repo, "switch", "--create", "merge-topic");
+            await File.WriteAllTextAsync(fullFile, "topic merge");
+            await Git(repo, "add", file);
+            await CommitFixture(repo, "Topic merge edit");
+            await Git(repo, "switch", mainBranch);
+            await File.WriteAllTextAsync(fullFile, "main merge");
+            await Git(repo, "add", file);
+            await CommitFixture(repo, "Main merge edit");
+            await Assert.ThrowsAsync<IOException>(() => service.MergeAsync(repo, "merge-topic"));
+            Assert.True((await service.GetStatusAsync(repo)).IsMergeInProgress);
+            await Assert.ThrowsAsync<InvalidOperationException>(() => service.RebaseAsync(repo, "HEAD"));
+            await Git(repo, "merge", "--abort");
+            Assert.False((await service.GetStatusAsync(repo)).HasOperationInProgress);
+
+            await Git(repo, "switch", "--create", "rebase-topic");
+            await File.WriteAllTextAsync(fullFile, "topic rebase");
+            await Git(repo, "add", file);
+            await CommitFixture(repo, "Topic rebase edit");
+            await Git(repo, "switch", mainBranch);
+            await File.WriteAllTextAsync(fullFile, "main rebase");
+            await Git(repo, "add", file);
+            await CommitFixture(repo, "Main rebase edit");
+            await Git(repo, "switch", "rebase-topic");
+            string topicHead = await Git(repo, "rev-parse", "HEAD");
+            await Assert.ThrowsAsync<IOException>(() => service.RebaseAsync(repo, mainBranch));
+            Assert.True((await service.GetStatusAsync(repo)).IsRebaseInProgress);
+            await Assert.ThrowsAsync<InvalidOperationException>(() => service.FastForwardAsync(repo));
+            await Git(repo, "rebase", "--abort");
+            Assert.Equal(topicHead, await Git(repo, "rev-parse", "HEAD"));
+            Assert.Equal("topic rebase", await File.ReadAllTextAsync(fullFile));
+        }
+        finally
+        {
+            foreach (var entry in Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories)) File.SetAttributes(entry, FileAttributes.Normal);
+            Directory.Delete(root, true);
+        }
+    }
+
+    private static Task<string> CommitFixture(string repository, string message) =>
+        Git(repository, "-c", "user.name=Fixture", "-c", "user.email=fixture@example.test", "-c", "commit.gpgsign=false", "commit", "-m", message);
+
     private static async Task<string> Git(string workingDirectory, params string[] args)
     {
         var result = await ProcessRunner.RunAsync("git", args, workingDirectory);

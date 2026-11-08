@@ -1,6 +1,6 @@
 # Phase 5.1 progress
 
-Implementation and verification checkpoint: 2026-11-08 16:10 IST, branch `phase5-repository-workflows`, commit `873b53e`. Tracking refresh: 2026-11-08 17:47 IST; no code changes or tests were run in this refresh. P5 #22 and P5.1 #23 remain In progress; evidence was resynchronized to both Project 4 tickets.
+Implementation and verification checkpoint: 2026-11-08 17:52 IST, branch `phase5-repository-workflows`. P5 #22 and P5.1 #23 remain In progress.
 
 ## Implemented in this checkpoint
 
@@ -12,13 +12,12 @@ Implementation and verification checkpoint: 2026-11-08 16:10 IST, branch `phase5
 ## Executed verification
 
 - `dotnet build ApiWrangler.slnx -c Release --no-restore` — passed, 0 warnings and 0 errors.
-- `dotnet test tests/ApiWrangler.IntegrationTests/ApiWrangler.IntegrationTests.csproj -c Release --no-restore --no-build --filter "FullyQualifiedName~GitRepository_" --logger "console;verbosity=minimal"` — 2 passed, 0 failed, 0 skipped.
+- `dotnet test tests/ApiWrangler.IntegrationTests/ApiWrangler.IntegrationTests.csproj -c Release --no-restore --filter "FullyQualifiedName~GitRepository_|FullyQualifiedName~GitBranchChange_" --logger "console;verbosity=minimal"` — 4 passed, 0 failed, 0 skipped. This invocation compiled the integration-test project and its dependencies.
 
-The tests use local bare remotes and cover fetch not changing working files, independent ahead/behind and dirty facts, unrelated dirty files, rejection without loss of local commits, fast-forward, create/switch branch, history, API Wrangler path restore, detached HEAD, linked worktree discovery, and refusal to switch with a dirty tree.
+The tests use local bare remotes and cover fetch not changing working files, independent ahead/behind and dirty facts, unrelated dirty files, rejected push preserving local commits, offline fetch preserving HEAD/files, fast-forward, branch create/switch/upstream selection, history, API Wrangler path restore, detached HEAD, linked worktree discovery, and dirty-switch refusal. Real merge and rebase conflicts remain visible as active operations and block further integration; abort preserves the topic commit. An open project session observes a branch change, reads the new asset, snapshots the new Git commit, and refuses writes during `index.lock` without changing the asset.
 
 ## Remaining acceptance
 
-- Exercise offline fetch, rejected authentication, and rejected push through the desktop workbench.
-- Verify existing merge/rebase recovery states and external branch changes with an open project editor and snapshot.
+- Exercise rejected authentication through a configured desktop credential/SSH flow; the local test environment does not have an isolated authentication fixture.
 - Complete desktop interaction review for clone/open/init/standalone and remote selection.
 - P5.1 review, P5.2 scoped reviewed commits/secret scanning, and P5.3 semantic conflict resolution are still required before Phase 5 exit review.
