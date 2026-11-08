@@ -40,11 +40,13 @@ public sealed class FoundationTests
             var service = new GitRepositoryService();
             await service.InitializeAsync(remote, bare: true);
             await service.CloneAsync(remote, first);
+            await ConfigureRepository(first);
             await File.WriteAllTextAsync(Path.Combine(first, "asset.txt"), "original");
             await Git(first, "add", "asset.txt");
             await Git(first, "-c", "user.name=Fixture", "-c", "user.email=fixture@example.test", "-c", "commit.gpgsign=false", "commit", "-m", "Initial fixture");
             await Git(first, "push", "origin", "HEAD");
             await Git(root, "clone", remote, second);
+            await ConfigureRepository(second);
             var before = await Git(second, "rev-parse", "HEAD");
             await File.WriteAllTextAsync(Path.Combine(first, "asset.txt"), "incoming");
             await Git(first, "add", "asset.txt");
@@ -76,12 +78,14 @@ public sealed class FoundationTests
         {
             await Git(root, "init", "--bare", remote);
             await Git(root, "clone", remote, first);
+            await ConfigureRepository(first);
             Directory.CreateDirectory(Path.Combine(first, "api-wrangler"));
             await File.WriteAllTextAsync(Path.Combine(first, "api-wrangler", "fixture.txt"), "base");
             await Git(first, "add", "api-wrangler/fixture.txt");
             await Git(first, "-c", "user.name=Fixture", "-c", "user.email=fixture@example.test", "-c", "commit.gpgsign=false", "commit", "-m", "Base");
             await Git(first, "push", "-u", "origin", "HEAD");
             await Git(root, "clone", remote, second);
+            await ConfigureRepository(second);
             string expectedBranch = await Git(second, "branch", "--show-current");
             await File.WriteAllTextAsync(Path.Combine(first, "api-wrangler", "fixture.txt"), "remote");
             await Git(first, "commit", "-am", "Remote update");
@@ -124,6 +128,7 @@ public sealed class FoundationTests
             var service = new GitRepositoryService();
             await service.InitializeAsync(remote, bare: true);
             await service.CloneAsync(remote, first);
+            await ConfigureRepository(first);
             Directory.CreateDirectory(Path.Combine(first, "api-wrangler"));
             await File.WriteAllTextAsync(Path.Combine(first, "api-wrangler", "asset.txt"), "one");
             await File.WriteAllTextAsync(Path.Combine(first, "api-wrangler", "CaseFile.txt"), "case baseline");
@@ -131,6 +136,7 @@ public sealed class FoundationTests
             await Git(first, "-c", "user.name=Fixture", "-c", "user.email=fixture@example.test", "-c", "commit.gpgsign=false", "commit", "-m", "First");
             await Git(first, "push", "-u", "origin", "HEAD");
             await Git(root, "clone", remote, second);
+            await ConfigureRepository(second);
             string defaultBranch = await Git(second, "branch", "--show-current");
             await File.WriteAllTextAsync(Path.Combine(first, "api-wrangler", "asset.txt"), "two");
             await Git(first, "commit", "-am", "Second");
@@ -191,6 +197,7 @@ public sealed class FoundationTests
             var service = new GitRepositoryService();
             await service.InitializeAsync(remote, bare: true);
             await service.CloneAsync(remote, repo);
+            await ConfigureRepository(repo);
             Directory.CreateDirectory(Path.GetDirectoryName(fullFile)!);
             await File.WriteAllTextAsync(fullFile, "base");
             await Git(repo, "add", file);
@@ -270,6 +277,13 @@ public sealed class FoundationTests
         {
             Directory.Delete(root, true);
         }
+    }
+
+    private static async Task ConfigureRepository(string repository)
+    {
+        await Git(repository, "config", "user.name", "Fixture");
+        await Git(repository, "config", "user.email", "fixture@example.test");
+        await Git(repository, "config", "commit.gpgsign", "false");
     }
 
     private static Task<string> CommitFixture(string repository, string message) =>
