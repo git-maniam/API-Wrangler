@@ -2532,18 +2532,27 @@ Do not begin distributed infrastructure before these decisions are settled.
 
 **Implementation checkpoint (2026-11-07):** Phase 1 project discovery, versioned schemas, canonical assets, journaled persistence, watcher/recovery behavior, snapshots, local settings, and a desktop asset editor are implemented in PR #57. The five Phase 1 exit checks pass locally. After the Linux writer-lease fix, hosted Windows and Linux headless jobs each passed 30 tests with zero skipped; desktop build, format, and publish passed. ADR-0002 defines version 1 as the first supported format. P1.1-P1.3 are In review; P1.4 manual project-editor accessibility acceptance is In progress. The phase epic remains In progress until review, acceptance, and merge. See docs/implementation-status.md and docs/phase-1-exit-review.md.
 
-#### Restart bookmark (updated 2026-11-08 21:46 IST)
+#### Restart bookmark (updated 2026-11-08 21:58 IST)
 
-Phase 6.1 (Production Node worker, trust policy, and packages) is complete and verified on branch `phase6-scripting-and-packages`.
+Phase 6.2 (Postman compatibility adapter and fixtures) is complete and verified on branch `phase6-postman-adapter`.
 Status:
-- P6.1 (Issue #27):
-  - `ProjectTrustService`: Host-local trust storage, non-execution on repository open/clone/fetch/import, deterministic SHA-256 script hash across all project scripts and manifests, detection of tampered scripts, and explicit untrusted execution blocking.
-  - `NodeRuntimeService`: Node and npm discovery across PATH, standard locations, and environment variables, with Node LTS 20+ validation and dependency diagnostics.
-  - `NpmPackageService`: Package metadata extraction without code execution, lockfile presence verification, `npm ci --ignore-scripts` enforcement, separate explicit lifecycle execution, and host configuration for private registries.
-  - Production Node Worker (`workers/node/src/worker.ts` & `NodeScriptHost`): Framed binary IPC, native `wrangler.test` and `wrangler.expect` assertions, request/response contexts, scoped variable mutations, bounded console logs, and hard termination of infinite loops/descendant processes via wall-clock timeouts.
-  - Documentation: Verified in `docs/phase-6.1-progress.md`.
-- Automated test suite: 213 passed, 0 failed, 0 skipped. Desktop smoke (`scripts/Test-Desktop.ps1`) passed cleanly. Solution builds with 0 warnings/errors in Release. `dotnet format --verify-no-changes` passed.
-- Next work: submit PR for `phase6-scripting-and-packages`, monitor CI checks, merge into `main`, update Issue #27 to `Done` in Project 4, and begin P6.2 (Issue #28: Postman compatibility adapter and fixtures).
+- P6.2 (Issue #28):
+  - Postman Runtime Adapter (`workers/node/src/worker.ts`):
+    - `pm.test` & `pm.expect` with Chai BDD matchers (`to.equal`, `to.eql`, `to.be.ok`, `to.have.property`, `to.include`, `to.be.above`, `to.be.at.least`, `to.be.below`, `to.be.at.most`, `to.be.a`, `to.be.an`, `to.be.true`, `to.be.false`, `to.be.null`, `to.be.undefined`, `to.match`, and `.not` inversion).
+    - `pm.response`: code, status, headers, responseTime, size, text(), json(), and assertions `to.have.status()`, `to.have.header()`, `to.have.jsonBody()`, `to.be.ok`, `to.be.clientError`, `to.be.serverError`.
+    - `pm.request`: method, url (`toString()`, `getPath()`), headers, body.
+    - Variable scopes: `pm.environment`, `pm.collectionVariables`, `pm.variables`, `pm.iterationData` with `get`, `set`, `has`, `unset`, `clear`, `toObject`.
+    - Secondary requests: `pm.sendRequest` with callback or Promise support.
+    - Flow control: `postman.setNextRequest(target)`.
+    - Legacy syntax: `tests["name"] = boolean` and legacy globals (`responseCode`, `responseBody`, `responseTime`).
+    - Visible traps: `pm.visualizer`, `pm.cookies`, `pm.execution.skipRequest`.
+  - Static Analysis (`PostmanCompatibilityService` in `ApiWrangler.Application`):
+    - AST/regex script analyzer identifying supported and unsupported Postman features.
+  - Automated tests: 218 passed, 0 failed, 0 skipped (`PostmanCompatibilityAdapterTests`, `NodeScriptHostTests`, and all Phase 0-5 tests).
+  - Desktop smoke (`scripts/Test-Desktop.ps1`): passed (`{"editorRoundTrip":true,"httpRoundTrip":true,"cancellation":true,"dispatcherTicksDuringRequest":9}`).
+  - Formatter (`dotnet format --verify-no-changes`): passed with zero changes.
+  - Documentation: Verified in `docs/phase-6.2-progress.md`.
+- Next work: push branch `phase6-postman-adapter`, create PR for Issue #28, await CI verification, squash-merge into `main`, update Issue #28 to Done in Project 4, and start P6.3 (Issue #29: Transactional Postman/OpenAPI/cURL/HAR import and supported exports, Milestone B).
 Published checkpoint: implementation `9156d80` pushed; PR #69 is now non-draft and P4.1 (#20) is In review. P4 (#19) remains In progress. Hosted desktop/Windows/Linux checks were pending at 11:25 IST. Resume by checking those results and PR review before merge/completion; local evidence is 62 passing tests and the passing desktop dataset smoke described below. No tests/builds rerun for this final metadata refresh. Next 30-minute refresh is due by 11:55 IST if execution is active.
 
 Current verified handoff: P4.1 file-backed import and desktop prepare/accept workflow implemented on `phase4-delimited-reader`, PR #69 being submitted for review. `PreparedDatasetFile` streams validated rows to a temporary spool; `ImportDatasetFileAsync` holds the project writer gate, verifies the prepared hash, publishes immutable JSONL then atomically saves its definition. Full-source mappings/culture/null/date conversions use the same streaming converter as preview. Desktop supports CSV/TSV/JSON/JSONL, UTF-8/UTF-16 LE/Windows-1252, explicit case-ID addition, cancellation and stale-preview rejection. Source changes after preparation cannot alter accepted rows. Release solution build succeeded; 62 dataset/persistence tests passed, 0 skipped. Desktop dataset smoke passed and screenshot inspected (`artifacts/dataset-ui-smoke/dataset-import.png`). A smoke-only compile error referencing the wrong tab name was corrected and the desktop rebuild/smoke passed. Changed-file formatting only afterward; no broad retest. Prior unverified notes below are superseded. Next: inspect PR #69 review/CI, resolve findings; do not mark P4.1 Done until acceptance and merge. P4 epic stays In progress; then continue P4.2 (#21) grid/clipboard work. Preserve 14 unrelated whitespace edits. No external blocker. Limits and crash-orphan behavior: `docs/dataset-import.md`.

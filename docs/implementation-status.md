@@ -1,5 +1,25 @@
 # Implementation status
 
+## Phase 6.2 complete: Postman compatibility adapter and fixtures (2026-11-08 21:58 IST)
+
+Phase 6.2 is implemented and verified on branch `phase6-postman-adapter`:
+- P6.2 (Issue #28):
+  - Postman Runtime Adapter (`workers/node/src/worker.ts`):
+    - `pm.test` & `pm.expect` with Chai BDD matchers (`to.equal`, `to.eql`, `to.be.ok`, `to.have.property`, `to.include`, `to.be.above`, `to.be.at.least`, `to.be.below`, `to.be.at.most`, `to.be.a`, `to.be.an`, `to.be.true`, `to.be.false`, `to.be.null`, `to.be.undefined`, `to.match`, and `.not` inversion).
+    - `pm.response`: code, status, headers, responseTime, size, text(), json(), and assertions `to.have.status()`, `to.have.header()`, `to.have.jsonBody()`, `to.be.ok`, `to.be.clientError`, `to.be.serverError`.
+    - `pm.request`: method, url (`toString()`, `getPath()`), headers, body.
+    - Variable scopes: `pm.environment`, `pm.collectionVariables`, `pm.variables`, `pm.iterationData` with `get`, `set`, `has`, `unset`, `clear`, `toObject`.
+    - Secondary requests: `pm.sendRequest` with callback or Promise support.
+    - Flow control: `postman.setNextRequest(target)`.
+    - Legacy syntax: `tests["name"] = boolean` and legacy globals (`responseCode`, `responseBody`, `responseTime`).
+    - Visible traps: `pm.visualizer`, `pm.cookies`, `pm.execution.skipRequest`.
+  - Static Analysis (`PostmanCompatibilityService` in `ApiWrangler.Application`):
+    - AST/regex script analyzer identifying supported and unsupported Postman features.
+  - Automated tests: 218 passed, 0 failed, 0 skipped (`PostmanCompatibilityAdapterTests`, `NodeScriptHostTests`, and all Phase 0-5 tests).
+  - Desktop smoke (`scripts/Test-Desktop.ps1`): passed (`{"editorRoundTrip":true,"httpRoundTrip":true,"cancellation":true,"dispatcherTicksDuringRequest":9}`).
+  - Formatter (`dotnet format --verify-no-changes`): passed with zero deviations.
+  - Documentation: Verified in `docs/phase-6.2-progress.md`.
+
 ## Phase 6.1 complete: Production Node worker, trust policy, and packages (2026-11-08 21:46 IST)
 
 Phase 6.1 is implemented and verified on branch `phase6-scripting-and-packages`:
