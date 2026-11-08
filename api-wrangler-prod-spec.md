@@ -2532,9 +2532,20 @@ Do not begin distributed infrastructure before these decisions are settled.
 
 **Implementation checkpoint (2026-11-07):** Phase 1 project discovery, versioned schemas, canonical assets, journaled persistence, watcher/recovery behavior, snapshots, local settings, and a desktop asset editor are implemented in PR #57. The five Phase 1 exit checks pass locally. After the Linux writer-lease fix, hosted Windows and Linux headless jobs each passed 30 tests with zero skipped; desktop build, format, and publish passed. ADR-0002 defines version 1 as the first supported format. P1.1-P1.3 are In review; P1.4 manual project-editor accessibility acceptance is In progress. The phase epic remains In progress until review, acceptance, and merge. See docs/implementation-status.md and docs/phase-1-exit-review.md.
 
-#### Restart bookmark (updated 2026-11-09 01:05 IST)
+#### Restart bookmark (updated 2026-11-09 01:20 IST)
 
-Phase 12.1 (Playwright package, traffic matching, and combined results) is implemented and verified on branch `phase12-playwright-traffic`:
+Phase 12 (Playwright and visual workflows) is fully implemented and certified complete on branch `phase12-visual-flows`:
+- P12.2 (Issue #48):
+  - Domain models (`VisualFlowModels.cs`): `FlowNodeKind`, `FlowEdge`, `FlowNodeDefinition`, `FlowDefinition`, `FlowNodeLayout`, `FlowLayoutDefinition`, `FlowExecutionOutcome`, `FlowNodeExecutionRecord`, `FlowExecutionReport`, `FlowValidationDiagnostic`, `FlowValidationResult`, and `DebuggerState`.
+  - Application services (`VisualFlowEngine.cs`):
+    - Separation of canvas coordinates from execution semantics: `FlowDefinition` contains exclusively semantic nodes and edges; coordinates live in `FlowLayoutDefinition` preventing Git merge conflicts on layout repositioning.
+    - Graph validation: Rejects unreachable nodes via BFS traversal from the Start node and rejects unbounded loops lacking a positive `MaxIterations` limit.
+    - Shared execution engine: Reuses `HttpRequestService` and `VariableContext` execution primitives for request dispatch and variable evaluation.
+    - Secret redaction: Variables containing sensitive keywords (`password`, `secret`, `token`, `apiKey`, `credential`, etc.) or token prefixes are automatically masked with `[REDACTED]` during variable inspection and snapshot recording.
+    - Cancellation propagation: Immediately propagates cancellation tokens across in-flight requests and delay intervals.
+    - Interactive debugger session (`FlowDebugSession`): Supports setting/removing breakpoints, single-step stepping (`StepAsync`), run-to-breakpoint (`ContinueAsync`), and redacted variable inspection.
+  - CLI operations: Added `flow run` command to `api-wrangler` CLI (`Program.cs`) for headless execution of flow definition files.
+  - Integration tests (`VisualFlowTests.cs`): 4 tests verifying rejection of unreachable nodes and unbounded loops, cancellation propagation, canvas coordinate separation from semantics, shared execution engine with secret redaction, and debugger stepping/breakpoints.
 - P12.1 (Issue #47):
   - Domain models (`PlaywrightModels.cs`): `CapturedTrafficRecord`, `TrafficMatchResult`, `TrafficAssertionRule`, `CapturedTrafficValidationResult`, `DependencyEdge`, `TrafficDependencyMap`, `PlaywrightCombinedScenarioResult`, and `PlaywrightSummaryReport`.
   - TypeScript integration (`workers/node/src/playwright.ts`):
@@ -2550,9 +2561,9 @@ Phase 12.1 (Playwright package, traffic matching, and combined results) is imple
     - `GenerateCiArtifacts`: Emits machine-readable `playwright-api-report.json` and formatted `playwright-api-summary.md` with scenario breakdown tables.
   - CLI operations: Added `playwright evaluate` command to `api-wrangler` CLI (`Program.cs`) for headless CI evaluation of captured test traffic.
   - Integration tests (`PlaywrightTrafficTests.cs`): 4 tests verifying passing UI with failing API assertion naming the scenario, ambiguous/unmatched traffic surfacing and secret redaction, explicit limitation disclosure and CI artifact generation, and dependency mapping/draft request generation.
-  - Full automated test suite: 288 passed, 0 failed, 0 skipped. `scripts/Test-Desktop.ps1` passed cleanly. `dotnet format --verify-no-changes` passed.
-  - Documentation: Verified in `docs/phase-12.1-progress.md`.
-- Next work: push branch `phase12-playwright-traffic`, open PR for Issue #47, move ticket in Project 4 to In review, await CI checks, squash-merge into `main`, mark Issue #47 Done in Project 4, and advance to P12.2 (Issue #48: Text-backed visual flows using shared execution primitives).
+- Full automated test suite: 292 passed, 0 failed, 0 skipped. `scripts/Test-Desktop.ps1` passed cleanly. `dotnet format --verify-no-changes` passed.
+- Documentation: Verified in `docs/phase-12.1-progress.md`, `docs/phase-12.2-progress.md`, and `docs/phase-12-exit-review.md`.
+- Next work: push branch `phase12-visual-flows`, open PR for Issue #48, move ticket in Project 4 to In review, await CI checks, squash-merge into `main`, update Issue #48 and Phase Epic #46 to Done in Project 4, and advance to Phase 13 (Documentation, optional AI, and release hardening).
 Published checkpoint: implementation `9156d80` pushed; PR #69 is now non-draft and P4.1 (#20) is In review. P4 (#19) remains In progress. Hosted desktop/Windows/Linux checks were pending at 11:25 IST. Resume by checking those results and PR review before merge/completion; local evidence is 62 passing tests and the passing desktop dataset smoke described below. No tests/builds rerun for this final metadata refresh. Next 30-minute refresh is due by 11:55 IST if execution is active.
 
 Current verified handoff: P4.1 file-backed import and desktop prepare/accept workflow implemented on `phase4-delimited-reader`, PR #69 being submitted for review. `PreparedDatasetFile` streams validated rows to a temporary spool; `ImportDatasetFileAsync` holds the project writer gate, verifies the prepared hash, publishes immutable JSONL then atomically saves its definition. Full-source mappings/culture/null/date conversions use the same streaming converter as preview. Desktop supports CSV/TSV/JSON/JSONL, UTF-8/UTF-16 LE/Windows-1252, explicit case-ID addition, cancellation and stale-preview rejection. Source changes after preparation cannot alter accepted rows. Release solution build succeeded; 62 dataset/persistence tests passed, 0 skipped. Desktop dataset smoke passed and screenshot inspected (`artifacts/dataset-ui-smoke/dataset-import.png`). A smoke-only compile error referencing the wrong tab name was corrected and the desktop rebuild/smoke passed. Changed-file formatting only afterward; no broad retest. Prior unverified notes below are superseded. Next: inspect PR #69 review/CI, resolve findings; do not mark P4.1 Done until acceptance and merge. P4 epic stays In progress; then continue P4.2 (#21) grid/clipboard work. Preserve 14 unrelated whitespace edits. No external blocker. Limits and crash-orphan behavior: `docs/dataset-import.md`.
