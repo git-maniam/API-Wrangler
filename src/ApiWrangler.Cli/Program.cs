@@ -379,4 +379,90 @@ runner.Subcommands.Add(runnerExec);
 
 root.Subcommands.Add(runner);
 
+var mock = new Command("mock", "Mock server operations: run local or shared mock instances with explicit authentication.");
+
+var mockServe = new Command("serve", "Start a headless mock server instance from a JSON rules file.");
+var rulesFile = new Option<FileInfo?>("--rules") { Description = "Path to JSON file containing MockRule array" };
+var portOption = new Option<int>("--port") { DefaultValueFactory = _ => 0, Description = "Port number (0 for dynamic)" };
+var hostOption = new Option<string>("--host") { DefaultValueFactory = _ => "127.0.0.1", Description = "Host address to bind to" };
+var allowExternalOption = new Option<bool>("--allow-external") { Description = "Allow remote/external network binding" };
+var authTokenOption = new Option<string?>("--auth-token") { Description = "Authentication token required for requests" };
+var adminKeyOption = new Option<string?>("--admin-key") { Description = "Admin API key for state reset and logs" };
+var maxLogsOption = new Option<int>("--max-logs") { DefaultValueFactory = _ => 1000, Description = "Maximum recorded log entries" };
+
+mockServe.Options.Add(rulesFile);
+mockServe.Options.Add(portOption);
+mockServe.Options.Add(hostOption);
+mockServe.Options.Add(allowExternalOption);
+mockServe.Options.Add(authTokenOption);
+mockServe.Options.Add(adminKeyOption);
+mockServe.Options.Add(maxLogsOption);
+
+mockServe.SetAction(async (parse, token) =>
+{
+    try
+    {
+        var file = parse.GetValue(rulesFile);
+        var rules = new List<MockRule>();
+        if (file is not null && file.Exists)
+        {
+            var content = await File.ReadAllTextAsync(file.FullName, token);
+            var deserialized = JsonSerializer.Deserialize<List<MockRule>>(content, json);
+            if (deserialized is not null)
+            {
+                rules.AddRange(deserialized);
+            }
+        }
+
+        var config = new MockServerConfiguration(
+            Host: parse.GetValue(hostOption)!,
+            Port: parse.GetValue(portOption),
+            AllowExternalBinding: parse.GetValue(allowExternalOption),
+            AuthToken: parse.GetValue(authTokenOption),
+            AdminApiKey: parse.GetValue(adminKeyOption),
+            MaxLogRetention: parse.GetValue(maxLogsOption)
+        );
+
+        var engine = new MockEngine();
+        foreach (var r in rules)
+        {
+            engine.AddRule(r);
+        }
+
+        await engine.StartAsync(config, token);
+
+        var status = engine.GetDeploymentStatus();
+        Console.WriteLine(JsonSerializer.Serialize(status, json));
+
+        try
+        {
+            await Task.Delay(Timeout.Infinite, token);
+        }
+        catch (OperationCanceledException)
+        {
+            // Graceful cancellation requested
+        }
+
+        await engine.StopAsync();
+        return 0;
+    }
+    catch (InvalidOperationException ex)
+    {
+        Console.Error.WriteLine(ex.Message);
+        return 2;
+    }
+    catch (OperationCanceledException)
+    {
+        return 4;
+    }
+    catch (Exception ex)
+    {
+        Console.Error.WriteLine($"Mock server error: {ex.Message}");
+        return 3;
+    }
+});
+mock.Subcommands.Add(mockServe);
+
+root.Subcommands.Add(mock);
+
 return await root.Parse(args).InvokeAsync();

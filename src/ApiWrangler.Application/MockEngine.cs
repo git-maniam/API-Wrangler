@@ -1,4 +1,6 @@
 using System.Diagnostics;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.RegularExpressions;
 using ApiWrangler.Domain;
 using Microsoft.AspNetCore.Builder;
@@ -18,6 +20,7 @@ public sealed class MockEngine : IAsyncDisposable
     private Random? seededRandom;
     private int intermittentSeed;
     private string? currentListeningUrl;
+    private MockServerConfiguration? activeConfig;
 
     public string? ListeningUrl => currentListeningUrl;
     public IReadOnlyList<MockRule> Rules { get { lock (syncRoot) return rules.ToList(); } }
@@ -140,9 +143,35 @@ public sealed class MockEngine : IAsyncDisposable
         }
     }
 
+    public HostedMockDeploymentStatus GetDeploymentStatus()
+    {
+        lock (syncRoot)
+        {
+            return new HostedMockDeploymentStatus(
+                IsListening: app is not null,
+                ListeningUrl: currentListeningUrl,
+                ActiveRulesCount: rules.Count,
+                RecordedLogCount: logs.Count,
+                ExternalBindingEnabled: activeConfig?.AllowExternalBinding ?? false,
+                AuthenticationEnforced: activeConfig?.RequireAuthentication == true || !string.IsNullOrWhiteSpace(activeConfig?.AuthToken)
+            );
+        }
+    }
+
     public async Task StartAsync(MockServerConfiguration? config = null, CancellationToken token = default)
     {
         config ??= new MockServerConfiguration();
+        activeConfig = config;
+
+        if (config.AllowExternalBinding && string.IsNullOrWhiteSpace(config.AuthToken))
+        {
+            throw new InvalidOperationException("Remote exposure requires explicit authentication configuration (AuthToken). Starting a mock server with external binding without authentication is not permitted.");
+        }
+
+        if (config.RequireAuthentication && string.IsNullOrWhiteSpace(config.AuthToken))
+        {
+            throw new InvalidOperationException("RequireAuthentication is enabled but no AuthToken was configured.");
+        }
 
         // Enforce loopback unless explicitly enabled
         string host = config.AllowExternalBinding ? config.Host : "127.0.0.1";
@@ -154,12 +183,77 @@ public sealed class MockEngine : IAsyncDisposable
 
         app = builder.Build();
 
+        // Admin endpoints
+        app.MapGet("/__admin/health", () =>
+        {
+            return Results.Ok(GetDeploymentStatus());
+        });
+
+        app.MapGet("/__admin/rules", (HttpContext context) =>
+        {
+            if (!IsAdminAuthorized(context, config))
+            {
+                return Results.Json(new { error = "Unauthorized", message = "Admin authorization required." }, statusCode: 401);
+            }
+            return Results.Ok(Rules);
+        });
+
+        app.MapGet("/__admin/logs", (HttpContext context) =>
+        {
+            if (!IsAdminAuthorized(context, config))
+            {
+                return Results.Json(new { error = "Unauthorized", message = "Admin authorization required." }, statusCode: 401);
+            }
+            return Results.Ok(Logs);
+        });
+
+        app.MapPost("/__admin/state/reset", (HttpContext context) =>
+        {
+            if (!IsAdminAuthorized(context, config))
+            {
+                return Results.Json(new { error = "Unauthorized", message = "Admin authorization required." }, statusCode: 401);
+            }
+            ResetState();
+            return Results.Ok(new { status = "ResetSuccessful" });
+        });
+
         app.MapFallback(async (HttpContext context) =>
         {
             var sw = Stopwatch.StartNew();
             string method = context.Request.Method;
             string path = context.Request.Path.Value ?? "/";
             string query = context.Request.QueryString.Value ?? "";
+
+            // Check authentication for mock routes if configured
+            bool requiresAuth = config.RequireAuthentication || !string.IsNullOrWhiteSpace(config.AuthToken);
+            if (requiresAuth && !IsAuthorized(context, config.AuthToken!))
+            {
+                sw.Stop();
+                context.Response.StatusCode = 401;
+                context.Response.ContentType = "application/json";
+                await context.Response.WriteAsync("{\"error\": \"Unauthorized\", \"message\": \"Valid authorization header or API key required.\"}", context.RequestAborted).ConfigureAwait(false);
+
+                var unauthLog = new MockServerLogEntry(
+                    Timestamp: DateTimeOffset.UtcNow,
+                    Method: method,
+                    Path: path,
+                    QueryString: query,
+                    Headers: context.Request.Headers.ToDictionary(h => h.Key, h => h.Value.ToString()),
+                    Body: null,
+                    MatchedRuleCount: 0,
+                    MatchedRuleId: null,
+                    ResponseStatusCode: 401,
+                    FaultApplied: "AuthenticationRequired",
+                    Duration: sw.Elapsed
+                );
+                lock (syncRoot)
+                {
+                    logs.Add(unauthLog);
+                    int maxRetention = config.MaxLogRetention > 0 ? config.MaxLogRetention : 1000;
+                    while (logs.Count > maxRetention) logs.RemoveAt(0);
+                }
+                return;
+            }
 
             string? body = null;
             if (context.Request.ContentLength > 0 || (context.Request.ContentType?.Contains("text") == true || context.Request.ContentType?.Contains("json") == true))
@@ -293,6 +387,8 @@ public sealed class MockEngine : IAsyncDisposable
             lock (syncRoot)
             {
                 logs.Add(logEntry);
+                int maxRetention = config.MaxLogRetention > 0 ? config.MaxLogRetention : 1000;
+                while (logs.Count > maxRetention) logs.RemoveAt(0);
             }
         });
 
@@ -419,6 +515,55 @@ public sealed class MockEngine : IAsyncDisposable
         catch { }
 
         return false;
+    }
+
+    private static bool IsAuthorized(HttpContext context, string expectedToken)
+    {
+        if (context.Request.Headers.TryGetValue("Authorization", out var authValues))
+        {
+            string authHeader = authValues.ToString();
+            if (authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+            {
+                string token = authHeader["Bearer ".Length..].Trim();
+                if (FixedTimeEquals(token, expectedToken)) return true;
+            }
+        }
+
+        if (context.Request.Headers.TryGetValue("X-Api-Key", out var apiKeyValues))
+        {
+            string key = apiKeyValues.ToString().Trim();
+            if (FixedTimeEquals(key, expectedToken)) return true;
+        }
+
+        return false;
+    }
+
+    private static bool IsAdminAuthorized(HttpContext context, MockServerConfiguration config)
+    {
+        // If no admin key and no auth token and auth not required, open by default (e.g. local loopback)
+        if (string.IsNullOrWhiteSpace(config.AdminApiKey) && string.IsNullOrWhiteSpace(config.AuthToken) && !config.RequireAuthentication)
+        {
+            return true;
+        }
+
+        if (!string.IsNullOrWhiteSpace(config.AdminApiKey) && IsAuthorized(context, config.AdminApiKey))
+        {
+            return true;
+        }
+
+        if (!string.IsNullOrWhiteSpace(config.AuthToken) && IsAuthorized(context, config.AuthToken))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    private static bool FixedTimeEquals(string a, string b)
+    {
+        byte[] aBytes = Encoding.UTF8.GetBytes(a);
+        byte[] bBytes = Encoding.UTF8.GetBytes(b);
+        return CryptographicOperations.FixedTimeEquals(aBytes, bBytes);
     }
 }
 

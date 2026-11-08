@@ -1,16 +1,27 @@
 # Implementation status
 
-## Phase 11.1 complete: Distributed worker coordination and truthful aggregation (2026-11-09 00:41 IST)
+## Phase 11 complete: Distributed load and hosted mocks (2026-11-09 00:52 IST)
 
-Phase 11.1 is implemented and verified on branch `phase11-distributed-coordination`:
+Phase 11 is fully implemented and certified complete on branch `phase11-hosted-mocks`:
+- P11.2 (Issue #45):
+  - Domain models (`MockModels.cs`): Enhanced `MockServerConfiguration` (`AuthToken`, `AdminApiKey`, `RequireAuthentication`, `MaxLogRetention`) and added `HostedMockDeploymentStatus`.
+  - Application services (`MockEngine.cs`):
+    - Mandatory authentication for remote exposure: `AllowExternalBinding` requires `AuthToken` or startup is aborted with `InvalidOperationException`.
+    - Token authentication: Constant-time validation (`CryptographicOperations.FixedTimeEquals`) supporting both `Authorization: Bearer <token>` and `X-Api-Key: <token>`, returning 401 Unauthorized on invalid/missing credentials.
+    - Administrative control plane: `GET /__admin/health` (public readiness probe), `GET /__admin/rules`, `GET /__admin/logs`, and `POST /__admin/state/reset` for test isolation.
+    - Bounded log retention: In-memory logs capped at `MaxLogRetention` using FIFO eviction to prevent memory leakage in long-running services.
+    - Semantic equivalence: Local loopback and remote hosted mock deployments execute identical rules, deterministic precedence, scenario state transitions, and fault simulations.
+  - CLI operations: Added `mock serve` command to `api-wrangler` CLI (`Program.cs`) for headless mock hosting in Docker/Linux/Windows containers.
+  - Operational documentation: Published `docs/operations/hosted-mock-deployment.md`.
+  - Integration tests (`HostedMockTests.cs`): 5 tests verifying mandatory authentication on external binding, unauthorized request rejection, semantic equivalence between local and hosted mocks, administrative endpoints and state reset, and bounded log retention.
 - P11.1 (Issue #44):
   - Domain models (`DistributedLoadModels.cs`): `DistributedWorkerAssignment`, `DistributedLoadPlan`, `DistributedWorkerReport`, and `DistributedLoadSummary`.
   - Application services (`DistributedLoadCoordinator.cs`):
     - `PlanDistribution`: Multi-worker partitioning of virtual users, target arrival rate (RPS), and contiguous input slice boundaries (`InputSliceStartIndex`, `InputSliceCount`), with coordinated synchronized start timestamps.
     - `AggregateResults`: Strict snapshot hash matching (rejects unaligned or mismatched worker snapshots), truthful multi-worker histogram pooling via `LoadExecutionEngine.MergeHistograms` to prevent percentile averaging corruption, missing worker loss tracking (`PartialWorkerLoss`, `MissingWorkerIds`), unskewed achieved throughput reporting, error categorization pooling, and multi-worker threshold evaluation.
   - Integration tests (`DistributedLoadTests.cs`): 5 tests verifying even input slice and VU allocation, rejection of mismatched worker snapshots, truthful histogram aggregation without averaging, worker loss visibility, and multi-worker threshold evaluation.
-  - Full automated test suite: 278 passed, 0 failed, 0 skipped. `scripts/Test-Desktop.ps1` passed cleanly (`{"editorRoundTrip":true,"httpRoundTrip":true,"cancellation":true,"dispatcherTicksDuringRequest":9}`). `dotnet format --verify-no-changes` passed.
-  - Documentation: Verified in `docs/phase-11.1-progress.md`.
+- Full automated test suite: 283 passed, 0 failed, 0 skipped. `scripts/Test-Desktop.ps1` passed cleanly. `dotnet format --verify-no-changes` passed.
+- Documentation: Verified in `docs/phase-11.1-progress.md`, `docs/phase-11.2-progress.md`, and `docs/phase-11-exit-review.md`.
 
 ## Phase 10 complete: Unattended execution and monitoring (2026-11-09 00:30 IST)
 
