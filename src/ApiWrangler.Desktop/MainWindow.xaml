@@ -437,6 +437,51 @@
                     </DockPanel>
                 </Grid>
             </TabItem>
+            <TabItem Header="Load testing">
+                <Grid Margin="12" DataContext="{Binding LoadTesting}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="360" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <!-- Left: Configuration & Controls -->
+                    <DockPanel Grid.Column="0" Margin="0,0,12,0">
+                        <TextBlock DockPanel.Dock="Top" Text="Local Load Execution" FontWeight="Bold" FontSize="16" Margin="0,0,0,8" />
+                        <TextBlock DockPanel.Dock="Top" Text="Target URL:" Margin="0,2" />
+                        <TextBox DockPanel.Dock="Top" Text="{Binding TargetUrl, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,6" />
+                        
+                        <WrapPanel DockPanel.Dock="Top" Margin="0,2,0,6">
+                            <TextBlock Text="Method: " VerticalAlignment="Center" />
+                            <TextBox Width="50" Text="{Binding Method, UpdateSourceTrigger=PropertyChanged}" />
+                            <TextBlock Text=" VUs: " VerticalAlignment="Center" Margin="6,0,0,0" />
+                            <TextBox Width="40" Text="{Binding VirtualUsers, UpdateSourceTrigger=PropertyChanged}" />
+                            <TextBlock Text=" Duration (s): " VerticalAlignment="Center" Margin="6,0,0,0" />
+                            <TextBox Width="40" Text="{Binding DurationSeconds, UpdateSourceTrigger=PropertyChanged}" />
+                        </WrapPanel>
+
+                        <WrapPanel DockPanel.Dock="Top" Margin="0,2,0,6">
+                            <TextBlock Text="Model: " VerticalAlignment="Center" />
+                            <ComboBox SelectedValue="{Binding LoadModel}" SelectedValuePath="Content" Width="170">
+                                <ComboBoxItem Content="ClosedLoopVirtualUsers" IsSelected="True" />
+                                <ComboBoxItem Content="OpenLoopArrivalRate" />
+                            </ComboBox>
+                        </WrapPanel>
+
+                        <CheckBox DockPanel.Dock="Top" Content="Explicit target confirmation acknowledged" IsChecked="{Binding Confirmed}" Margin="0,4,0,8" />
+
+                        <WrapPanel DockPanel.Dock="Top" Margin="0,4,0,8">
+                            <Button Content="Start Test" Command="{Binding StartLoadTestCommand}" Margin="0,0,8,0" Padding="12,3" />
+                            <Button Content="Cancel" Command="{Binding CancelLoadTestCommand}" Padding="12,3" />
+                        </WrapPanel>
+
+                        <TextBlock DockPanel.Dock="Top" Text="{Binding Status}" FontWeight="SemiBold" Margin="0,4,0,4" />
+                    </DockPanel>
+                    <!-- Right: Reports & Histograms -->
+                    <DockPanel Grid.Column="1">
+                        <TextBlock DockPanel.Dock="Top" Text="Load Execution Metrics &amp; Percentiles" FontWeight="Bold" FontSize="16" Margin="0,0,0,8" />
+                        <TextBox Text="{Binding ReportSummary, Mode=OneWay}" IsReadOnly="True" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" FontFamily="Consolas" FontSize="13" AutomationProperties.Name="Load test report summary" />
+                    </DockPanel>
+                </Grid>
+            </TabItem>
             <TabItem Header="Dataset feasibility">
                 <DockPanel Margin="12">
                     <TextBlock DockPanel.Dock="Top" Text="100,000 synthetic cases · paged rows · read-only feasibility fixture" Margin="0,0,0,12" />

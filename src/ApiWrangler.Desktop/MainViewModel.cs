@@ -21,6 +21,7 @@ public partial class MainViewModel(
     public ProjectImportViewModel ProjectImport { get; } = new(() => projectEditor.CurrentSession);
     public ProtocolExpansionViewModel Protocol { get; } = new();
     public MockServerViewModel Mocks { get; } = new();
+    public LoadTestingViewModel LoadTesting { get; } = new();
     public DatasetGridViewModel DatasetGrid { get; } = new();
     public GitWorkbenchViewModel Git { get; } = new();
 

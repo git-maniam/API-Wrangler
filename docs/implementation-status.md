@@ -1,5 +1,19 @@
 # Implementation status
 
+## Phase 9.1 complete: Closed-loop and open-loop load execution (2026-11-08 23:34 IST)
+
+Phase 9.1 is implemented and verified on branch `phase9-load-execution`:
+- P9.1 (Issue #37):
+  - Domain models (`LoadTestModels.cs`): `LoadModelType`, `LoadProfileType`, `LoadTestConfiguration`, `LoadIterationMetric`, `LatencyHistogram`, and `LoadTestReport`.
+  - Application services (`LoadExecutionEngine.cs`):
+    - `LoadExecutionEngine`: High-performance execution engine supporting both closed-loop virtual user models and open-loop arrival rates.
+    - Safety controls: enforces target confirmation (`RequireTargetConfirmation`), stops automatically on error thresholds (`MaxConsecutiveErrors`), and guarantees clean cancellation without leaking worker tasks.
+    - Telemetry and metrics: computes throughput (achieved vs target RPS), detects load generator saturation, and calculates complete latency histograms (Min, Mean, P50, P90, P95, P99, Max).
+  - Desktop integration: added `LoadTestingViewModel` and a dedicated "Load testing" tab in `MainWindow.xaml` for running tests with real-time metric summaries.
+  - Integration tests (`LoadExecutionEngineTests.cs`): 5 tests verifying percentile calculation, safety confirmation gate, VU execution against local mock server, consecutive error threshold aborts, and clean cancellation.
+  - Automated test suite: 254 passed, 0 failed, 0 skipped. `scripts/Test-Desktop.ps1` passed cleanly. `dotnet format --verify-no-changes` passed.
+  - Documentation: Verified in `docs/phase-9.1-progress.md`.
+
 ## Phase 8 complete: Mocks and webhook debugging (2026-11-08 23:22 IST)
 
 Phase 8 is fully implemented and verified on branch `phase8-webhook-debugging`:
