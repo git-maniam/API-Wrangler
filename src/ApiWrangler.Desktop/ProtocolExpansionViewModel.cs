@@ -36,6 +36,15 @@ public partial class ProtocolExpansionViewModel : ObservableObject
     [ObservableProperty] private string grpcTranscript = "";
     [ObservableProperty] private string grpcStatus = "Ready";
 
+    // WebSocket & SSE
+    [ObservableProperty] private string streamingEndpoint = "ws://127.0.0.1:8080/ws";
+    [ObservableProperty] private string streamingMessage = "{\"type\": \"ping\"}";
+    [ObservableProperty] private string streamingTranscript = "";
+    [ObservableProperty] private string streamingStatus = "Ready";
+
+    private WebSocketSession? activeWebSocket;
+    private SseSession? activeSse;
+
     [ObservableProperty, NotifyPropertyChangedFor(nameof(IsIdle))] private bool isBusy;
     public bool IsIdle => !IsBusy;
 
@@ -118,6 +127,97 @@ public partial class ProtocolExpansionViewModel : ObservableObject
             $"[{t.Timestamp:HH:mm:ss.fff}] [{t.Direction}] {t.EventType}: {t.Payload}"));
 
         GrpcStatus = $"Completed ({result.StatusCode}, {result.Duration.TotalMilliseconds:F1} ms)";
+    }
+
+    [RelayCommand]
+    public async Task ConnectStreamingAsync()
+    {
+        if (IsBusy) return;
+        IsBusy = true;
+        StreamingStatus = $"Connecting to {StreamingEndpoint}...";
+
+        try
+        {
+            if (StreamingEndpoint.StartsWith("ws://", StringComparison.OrdinalIgnoreCase) ||
+                StreamingEndpoint.StartsWith("wss://", StringComparison.OrdinalIgnoreCase))
+            {
+                if (activeWebSocket is not null)
+                {
+                    await activeWebSocket.DisposeAsync();
+                }
+
+                activeWebSocket = new WebSocketSession();
+                await activeWebSocket.ConnectAsync(new Uri(StreamingEndpoint), timeout: TimeSpan.FromSeconds(5));
+                StreamingStatus = $"Connected (WebSocket: {activeWebSocket.State})";
+                UpdateStreamingTranscript(activeWebSocket.Transcript);
+            }
+            else
+            {
+                if (activeSse is not null)
+                {
+                    await activeSse.DisposeAsync();
+                }
+
+                activeSse = new SseSession();
+                await activeSse.ConnectAsync(new Uri(StreamingEndpoint), timeout: TimeSpan.FromSeconds(5));
+                StreamingStatus = "Connected to SSE stream";
+                UpdateStreamingTranscript(activeSse.Transcript);
+            }
+        }
+        catch (Exception ex)
+        {
+            StreamingStatus = $"Connection failed: {ex.Message}";
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    [RelayCommand]
+    public async Task SendWebSocketMessageAsync()
+    {
+        if (activeWebSocket is null)
+        {
+            StreamingStatus = "Not connected to a WebSocket session.";
+            return;
+        }
+
+        try
+        {
+            await activeWebSocket.SendMessageAsync(StreamingMessage);
+            UpdateStreamingTranscript(activeWebSocket.Transcript);
+        }
+        catch (Exception ex)
+        {
+            StreamingStatus = $"Send failed: {ex.Message}";
+        }
+    }
+
+    [RelayCommand]
+    public async Task DisconnectStreamingAsync()
+    {
+        if (activeWebSocket is not null)
+        {
+            await activeWebSocket.DisposeAsync();
+            UpdateStreamingTranscript(activeWebSocket.Transcript);
+            activeWebSocket = null;
+        }
+
+        if (activeSse is not null)
+        {
+            await activeSse.DisposeAsync();
+            UpdateStreamingTranscript(activeSse.Transcript);
+            activeSse = null;
+        }
+
+        StreamingStatus = "Disconnected";
+    }
+
+    private void UpdateStreamingTranscript(IReadOnlyList<StreamingTranscriptEntry> entries)
+    {
+        StreamingTranscript = string.Join("\n", entries.Select(t =>
+            $"[{t.Timestamp:HH:mm:ss.fff}] [{t.Direction}] {t.EventType}: {t.Payload}"));
     }
 }
 

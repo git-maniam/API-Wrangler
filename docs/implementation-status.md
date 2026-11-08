@@ -1,5 +1,18 @@
 # Implementation status
 
+## Phase 7.2 complete: WebSocket and SSE sessions and bounded transcripts (2026-11-08 22:45 IST)
+
+Phase 7.2 is implemented and verified on branch `phase7-websocket-sse`:
+- P7.2 (Issue #32):
+  - Domain models (`StreamingModels.cs`): `StreamingProtocol`, `StreamDirection`, `StreamEventType`, `StreamingTranscriptEntry`, `StreamingReconnectionPolicy`, `StreamingLimits`, and `SseEventEntry`.
+  - Application services (`StreamingService.cs`):
+    - `WebSocketSession`: full async connection, custom HTTP headers, subprotocols, text frame transmission, sliding bounded message buffer with `DroppedCount` telemetry, predicate-driven `AwaitMessageAsync` with timeout/cancellation, and graceful disconnect handshake.
+    - `SseSession`: W3C EventSource line parsing (`event:`, multi-line `data:`, `id:` tracking with `Last-Event-ID` header injection, `retry:`, and comment filtering), sliding bounded buffer with `DroppedCount`, predicate-driven `AwaitEventAsync`, and graceful cancellation.
+  - Desktop integration: Upgraded `ProtocolExpansionViewModel` and added WebSocket & SSE streaming controls and live chronological transcript pane to the "Protocols & Streaming" tab in `MainWindow.xaml`.
+  - Integration tests (`WebSocketAndSseTests.cs`): In-process ASP.NET Core test server hosting WebSocket echo and SSE stream endpoints. Tests connection, header/event parsing, bounded FIFO retention drops, predicate awaiting, and clean disconnection.
+  - Automated test suite: 239 passed, 0 failed, 0 skipped. Desktop smoke (`scripts/Test-Desktop.ps1`) passed cleanly. Format verification passed (`dotnet format --verify-no-changes`).
+  - Documentation: Verified in `docs/phase-7.2-progress.md`.
+
 ## Phase 7.1 complete: GraphQL and gRPC editors, adapters, and contracts (2026-11-08 22:30 IST)
 
 Phase 7.1 is implemented and verified on branch `phase7-graphql-grpc`:
