@@ -1,5 +1,20 @@
 # Implementation status
 
+## Phase 13.1 complete: Contracts, static documentation, catalog, and SDK generation (2026-11-09 01:36 IST)
+
+Phase 13.1 is implemented and verified on branch `phase13-contracts-docs-catalog`:
+- P13.1 (Issue #50):
+  - Domain models (`ContractModels.cs`): `ContractBreakingChange`, `ContractDiffReport`, `ContractOperationLink`, `CatalogSearchResult`, `SdkGenerationTarget`, `GeneratedSdkFile`, and `SdkGenerationResult`.
+  - Application services (`ContractAndCatalogServices.cs`):
+    - `ContractDiffEngine`: Compares baseline and target OpenAPI specifications, detecting removed endpoints, removed HTTP methods, removed required parameters, parameter type changes, newly required request parameters/bodies, and removed response status codes.
+    - `DocumentationGenerator`: Generates responsive HTML (`index.html`) and Markdown (`api-reference.md`) documentation with sensitive secret values and credentials completely omitted or masked with `[REDACTED_SECRET]`.
+    - `ApiCatalogIndex`: High-performance in-memory catalog with measured 10,000-request acceptance benchmarks, executing search queries across 10,000 requests in sub-millisecond to few milliseconds latency.
+    - `SdkGenerator`: Generates idiomatic client SDKs for C# (`ApiClient.cs`), TypeScript (`apiClient.ts`), and Python (`api_client.py`), strictly outputting to isolated preview directories prior to workspace adoption.
+  - CLI operations: Added `contract diff`, `docs generate`, and `sdk generate` commands to `api-wrangler` CLI (`Program.cs`).
+  - Integration tests (`ContractAndCatalogTests.cs`): 4 tests verifying contract breaking change detection, secret omission in generated static documentation, 10,000-request catalog indexing and search performance, and multi-language SDK preview directory generation.
+  - Full automated test suite: 297 passed, 0 failed, 0 skipped. `scripts/Test-Desktop.ps1` passed cleanly. `dotnet format --verify-no-changes` passed.
+  - Documentation: Verified in `docs/phase-13.1-progress.md`.
+
 ## Phase 12 complete: Playwright and visual workflows (2026-11-09 01:20 IST)
 
 Phase 12 is fully implemented and certified complete on branch `phase12-visual-flows`:

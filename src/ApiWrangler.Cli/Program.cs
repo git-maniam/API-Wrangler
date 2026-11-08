@@ -600,4 +600,117 @@ flow.Subcommands.Add(flowRun);
 
 root.Subcommands.Add(flow);
 
+var contract = new Command("contract", "Contract operations: linting, breaking change comparisons, and schema diffs.");
+var contractDiff = new Command("diff", "Compare two OpenAPI specifications and report breaking changes.");
+var baseFileOption = new Option<FileInfo>("--baseline") { Required = true, Description = "Path to baseline OpenAPI specification JSON" };
+var targetFileOption = new Option<FileInfo>("--target") { Required = true, Description = "Path to target OpenAPI specification JSON" };
+contractDiff.Options.Add(baseFileOption);
+contractDiff.Options.Add(targetFileOption);
+contractDiff.SetAction(async (parse, token) =>
+{
+    try
+    {
+        var bf = parse.GetValue(baseFileOption)!;
+        var tf = parse.GetValue(targetFileOption)!;
+        if (!bf.Exists || !tf.Exists)
+        {
+            Console.Error.WriteLine("Baseline or target file not found.");
+            return 2;
+        }
+
+        string baseJson = await File.ReadAllTextAsync(bf.FullName, token);
+        string targetJson = await File.ReadAllTextAsync(tf.FullName, token);
+
+        var diffEngine = new ContractDiffEngine();
+        var report = diffEngine.CompareOpenApiContracts(baseJson, targetJson);
+        Console.WriteLine(JsonSerializer.Serialize(report, json));
+
+        return report.TotalBreakingChanges > 0 ? 1 : 0;
+    }
+    catch (Exception ex)
+    {
+        Console.Error.WriteLine($"Diff error: {ex.Message}");
+        return 3;
+    }
+});
+contract.Subcommands.Add(contractDiff);
+root.Subcommands.Add(contract);
+
+var docs = new Command("docs", "Static documentation generation for collections and contracts.");
+var docsGen = new Command("generate", "Generate HTML and Markdown documentation without secrets.");
+var docsOutput = new Option<DirectoryInfo>("--output") { Required = true, Description = "Output directory for static site" };
+var docsTitle = new Option<string>("--title") { DefaultValueFactory = _ => "API Documentation" };
+var docsReqs = new Option<FileInfo?>("--requests") { Description = "Path to requests JSON array" };
+docsGen.Options.Add(docsOutput);
+docsGen.Options.Add(docsTitle);
+docsGen.Options.Add(docsReqs);
+docsGen.SetAction(async (parse, token) =>
+{
+    try
+    {
+        var reqs = new List<HttpRequestDefinition>();
+        var rf = parse.GetValue(docsReqs);
+        if (rf is not null && rf.Exists)
+        {
+            var txt = await File.ReadAllTextAsync(rf.FullName, token);
+            var parsed = JsonSerializer.Deserialize<List<HttpRequestDefinition>>(txt, json);
+            if (parsed is not null) reqs.AddRange(parsed);
+        }
+
+        var generator = new DocumentationGenerator();
+        generator.PublishDocumentation(parse.GetValue(docsOutput)!.FullName, parse.GetValue(docsTitle)!, reqs);
+        Console.WriteLine(JsonSerializer.Serialize(new { status = "Published", output = parse.GetValue(docsOutput)!.FullName }, json));
+        return 0;
+    }
+    catch (Exception ex)
+    {
+        Console.Error.WriteLine($"Docs generation error: {ex.Message}");
+        return 3;
+    }
+});
+docs.Subcommands.Add(docsGen);
+root.Subcommands.Add(docs);
+
+var sdk = new Command("sdk", "Client SDK generation with separate preview directories.");
+var sdkGen = new Command("generate", "Generate client SDK code into a preview directory.");
+var sdkTargetOption = new Option<string>("--target") { DefaultValueFactory = _ => "csharp", Description = "Target language: csharp, typescript, python" };
+var sdkPreviewDir = new Option<DirectoryInfo>("--preview-dir") { Required = true, Description = "Directory to output preview files" };
+var sdkReqs = new Option<FileInfo?>("--requests") { Description = "Path to requests JSON array" };
+sdkGen.Options.Add(sdkTargetOption);
+sdkGen.Options.Add(sdkPreviewDir);
+sdkGen.Options.Add(sdkReqs);
+sdkGen.SetAction(async (parse, token) =>
+{
+    try
+    {
+        var reqs = new List<HttpRequestDefinition>();
+        var rf = parse.GetValue(sdkReqs);
+        if (rf is not null && rf.Exists)
+        {
+            var txt = await File.ReadAllTextAsync(rf.FullName, token);
+            var parsed = JsonSerializer.Deserialize<List<HttpRequestDefinition>>(txt, json);
+            if (parsed is not null) reqs.AddRange(parsed);
+        }
+
+        var targetLang = Enum.TryParse<SdkGenerationTarget>(parse.GetValue(sdkTargetOption), true, out var t) ? t : SdkGenerationTarget.CSharp;
+        var generator = new SdkGenerator();
+        var result = generator.GenerateSdk(reqs, targetLang, parse.GetValue(sdkPreviewDir)!.FullName);
+
+        Console.WriteLine(JsonSerializer.Serialize(new
+        {
+            target = targetLang.ToString(),
+            previewDirectory = result.PreviewDirectory,
+            filesGenerated = result.Files.Select(f => f.RelativePath).ToList()
+        }, json));
+        return 0;
+    }
+    catch (Exception ex)
+    {
+        Console.Error.WriteLine($"SDK generation error: {ex.Message}");
+        return 3;
+    }
+});
+sdk.Subcommands.Add(sdkGen);
+root.Subcommands.Add(sdk);
+
 return await root.Parse(args).InvokeAsync();
