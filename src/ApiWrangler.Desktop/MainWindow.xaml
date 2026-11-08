@@ -21,7 +21,7 @@
             <TabItem Header="Project assets">
                 <Grid Margin="12" DataContext="{Binding ProjectEditor}">
                     <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
-                    <DockPanel Margin="0,0,0,8">
+                    <DockPanel Grid.Row="1" Margin="0,0,0,8">
                         <Button DockPanel.Dock="Right" Content="_Open project" Command="{Binding OpenProjectCommand}" Margin="8,0,0,0" />
                         <Label DockPanel.Dock="Left" Content="_Project path" Target="{Binding ElementName=ProjectPathBox}" VerticalAlignment="Center" Padding="0" Margin="0,0,8,0" />
                         <TextBox x:Name="ProjectPathBox" Text="{Binding ProjectPath, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Project directory or manifest path" />
@@ -263,6 +263,145 @@
                     <StackPanel Grid.Row="3" Margin="0,8,0,0">
                         <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite" Foreground="DarkSlateGray" />
                         <TextBlock Text="{Binding ClipboardSummary}" TextWrapping="Wrap" Margin="0,2,0,0" Foreground="DimGray" />
+                    </StackPanel>
+                </Grid>
+            </TabItem>
+            <TabItem Header="Git collaboration">
+                <Grid Margin="12" DataContext="{Binding Git}" IsEnabled="{Binding CanInteract}">
+                    <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                    <DockPanel Margin="0,0,0,8">
+                        <TextBlock DockPanel.Dock="Left" Text="Git executable" VerticalAlignment="Center" Margin="0,0,8,0" />
+                        <TextBox Text="{Binding GitExecutable, UpdateSourceTrigger=PropertyChanged}" ToolTip="Executable path or command name" AutomationProperties.Name="Git executable path" />
+                    </DockPanel>
+                    <DockPanel Grid.Row="1" Margin="0,0,0,8">
+                        <Button DockPanel.Dock="Right" Content="_Refresh" Command="{Binding RefreshCommand}" Margin="8,0,0,0" />
+                        <Button DockPanel.Dock="Right" Content="_Initialize" Command="{Binding InitializeCommand}" Margin="8,0,0,0" />
+                        <TextBlock DockPanel.Dock="Left" Text="Repository path" VerticalAlignment="Center" Margin="0,0,8,0" />
+                        <TextBox Text="{Binding RepositoryPath, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Git repository path" />
+                    </DockPanel>
+                    <DockPanel Grid.Row="2" Margin="0,0,0,8">
+                        <Button DockPanel.Dock="Right" Content="_Clone" Command="{Binding CloneCommand}" Margin="8,0,0,0" />
+                        <TextBlock DockPanel.Dock="Left" Text="Clone / remote URL" VerticalAlignment="Center" Margin="0,0,8,0" />
+                        <TextBox Text="{Binding RemoteUrl, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Git clone URL or remote URL" />
+                    </DockPanel>
+                    <DockPanel Grid.Row="3" Margin="0,0,0,8">
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                            <Button Content="Add remote" Command="{Binding AddRemoteCommand}" Margin="4,0,0,0" />
+                            <Button Content="Select" Command="{Binding SelectRemoteCommand}" Margin="4,0,0,0" />
+                            <Button Content="Fetch" Command="{Binding FetchCommand}" Margin="4,0,0,0" />
+                            <Button Content="Push" Command="{Binding PushCommand}" Margin="4,0,0,0" />
+                        </StackPanel>
+                        <TextBlock DockPanel.Dock="Left" Text="Remote name" VerticalAlignment="Center" Margin="0,0,8,0" />
+                        <TextBox Text="{Binding RemoteName, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Git remote name" />
+                    </DockPanel>
+                    <DockPanel Grid.Row="4" Margin="0,0,0,8">
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                            <Button Content="New branch" Command="{Binding CreateBranchCommand}" Margin="4,0,0,0" />
+                            <Button Content="Switch" Command="{Binding SwitchBranchCommand}" Margin="4,0,0,0" />
+                            <Button Content="Fast-forward" Command="{Binding FastForwardCommand}" Margin="4,0,0,0" />
+                            <Button Content="History" Command="{Binding LoadHistoryCommand}" Margin="4,0,0,0" />
+                        </StackPanel>
+                        <TextBlock DockPanel.Dock="Left" Text="Branch" VerticalAlignment="Center" Margin="0,0,8,0" />
+                        <ComboBox ItemsSource="{Binding Branches}" Text="{Binding BranchName, UpdateSourceTrigger=PropertyChanged}" IsEditable="True" AutomationProperties.Name="Git branch" />
+                    </DockPanel>
+                    <DockPanel Grid.Row="5" Margin="0,0,0,8">
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                            <Label Content="Compare base" Target="{Binding ElementName=GitCompareBaseBox}" VerticalAlignment="Center" Padding="0" Margin="4,0,4,0" />
+                            <TextBox x:Name="GitCompareBaseBox" Text="{Binding ComparisonBaseBranch, UpdateSourceTrigger=PropertyChanged}" Width="110" VerticalContentAlignment="Center" AutomationProperties.Name="GitHub comparison base branch" />
+                            <Button Content="Compare" Command="{Binding OpenGitHubCompareCommand}" Margin="4,0,0,0" />
+                            <Button Content="Merge" Command="{Binding MergeCommand}" Margin="4,0,0,0" />
+                            <Button Content="Rebase" Command="{Binding RebaseCommand}" Margin="4,0,0,0" />
+                        </StackPanel>
+                        <TextBlock DockPanel.Dock="Left" Text="Revision" VerticalAlignment="Center" Margin="0,0,8,0" />
+                        <TextBox Text="{Binding Revision, UpdateSourceTrigger=PropertyChanged}" ToolTip="Revision or branch for merge, rebase, or restore" AutomationProperties.Name="Git integration revision" />
+                    </DockPanel>
+                    <TabControl x:Name="GitDetailTabs" Grid.Row="6">
+                      <TabItem Header="Status &amp; history">
+                       <Grid>
+                        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                        <TextBlock Text="{Binding Summary}" TextWrapping="Wrap" Margin="0,0,0,6" />
+                        <Grid Grid.Row="1">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="8" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                            <DockPanel>
+                                <TextBlock DockPanel.Dock="Top" Text="Working-tree changes" Margin="0,0,0,4" />
+                                <ListBox ItemsSource="{Binding Changes}" AutomationProperties.Name="Git working-tree changes" />
+                            </DockPanel>
+                            <GridSplitter Grid.Column="1" Width="8" HorizontalAlignment="Stretch" />
+                            <DockPanel Grid.Column="2">
+                                <TextBlock DockPanel.Dock="Top" Text="Recent commits" Margin="0,0,0,4" />
+                                <ListBox ItemsSource="{Binding History}" AutomationProperties.Name="Git commit history">
+                                    <ListBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding Subject}" ToolTip="{Binding Hash}" TextTrimming="CharacterEllipsis" /></DataTemplate></ListBox.ItemTemplate>
+                                </ListBox>
+                            </DockPanel>
+                        </Grid>
+                        <DockPanel Grid.Row="2" Margin="0,6,0,0">
+                            <Button DockPanel.Dock="Right" Content="Restore path" Command="{Binding RestoreCommand}" Margin="8,0,0,0" />
+                            <TextBlock DockPanel.Dock="Left" Text="API Wrangler asset path" VerticalAlignment="Center" Margin="0,0,8,0" />
+                            <TextBox Text="{Binding AssetPath, UpdateSourceTrigger=PropertyChanged}" ToolTip="Path under api-wrangler/" AutomationProperties.Name="Asset path to restore" />
+                        </DockPanel>
+                       </Grid>
+                      </TabItem>
+                      <TabItem Header="Commit review">
+                       <Grid Margin="8">
+                        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                        <DockPanel Margin="0,0,0,6">
+                            <Button DockPanel.Dock="Right" Content="Review selected files" Command="{Binding ReviewSelectedCommitCommand}" Margin="8,0,0,0" />
+                            <TextBlock DockPanel.Dock="Left" Text="Repository paths under api-wrangler/, one per line" VerticalAlignment="Center" Margin="0,0,8,0" />
+                            <TextBox Text="{Binding SelectedCommitPaths, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" Height="48" VerticalScrollBarVisibility="Auto" AutomationProperties.Name="Selected API Wrangler commit paths" />
+                        </DockPanel>
+                        <DockPanel Grid.Row="1" Margin="0,0,0,6">
+                            <Button DockPanel.Dock="Right" Content="Commit reviewed files" Command="{Binding CommitReviewedCommand}" IsEnabled="{Binding CanCommitReviewed}" Margin="8,0,0,0" />
+                            <TextBlock DockPanel.Dock="Left" Text="Commit message" VerticalAlignment="Center" Margin="0,0,8,0" />
+                            <TextBox Text="{Binding CommitMessage, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Reviewed commit message" />
+                        </DockPanel>
+                        <TextBox Grid.Row="2" Text="{Binding CommitDiff, Mode=OneWay}" IsReadOnly="True" AcceptsReturn="True" TextWrapping="NoWrap" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" FontFamily="Consolas" AutomationProperties.Name="Exact cached commit diff" />
+                        <TextBlock Grid.Row="3" Text="{Binding CommitReviewStatus}" TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite" Margin="0,6,0,0" />
+                        <TextBlock Grid.Row="4" Text="Review the full diff before committing. Configured Git hooks and signing remain enabled; hooks may run code." TextWrapping="Wrap" Margin="0,4,0,0" />
+                       </Grid>
+                      </TabItem>
+                      <TabItem Header="Conflicts">
+                       <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="8" DataContext="{Binding Conflicts}">
+                            <DockPanel Margin="0,0,0,6">
+                                <Button DockPanel.Dock="Right" Content="Load versions" Command="{Binding LoadCommand}" Margin="8,0,0,0" />
+                                <Button DockPanel.Dock="Right" Content="Find conflicts" Command="{Binding RefreshCommand}" Margin="8,0,0,0" />
+                                <Label DockPanel.Dock="Left" Content="Unresolved path" Target="{Binding ElementName=GitConflictPath}" Padding="0" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                <ComboBox x:Name="GitConflictPath" ItemsSource="{Binding Paths}" SelectedItem="{Binding SelectedPath}" AutomationProperties.Name="Unresolved Git project path" />
+                            </DockPanel>
+                            <TextBlock Text="Compare Git's base, local (stage 2), and incoming (stage 3). During rebase, these labels follow Git's stage meanings." TextWrapping="Wrap" Margin="0,0,0,6" />
+                            <TabControl Height="150" Margin="0,0,0,6">
+                                <TabItem Header="Base"><TextBox Text="{Binding BaseText, Mode=OneWay}" IsReadOnly="True" AcceptsReturn="True" TextWrapping="NoWrap" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" FontFamily="Consolas" AutomationProperties.Name="Conflict base version" /></TabItem>
+                                <TabItem Header="Local"><TextBox Text="{Binding LocalText, Mode=OneWay}" IsReadOnly="True" AcceptsReturn="True" TextWrapping="NoWrap" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" FontFamily="Consolas" AutomationProperties.Name="Conflict local stage 2 version" /></TabItem>
+                                <TabItem Header="Incoming"><TextBox Text="{Binding IncomingText, Mode=OneWay}" IsReadOnly="True" AcceptsReturn="True" TextWrapping="NoWrap" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" FontFamily="Consolas" AutomationProperties.Name="Conflict incoming stage 3 version" /></TabItem>
+                            </TabControl>
+                            <TextBlock Text="Conflict decisions" FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding ConflictDetails}" TextWrapping="Wrap" Margin="0,4,0,6" />
+                            <Label Content="Proposed result / text editor" Target="{Binding ElementName=GitConflictDraft}" Padding="0" Margin="0,0,0,4" />
+                            <TextBox x:Name="GitConflictDraft" Text="{Binding DraftText, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding CanEdit}" Height="180" AcceptsReturn="True" AcceptsTab="False" TextWrapping="NoWrap" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" FontFamily="Consolas" AutomationProperties.Name="Editable conflict result" />
+                            <WrapPanel Margin="0,6,0,6">
+                                <Button Content="Review edited result" Command="{Binding ReviewEditedCommand}" IsEnabled="{Binding CanEdit}" Margin="0,0,8,4" />
+                                <Button Content="Review local version" Command="{Binding UseLocalCommand}" Margin="0,0,8,4" />
+                                <Button Content="Review incoming version" Command="{Binding UseIncomingCommand}" Margin="0,0,8,4" />
+                                <Button Content="Review deletion" Command="{Binding DeleteCommand}" Margin="0,0,8,4" />
+                            </WrapPanel>
+                            <DockPanel Margin="0,0,0,6">
+                                <Button DockPanel.Dock="Right" Content="Review save both" Command="{Binding SaveBothCommand}" Margin="8,0,0,0" />
+                                <Label DockPanel.Dock="Left" Content="Incoming copy path" Target="{Binding ElementName=GitConflictSaveBothPath}" Padding="0" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                <TextBox x:Name="GitConflictSaveBothPath" Text="{Binding SaveBothPath, UpdateSourceTrigger=PropertyChanged}" ToolTip="New repository-relative path under api-wrangler/. Local stays at the original path." AutomationProperties.Name="Save both incoming version path" />
+                            </DockPanel>
+                            <TextBlock Text="Final diff" FontWeight="SemiBold" Margin="0,0,0,4" />
+                            <TextBox Text="{Binding FinalDiff, Mode=OneWay}" IsReadOnly="True" Height="180" AcceptsReturn="True" TextWrapping="NoWrap" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" FontFamily="Consolas" AutomationProperties.Name="Final conflict resolution diff" />
+                            <CheckBox Content="I resolved the listed conflicts and reviewed this final diff." IsChecked="{Binding ReviewAccepted}" Margin="0,8,0,6" />
+                            <Button Content="Mark reviewed path resolved" Command="{Binding ResolveCommand}" IsEnabled="{Binding CanResolve}" HorizontalAlignment="Left" Margin="0,0,0,6" />
+                            <TextBlock Text="{Binding Status}" TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite" />
+                            <TextBlock Text="Recovery copies" FontWeight="SemiBold" Margin="0,6,0,4" />
+                            <TextBox Text="{Binding RecoveryPath, Mode=OneWay}" IsReadOnly="True" AutomationProperties.Name="Conflict recovery copies directory" />
+                        </StackPanel>
+                       </ScrollViewer>
+                      </TabItem>
+                    </TabControl>
+                    <StackPanel Grid.Row="7" Margin="0,8,0,0">
+                        <TextBlock Text="{Binding OperationStatus}" TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite" Margin="0,4,0,0" />
                     </StackPanel>
                 </Grid>
             </TabItem>

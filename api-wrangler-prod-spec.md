@@ -2532,17 +2532,16 @@ Do not begin distributed infrastructure before these decisions are settled.
 
 **Implementation checkpoint (2026-11-07):** Phase 1 project discovery, versioned schemas, canonical assets, journaled persistence, watcher/recovery behavior, snapshots, local settings, and a desktop asset editor are implemented in PR #57. The five Phase 1 exit checks pass locally. After the Linux writer-lease fix, hosted Windows and Linux headless jobs each passed 30 tests with zero skipped; desktop build, format, and publish passed. ADR-0002 defines version 1 as the first supported format. P1.1-P1.3 are In review; P1.4 manual project-editor accessibility acceptance is In progress. The phase epic remains In progress until review, acceptance, and merge. See docs/implementation-status.md and docs/phase-1-exit-review.md.
 
-#### Restart bookmark (updated 2026-11-08 15:57 IST)
+#### Restart bookmark (updated 2026-11-08 20:35 IST)
 
-STOPPED at user's request for system restart. Branch: `main` (commit `04381a1`), working tree clean, all changes pushed to `origin/main`.
+Phase 5 (Git collaboration, scoped commits, and semantic three-way conflicts) is complete and verified on branch `phase5-repository-workflows`.
 Status:
-- Phase 1, Phase 2, Phase 3, and Phase 4 are 100% complete, fully verified, merged into `main`, and marked `Done` in GitHub Project 4.
-- Phase 4 exit review is documented in `docs/phase-4-exit-review.md`.
-- All Phase 4 child tickets (P4.1 #20, P4.2 #21, P4.3 #55) and Phase 4 Epic (#19) are closed and `Done`.
-- Verification: 151 automated tests passed, 0 failed, 4 skipped; Desktop smoke passed; all CI checks passed on PR #69, PR #70, and PR #71.
-- Next work on resume: Phase 5 (Issue #26: "[Phase 5] Git collaboration and conflicts", starting with P5.1 #27: "Branch creation, switching, status, and publish state").
-- Blockers: None. Ready for immediate resumption after system restart.
-
+- P5.1 (Issue #23): Repository and branch workflows, branch switching, fast-forward, status facts, fetch without altering working files, and scoped restore verified.
+- P5.2 (Issue #24): Reviewed scoped commits, 4 MiB bounded diff review, high-confidence secret scanning, and explicit push verified.
+- P5.3 (Issue #25): Semantic three-way JSON proposal engine, conflict detection (same-field, delete/edit, duplicate ID), in-memory proposal validation, atomic Git staging with recovery copies, desktop conflict workbench, and two-clone team regression acceptance verified.
+- Milestone A (Team HTTP regression) exit criteria are verified in `docs/phase-5-exit-review.md`.
+- Automated test suite: 188 passed, 0 failed, 4 skipped. Desktop smoke and Git smoke (`--git-smoke`) passed cleanly. Solution builds with 0 warnings and 0 errors in Release configuration. Format verification passed.
+- Next work: submit PR for `phase5-repository-workflows`, run CI gates, merge into `main`, update GitHub Project 4 tickets (#22, #23, #24, #25) to `Done`, and proceed to Milestone B / Phase 6 (Performance and load foundation).
 Published checkpoint: implementation `9156d80` pushed; PR #69 is now non-draft and P4.1 (#20) is In review. P4 (#19) remains In progress. Hosted desktop/Windows/Linux checks were pending at 11:25 IST. Resume by checking those results and PR review before merge/completion; local evidence is 62 passing tests and the passing desktop dataset smoke described below. No tests/builds rerun for this final metadata refresh. Next 30-minute refresh is due by 11:55 IST if execution is active.
 
 Current verified handoff: P4.1 file-backed import and desktop prepare/accept workflow implemented on `phase4-delimited-reader`, PR #69 being submitted for review. `PreparedDatasetFile` streams validated rows to a temporary spool; `ImportDatasetFileAsync` holds the project writer gate, verifies the prepared hash, publishes immutable JSONL then atomically saves its definition. Full-source mappings/culture/null/date conversions use the same streaming converter as preview. Desktop supports CSV/TSV/JSON/JSONL, UTF-8/UTF-16 LE/Windows-1252, explicit case-ID addition, cancellation and stale-preview rejection. Source changes after preparation cannot alter accepted rows. Release solution build succeeded; 62 dataset/persistence tests passed, 0 skipped. Desktop dataset smoke passed and screenshot inspected (`artifacts/dataset-ui-smoke/dataset-import.png`). A smoke-only compile error referencing the wrong tab name was corrected and the desktop rebuild/smoke passed. Changed-file formatting only afterward; no broad retest. Prior unverified notes below are superseded. Next: inspect PR #69 review/CI, resolve findings; do not mark P4.1 Done until acceptance and merge. P4 epic stays In progress; then continue P4.2 (#21) grid/clipboard work. Preserve 14 unrelated whitespace edits. No external blocker. Limits and crash-orphan behavior: `docs/dataset-import.md`.

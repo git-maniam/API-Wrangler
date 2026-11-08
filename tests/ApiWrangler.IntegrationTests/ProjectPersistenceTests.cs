@@ -1,6 +1,7 @@
 using System.Text.Json.Nodes;
 using ApiWrangler.Application;
 using ApiWrangler.Domain;
+using ApiWrangler.Execution;
 using ApiWrangler.Storage;
 using System.Text.Json;
 
@@ -129,6 +130,68 @@ public sealed class ProjectPersistenceTests
         finally
         {
             if (Directory.Exists(root)) Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task GitBranchChange_RefreshesOpenSessionAndGitIndexLockBlocksWrites()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "ApiWrangler-git-session-tests", Guid.NewGuid().ToString("N"));
+        var repositoryRoot = Path.Combine(root, "repository");
+        var stateRoot = Path.Combine(root, "state");
+        var projectRoot = Path.Combine(repositoryRoot, "api-wrangler");
+        Directory.CreateDirectory(repositoryRoot);
+        try
+        {
+            await Git(repositoryRoot, "init");
+            await using var session = await new ProjectRepository(stateRoot).InitializeAsync(projectRoot, "Git fixture");
+            var requestPath = "collections/default/requests/hello.request.json";
+            var request = (await session.ReadAsync()).Assets.Single(item => item.Path == requestPath);
+            await Git(repositoryRoot, "add", "api-wrangler");
+            await CommitGitFixture(repositoryRoot, "Initial project");
+            string originalBranch = await Git(repositoryRoot, "branch", "--show-current");
+
+            await Git(repositoryRoot, "switch", "--create", "external-edit");
+            var branchContent = (JsonObject)request.Content.DeepClone();
+            branchContent["name"] = "External branch request";
+            var fullRequestPath = Path.Combine(projectRoot, requestPath.Replace('/', Path.DirectorySeparatorChar));
+            await File.WriteAllBytesAsync(fullRequestPath, CanonicalJson.Serialize(branchContent));
+            await Git(repositoryRoot, "add", "api-wrangler/" + requestPath);
+            await CommitGitFixture(repositoryRoot, "External branch project edit");
+            await Git(repositoryRoot, "switch", originalBranch);
+
+            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+            await using var notifications = session.WatchAsync(timeout.Token).GetAsyncEnumerator();
+            await Git(repositoryRoot, "switch", "external-edit");
+            Assert.True(await notifications.MoveNextAsync().AsTask().WaitAsync(timeout.Token));
+            var refreshed = (await session.ReadAsync(timeout.Token)).Assets.Single(item => item.Path == requestPath);
+            Assert.Equal("External branch request", refreshed.Content["name"]?.GetValue<string>());
+            var snapshot = await session.SnapshotAsync(timeout.Token);
+            Assert.Equal(await Git(repositoryRoot, "rev-parse", "HEAD"), snapshot.Commit);
+            Assert.False(snapshot.Dirty);
+
+            var changed = (JsonObject)refreshed.Content.DeepClone();
+            changed["name"] = "Must remain unsaved during Git index mutation";
+            var lockPath = await Git(repositoryRoot, "rev-parse", "--git-path", "index.lock");
+            lockPath = Path.GetFullPath(Path.Combine(repositoryRoot, lockPath));
+            await File.WriteAllTextAsync(lockPath, "test lock");
+            try
+            {
+                await Assert.ThrowsAsync<IOException>(() => session.SaveAsync([new(requestPath, changed, refreshed.Hash)], timeout.Token));
+            }
+            finally
+            {
+                File.Delete(lockPath);
+            }
+            Assert.Equal("External branch request", (await session.ReadAsync(timeout.Token)).Assets.Single(item => item.Path == requestPath).Content["name"]?.GetValue<string>());
+        }
+        finally
+        {
+            if (Directory.Exists(root))
+            {
+                foreach (var file in Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories)) File.SetAttributes(file, FileAttributes.Normal);
+                Directory.Delete(root, recursive: true);
+            }
         }
     }
 
@@ -440,4 +503,14 @@ public sealed class ProjectPersistenceTests
             if (Directory.Exists(root)) Directory.Delete(root, recursive: true);
         }
     }
+
+    private static async Task<string> Git(string repository, params string[] arguments)
+    {
+        var result = await ProcessRunner.RunAsync("git", arguments, repository);
+        Assert.True(result.ExitCode == 0, result.StandardError);
+        return result.StandardOutput.Trim();
+    }
+
+    private static Task<string> CommitGitFixture(string repository, string message) =>
+        Git(repository, "-c", "user.name=Fixture", "-c", "user.email=fixture@example.test", "-c", "commit.gpgsign=false", "commit", "-m", message);
 }

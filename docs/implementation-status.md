@@ -1,5 +1,32 @@
 # Implementation status
 
+## Phase 5 complete: Git collaboration, reviewed commits, and semantic conflict resolution (2026-11-08 20:34 IST)
+
+Phase 5 is complete on branch `phase5-repository-workflows`:
+- P5.1: `GitRepositoryService` with branch creation/switching, detached HEAD, worktree rejection, clean status facts, fetch without changing working files, fast-forward, explicit merge/rebase, and scoped restore.
+- P5.2: `GitCommitReviewService` with scoped `api-wrangler/` file staging, complete cached diff review up to 4 Mi characters, high-confidence secret scanning, commit message review, and explicit push.
+- P5.3: `GitConflictResolutionService`, `ProjectProposalValidator`, and `GitConflictWorkbenchViewModel`. Three-way semantic JSON proposal engine (independent object/ID-keyed row edits, ordered headers, preserving unknown fields, unilateral reordering, reporting same-field, delete/edit, duplicate-ID, and incompatible reorder conflicts). Bounded final diff review, explicit choices (Edited, Local, Incoming, Delete, Save Both), schema and reference validation before staging, recovery snapshots, and staging without losing unrelated work.
+- Two-clone acceptance: verified across two independent clones with simultaneous conflicting JSON edits, resolution, commit, push, and fast-forward pull.
+- Verification: 188 automated tests passed (0 failed, 4 skipped). Desktop smoke passed (`scripts/Test-Desktop.ps1`). Desktop Git smoke passed (`--git-smoke artifacts/git-smoke`). Format verification passed (`dotnet format --verify-no-changes`). Solution builds cleanly in Release configuration with zero warnings/errors.
+
+## Phase 5 parallel Git work checkpoint (2026-11-08 19:32 IST)
+
+- P5.1 follow-up: fixed case-insensitive restore safety on Windows, added visible labels and a GitHub compare action (including Git URL rewrite handling), and extended local workflow coverage.
+- P5.2 includes high-confidence secret scanning, explicit scoped staging, strict JSON syntax checks, desktop project schema/reference validation, exact index-tree and branch/HEAD confirmation, explicit commit, and separate push. Cached diff review returns complete output up to 4 Mi characters and fails closed above that limit.
+- P5.3 started with a read-only JSON three-way proposal engine. It merges independent object and ID-keyed row edits, preserves unknown fields and unilateral reorder, and reports same-field, delete/edit, duplicate-ID, and incompatible reorder conflicts.
+- Verification: prior Release solution build and desktop Git smoke passed; the latest focused Release test batch passed 15/15 with 0 skipped, covering P5.2 review/scanning and P5.3 proposals.
+- P5.1 remains In Progress for provider-specific rejected-auth and manual accessibility review. P5.2 remains In Progress with high-confidence-only scanner patterns. P5.3 remains In Progress; desktop/Git conflict integration, other file types, and two-clone acceptance remain. See the phase progress notes and Restart bookmark.
+## Phase 5.1 Git workflow checkpoint (2026-11-08 17:58 IST)
+
+P5.1 has started on `phase5-repository-workflows`:
+- Added `GitRepositoryService` for Git executable discovery/version, repository discovery/init/clone, status facts (dirty paths, branch/upstream, independent ahead/behind, remotes, detached HEAD, linked worktree, write access, merge/rebase/sequencer state), branch listing/history, remote add/select, fetch/push, branch creation/switch, fast-forward, explicit merge/rebase, and scoped `api-wrangler/` asset restore.
+- Added a desktop Git collaboration workbench exposing repository open/status, clone/init, remote operations, branch operations, integration, history, and asset restore. Git runs through argument arrays and configured Git authentication; the UI does not embed credentials. Branch/integration operations require a clean whole working tree; there is no automatic stash, force push, or hard reset.
+- Added `scripts/Test-GitDesktop.ps1` and a desktop smoke flow. It passed clone/init/open/status, remote selection, fetch, branch create/switch/push, history, and scoped restore against a local bare remote; the screenshot was inspected.
+- Existing `ProjectSession` guards continue to suspend writes during index locks and merge/rebase markers; snapshots compare Git identity across capture. No new cache was added.
+- Verification: Release solution build succeeded (0 warnings/errors); four focused tests passed (0 failed/skipped), covering offline/rejected operations, real merge/rebase conflicts and recovery, external branch changes with an open project session, snapshots, index-lock write suspension, fetch immutability, dirty/unrelated files, fast-forward, branch/history/restore, detached HEAD, and linked worktrees. Desktop Git workflow smoke passed; screenshot inspected.
+
+P5.1 remains In progress. Remaining: manually review provider-specific rejected-auth behavior and accessibility/credential prompts. A local HTTP 401 fixture hung in Git's credential path and was removed rather than treated as passing evidence. P5.2 scoped reviewed commits and P5.3 semantic conflict handling are tracked in the current Phase 5 progress checkpoint above. See `docs/phase-5.1-progress.md` and the Restart bookmark in the product spec.
+
 ## Phase 4 color-highlighted preview checkpoint (2026-11-08 11:51 IST)
 
 P4.3 implemented and verified on branch `phase4-preview-highlighting`:
@@ -71,7 +98,7 @@ Measurement host: Windows x64, AMD Ryzen 7 6800H, eight physical cores, about 21
 | 2 | In progress: P2.1 and P2.2 implemented on `phase2-variables-and-secrets`. Request workbench with full lifecycle controls, repeated headers/query params, multipart/urlencoded/file-backed bodies, automatic decompression, cookies, explicit TLS override, cross-origin redirect auth stripping, and non-idempotent retry protection. P2.2 delivered variable resolution with documented precedence (RequestLocal > Dataset > RunOverride > LocalEnvironment > Environment > Collection > ProjectDefault), bounded nesting ($\le 10$), circular reference detection with cycle trace, non-shadowed explicit `{{secret:...}}` namespace, Windows DPAPI secret store (`LocalSecretStore`), deterministic dynamic helpers, and redaction engine across headers, logs, and execution previews. Release build, 44 integration tests, and desktop smoke pass. |
 | 3 | Not started: collections, assertions, lifecycle, isolated iteration execution, reports, final CLI contracts |
 | 4 | Only the read-only grid probe exists; imports, editing, type/null semantics, stable cases, and export remain |
-| 5 | Only Git status/fetch probe exists; scoped commit, branching, integration, and conflict resolution remain |
+| 5 | P5.1 remains In progress; P5.2 scoped review/commit work has started in parallel; P5.3 conflict resolution remains |
 | 6 | Only framed IPC/process probe exists; script execution, trust policy, packages, imports, and compatibility remain |
 | 7–9 | Not started: additional protocols, mocks, webhook gateway, local performance engine |
 | 10–11 | Not started: control plane, runners, scheduler, distributed load, hosted mocks; do not start before foundation decisions settle |

@@ -15,7 +15,7 @@
 | 8.3 | TLS defaults, explicit no-follow redirects, no application retries | Redirect/auth-forwarding test; advanced transport policies pending |
 | 8.5, 27.3 | Streamed response files, 5 MiB preview / 100 MiB saved-body defaults | Large-response and response-limit cleanup tests |
 | 11.6 | Explicit result outcomes; timeout distinct from cancellation | HTTP deadline/cancellation tests; assertion/aggregate semantics pending |
-| 6.1, 6.8 | Installed Git, argument arrays, separate fetch | Bare remote and public-origin fetch; private credentials/SSH pending |
+| 6.1–6.11, 7 | Git collaboration: branch management, scoped staging, secret scanning, and semantic 3-way conflict resolution | 188 automated tests pass. Two independent clones resolve and merge conflicting JSON edits without losing unrelated work. Scoped staging, diff reviews, secret scanning, and recovery copies verified. |
 | 12.3 | Node IPC framing, version/correlation, deadlines, process-tree cancellation | NodeTests; production script trust and job-object containment pending |
 | 10.4, 27 | Bounded page cache and virtualized read-only grid fixture | Random-access cache test; desktop realization measurements |
 | 28 | Additional foundation `send`/probe commands | Final project/collection CLI commands are not implemented |
