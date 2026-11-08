@@ -263,7 +263,7 @@ public sealed class LoadExecutionEngineTests
             var funcConfig = new LoadTestConfiguration(
                 TargetUrl: mock.ListeningUrl + "/api/fault500",
                 VirtualUsers: 1,
-                Duration: TimeSpan.FromMilliseconds(300),
+                Duration: TimeSpan.FromMilliseconds(1000),
                 RequireTargetConfirmation: true,
                 Confirmed: true,
                 Thresholds: new LoadThresholdPolicy(MaxErrorRatePercent: 0) // zero tolerance threshold
@@ -280,7 +280,7 @@ public sealed class LoadExecutionEngineTests
             var transportConfig = new LoadTestConfiguration(
                 TargetUrl: mock.ListeningUrl + "/api/abort",
                 VirtualUsers: 1,
-                Duration: TimeSpan.FromMilliseconds(300),
+                Duration: TimeSpan.FromMilliseconds(1000),
                 RequireTargetConfirmation: true,
                 Confirmed: true
             );

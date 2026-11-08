@@ -713,4 +713,194 @@ sdkGen.SetAction(async (parse, token) =>
 sdk.Subcommands.Add(sdkGen);
 root.Subcommands.Add(sdk);
 
+var ai = new Command("ai", "Optional AI assistance with explicit context, redacting credentials, and reviewable diffs.");
+
+var aiDraft = new Command("draft", "Draft test assertions for an API request.");
+var aiEndpointOpt = new Option<string>("--endpoint") { Description = "Compatible model endpoint URL" };
+var aiApiKeyOpt = new Option<string>("--api-key") { Description = "Model API key" };
+var aiReqFileOpt = new Option<FileInfo>("--request") { Required = true, Description = "Request definition JSON" };
+var aiModelOpt = new Option<string>("--model") { DefaultValueFactory = _ => "gpt-4o" };
+aiDraft.Options.Add(aiEndpointOpt);
+aiDraft.Options.Add(aiApiKeyOpt);
+aiDraft.Options.Add(aiReqFileOpt);
+aiDraft.Options.Add(aiModelOpt);
+aiDraft.SetAction(async (parse, token) =>
+{
+    try
+    {
+        string? endpoint = parse.GetValue(aiEndpointOpt);
+        string? apiKey = parse.GetValue(aiApiKeyOpt);
+        bool enabled = !string.IsNullOrWhiteSpace(endpoint);
+        var config = new AiConfiguration(
+            IsEnabled: enabled,
+            ProviderKind: enabled ? AiProviderKind.OpenAiCompatible : AiProviderKind.Disabled,
+            EndpointUrl: endpoint,
+            ApiKey: apiKey,
+            ModelName: parse.GetValue(aiModelOpt)
+        );
+
+        using var service = new AiAssistanceService(config);
+        var file = parse.GetValue(aiReqFileOpt)!;
+        if (!file.Exists)
+        {
+            Console.Error.WriteLine("Request file does not exist.");
+            return 2;
+        }
+
+        var jsonText = await File.ReadAllTextAsync(file.FullName, token);
+        var req = JsonSerializer.Deserialize<HttpRequestDefinition>(jsonText, json);
+        var items = new List<AiContextItem>
+        {
+            new(AiContextItemKind.RequestUrl, "Target URL", req?.Url ?? string.Empty),
+            new(AiContextItemKind.RequestMethod, "HTTP Method", req?.Method ?? "GET")
+        };
+        if (req?.Headers is not null)
+        {
+            foreach (var h in req.Headers)
+            {
+                items.Add(new(AiContextItemKind.RequestHeaders, h.Name, h.Value));
+            }
+        }
+        if (!string.IsNullOrEmpty(req?.Body))
+        {
+            items.Add(new(AiContextItemKind.RequestBody, "Request Body", req.Body));
+        }
+
+        var proposal = await service.DraftTestsAsync(items, "Generate status and schema assertions", token);
+        Console.WriteLine(JsonSerializer.Serialize(new
+        {
+            proposal.Id,
+            kind = proposal.Kind.ToString(),
+            proposal.Title,
+            proposal.Explanation,
+            proposal.UnifiedDiff,
+            status = proposal.Status.ToString(),
+            proposal.RequiresUserReview,
+            proposal.CanAutoExecute,
+            proposal.CanAutoCommit
+        }, json));
+        return 0;
+    }
+    catch (InvalidOperationException ex)
+    {
+        Console.Error.WriteLine($"AI error: {ex.Message}");
+        return 3;
+    }
+    catch (Exception ex)
+    {
+        Console.Error.WriteLine($"Unexpected error: {ex.Message}");
+        return 1;
+    }
+});
+
+var aiExplain = new Command("explain", "Explain an observed API response.");
+var aiRespFileOpt = new Option<FileInfo>("--response") { Required = true, Description = "Response artifact file" };
+aiExplain.Options.Add(aiEndpointOpt);
+aiExplain.Options.Add(aiApiKeyOpt);
+aiExplain.Options.Add(aiRespFileOpt);
+aiExplain.Options.Add(aiModelOpt);
+aiExplain.SetAction(async (parse, token) =>
+{
+    try
+    {
+        string? endpoint = parse.GetValue(aiEndpointOpt);
+        string? apiKey = parse.GetValue(aiApiKeyOpt);
+        bool enabled = !string.IsNullOrWhiteSpace(endpoint);
+        var config = new AiConfiguration(
+            IsEnabled: enabled,
+            ProviderKind: enabled ? AiProviderKind.OpenAiCompatible : AiProviderKind.Disabled,
+            EndpointUrl: endpoint,
+            ApiKey: apiKey,
+            ModelName: parse.GetValue(aiModelOpt)
+        );
+
+        using var service = new AiAssistanceService(config);
+        var file = parse.GetValue(aiRespFileOpt)!;
+        if (!file.Exists)
+        {
+            Console.Error.WriteLine("Response file does not exist.");
+            return 2;
+        }
+
+        var content = await File.ReadAllTextAsync(file.FullName, token);
+        var items = new List<AiContextItem>
+        {
+            new(AiContextItemKind.ResponseBody, "Observed Response", content)
+        };
+
+        var proposal = await service.ExplainResponseAsync(items, token);
+        Console.WriteLine(JsonSerializer.Serialize(new
+        {
+            proposal.Id,
+            kind = proposal.Kind.ToString(),
+            proposal.Title,
+            proposal.Explanation,
+            proposal.ProposedText,
+            proposal.UnifiedDiff,
+            proposal.RequiresUserReview,
+            proposal.CanAutoExecute,
+            proposal.CanAutoCommit
+        }, json));
+        return 0;
+    }
+    catch (InvalidOperationException ex)
+    {
+        Console.Error.WriteLine($"AI error: {ex.Message}");
+        return 3;
+    }
+});
+
+var aiDataset = new Command("dataset", "Generate tabular test datasets.");
+var aiColsOpt = new Option<string>("--columns") { Required = true, Description = "Comma-separated column names" };
+var aiCountOpt = new Option<int>("--count") { DefaultValueFactory = _ => 5, Description = "Number of rows to generate" };
+aiDataset.Options.Add(aiEndpointOpt);
+aiDataset.Options.Add(aiApiKeyOpt);
+aiDataset.Options.Add(aiColsOpt);
+aiDataset.Options.Add(aiCountOpt);
+aiDataset.Options.Add(aiModelOpt);
+aiDataset.SetAction(async (parse, token) =>
+{
+    try
+    {
+        string? endpoint = parse.GetValue(aiEndpointOpt);
+        string? apiKey = parse.GetValue(aiApiKeyOpt);
+        bool enabled = !string.IsNullOrWhiteSpace(endpoint);
+        var config = new AiConfiguration(
+            IsEnabled: enabled,
+            ProviderKind: enabled ? AiProviderKind.OpenAiCompatible : AiProviderKind.Disabled,
+            EndpointUrl: endpoint,
+            ApiKey: apiKey,
+            ModelName: parse.GetValue(aiModelOpt)
+        );
+
+        using var service = new AiAssistanceService(config);
+        var cols = parse.GetValue(aiColsOpt)!.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+        int count = parse.GetValue(aiCountOpt);
+
+        var proposal = await service.GenerateDatasetAsync(cols, count, "Generate realistic sample test data", token);
+        Console.WriteLine(JsonSerializer.Serialize(new
+        {
+            proposal.Id,
+            kind = proposal.Kind.ToString(),
+            proposal.Title,
+            proposal.ProposedText,
+            proposal.UnifiedDiff,
+            proposal.RequiresUserReview,
+            proposal.CanAutoExecute,
+            proposal.CanAutoCommit
+        }, json));
+        return 0;
+    }
+    catch (InvalidOperationException ex)
+    {
+        Console.Error.WriteLine($"AI error: {ex.Message}");
+        return 3;
+    }
+});
+
+ai.Subcommands.Add(aiDraft);
+ai.Subcommands.Add(aiExplain);
+ai.Subcommands.Add(aiDataset);
+root.Subcommands.Add(ai);
+
 return await root.Parse(args).InvokeAsync();
