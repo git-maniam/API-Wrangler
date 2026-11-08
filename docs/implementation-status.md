@@ -1,5 +1,13 @@
 # Implementation status
 
+## Phase 4 color-highlighted preview checkpoint (2026-11-08 11:51 IST)
+
+P4.3 implemented and verified on branch `phase4-preview-highlighting`:
+- `DatasetHighlightingDefinitions`: Registers syntax highlighting definitions for CSV (distinguishing delimiters, quoted fields, numbers), JSON, and JSON Lines in AvalonEdit's `HighlightingManager`.
+- `DatasetPreviewFormatting`: Dynamically maps dataset formats ("CSV", "TSV", "JSON", "JSONL") to syntax highlighting modes.
+- Desktop Integration: Upgrades dataset import preview to AvalonEdit's `TextEditor` with live syntax highlighting and two-way typography bindings (`EditorFontFamily`, `EditorFontSize`).
+- Verification: 151 automated tests passed (0 failed, 4 skipped). Desktop smoke passed (`scripts/Test-Desktop.ps1`). Solution builds cleanly in Release configuration with zero warnings/errors. Format verification passed (`dotnet format --verify-no-changes`).
+
 ## Phase 4 editable grid and clipboard workflows checkpoint (2026-11-08 11:45 IST)
 
 P4.2 implemented and verified on branch `phase4-editable-grid`:
