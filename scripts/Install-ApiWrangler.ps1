@@ -1,4 +1,4 @@
-﻿param(
+param(
     [string]$SourceDirectory = "",
     [string]$InstallDirectory = "$env:LOCALAPPDATA\Programs\ApiWrangler",
     [switch]$NoDesktopShortcut = $false

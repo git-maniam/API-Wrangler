@@ -2175,6 +2175,37 @@ Every actionable error should provide:
 
 Do not expose secrets in copied diagnostics.
 
+### 26.5 Modern visual theme and design system
+
+The desktop workbench adopts a contemporary Windows 11 Fluent aesthetic harmonized with the warm gold/terracotta/slate palette of the application brand icon (`App-Icon.png`):
+
+1. **Brand Palette & Color Tokens**:
+   - **Primary Action Accent**: `#D97706` (Amber 600) to `#B43F2C` (Crimson Terracotta), representing active execution and the workbench identity.
+   - **Hover / Active State**: `#B45309` (Amber 700) with subtle glow; pressed state `#92400E`.
+   - **Neutral Surfaces**:
+     - Light Theme: `#F8FAFC` (Window surface Slate 50), `#FFFFFF` (Card/Pane surface), `#E2E8F0` (Borders/Dividers Slate 200).
+     - Dark Theme: `#0F172A` (Window surface Slate 900), `#1E293B` (Card/Pane surface Slate 800), `#334155` (Borders Slate 700).
+   - **Method Chips & Status Colors**:
+     - `GET`: Sky blue `#0284C7` (text) on `#E0F2FE` (chip fill).
+     - `POST`: Emerald green `#16A34A` on `#DCFCE7`.
+     - `PUT` / `PATCH`: Amber `#D97706` on `#FEF3C7`.
+     - `DELETE`: Crimson `#DC2626` on `#FEE2E2`.
+     - Passing / Verified: `#15803D`. Failing / Error: `#DC2626`.
+
+2. **Windows 11 Fluent Geometry & Styling**:
+   - **Corners**: Consistent `CornerRadius="6"` for interactive controls (buttons, textboxes, comboboxes) and `CornerRadius="8"` for cards and editor containers, eliminating sharp 1990s beveled rectangles.
+   - **Tabs (`TabControl` / `TabItem`)**: Replaced default 3D beveled tabs with modern segmented pill/underline tabs featuring smooth hover transitions and an active indicator bar in brand accent.
+   - **Buttons**:
+     - Primary action buttons (`_Send`, `_Save`, `_Open project`): Rich accent background with white text, rounded corners, subtle shadow, and responsive hover/press visual feedback.
+     - Secondary buttons (`Use _disk`, `Use d_raft`): Clean outline/ghost style with subtle border and fill-on-hover.
+   - **Input Controls (`TextBox`, `ComboBox`)**: Modern flat borders (`#CBD5E1`), generous internal padding (`8px`), and accent focus ring on active keyboard input.
+   - **Header Bar**: Branded top banner incorporating the application icon (`App-Icon.png`), title with gradient styling, version badge, and polished font customization controls.
+
+3. **Accessibility & Contrast**:
+   - Maintains strict WCAG 2.1 AA text contrast (>= 4.5:1 text-to-background ratio).
+   - High Contrast mode preserves system-specified high-contrast brush bindings.
+   - Retains programmatic `AutomationProperties` on all restyled controls.
+
 ## 27. Performance requirements
 
 These are acceptance targets, not guaranteed claims before measurement.
@@ -2532,9 +2563,9 @@ Do not begin distributed infrastructure before these decisions are settled.
 
 **Implementation checkpoint (2026-11-07):** Phase 1 project discovery, versioned schemas, canonical assets, journaled persistence, watcher/recovery behavior, snapshots, local settings, and a desktop asset editor are implemented in PR #57. The five Phase 1 exit checks pass locally. After the Linux writer-lease fix, hosted Windows and Linux headless jobs each passed 30 tests with zero skipped; desktop build, format, and publish passed. ADR-0002 defines version 1 as the first supported format. P1.1-P1.3 are In review; P1.4 manual project-editor accessibility acceptance is In progress. The phase epic remains In progress until review, acceptance, and merge. See docs/implementation-status.md and docs/phase-1-exit-review.md.
 
-#### Restart bookmark (updated 2026-11-09 10:58 IST)
+#### Restart bookmark (updated 2026-11-09 16:44 IST)
 
-Milestone B ("Complete required platform") and Phase 13 (Contracts, optional AI, and release hardening) are 100% complete, certified, and merged into `main` (commit `256e378`):
+Milestone B ("Complete required platform") and Phase 13 (Contracts, optional AI, and release hardening) are 100% complete, certified, and merged into `main` (commit `f20ebf3`):
 - All 13 platform capability phases (Phases 1 through 13) are fully delivered, verified, and merged:
   - Phase 1: Canonical project storage, journaled persistence, and desktop asset editor.
   - Phase 2: HTTP testing workbench, request parameterization, auth, and TLS inspection.
@@ -2549,6 +2580,10 @@ Milestone B ("Complete required platform") and Phase 13 (Contracts, optional AI,
   - Phase 11: Distributed load coordination across workers and hosted mock deployments with mandatory auth gates.
   - Phase 12: Playwright browser traffic capture, bidirectional scenario evaluation, and text-backed visual execution flows with debugger stepping.
   - Phase 13: OpenAPI breaking change analysis, secret-free documentation generation, 10,000-request catalog search, multi-language client SDKs, optional AI with strict Git credential redaction and reviewable diffs, per-user installer, portable ZIP release packaging, multi-resolution application icon, and supply chain artifacts (SBOM, SHA256 checksums, third-party notices).
+- UI Modernization (In Planning / Review):
+  - Section 26.5 ("Modern visual theme and design system") added to specification.
+  - Implementation plan generated in `modern-ui-theme-plan.md` covering Windows 11 Fluent control styling, rounded geometry (`CornerRadius="6"`/`"8"`), and the warm brand palette derived from `App-Icon.png` (Amber Gold `#ED8E3A`, Crimson Terracotta `#B43F2C`, and Deep Slate `#0F192A`).
+  - Next step: Awaiting user review/approval to implement `src/ApiWrangler.Desktop/Themes/FluentTheme.xaml` and modernize `MainWindow.xaml` and `App.xaml`.
 - Verification & Test Evidence:
   - 306 automated integration and unit tests pass in Release mode with 0 failures and 0 skipped.
   - Desktop WPF smoke test (`scripts/Test-Desktop.ps1`) passes cleanly.
