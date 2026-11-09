@@ -453,3 +453,35 @@ Phase 3 (Collections, Assertions, and CLI) is complete. All 4 sub-issues (#16, #
 - **P3.2 (Issue #17, PR #66, commit `ad1dbc6`):** Typed assertions, result aggregation, and evidence browser. Implemented `AssertionEngine.cs` with support for all typed assertions (`status`, `header`, `cookie`, `bodyContains`, `jsonPath`, `responseTime`, `responseSize`, `regex`) and operators (`equals`, `notEquals`, `contains`, `notContains`, `greaterThan`, `lessThan`, `exists`, `notExists`, `matches`). Evaluates assertions during collection and request execution. Distinguishes failed assertions (`ExecutionOutcome.Failed`) from transport/network errors (`ExecutionOutcome.Error`). Preserves teardown errors across aggregate calculations (`RunStatus.Error` / `RunStatus.Failed`). Implemented `BaselineEngine.cs` comparing status, headers, JSON and text with support for `IgnoredPaths`. Implemented reporters in `Reporters.cs` (`ConsoleReporter`, Section 14 `JsonReporter`, CI `JUnitReporter`, `MarkdownReporter`, `HtmlReporter`) and `EvidenceSanitizer` redacting sensitive headers and secret tokens. Wired `--reporters` and `--report-dir` into CLI `run` command and updated exit codes (exit code 1 for assertion failures, 3 for transport errors, 4 for cancellation, 0 for passed). 86 tests passed; Release desktop smoke passed; format verified. Merged into `main`.
 - **P3.3 (Issue #18, PR #67, commit `8e733a1`):** Project CLI contract and CI examples. Extended `api-wrangler` CLI with `init` (canonical project scaffolding with `ProjectRepository.InitializeAsync`), `validate` (schema and reference integrity check), and enhanced `run` command with deterministic exit codes (0 for pass, 1 for failed assertions, 2 for invalid configuration/project, 3 for infrastructure/transport errors, 4 for cancellation, 5 for missing dependencies). Added host environment variable secret resolution (`API_WRANGLER_SECRET_<KEY>` or `<KEY>`) enabling noninteractive CI runs without interactive DPAPI keys. Added CI documentation and example workflows under `docs/ci/` (GitHub Actions, generic shell, Windows runner, Linux container runner) and `.github/workflows/regression-example.yml` with failure artifact retention (`if: always()`) and security best practices (no untrusted pull-request secret exposure, no `pull_request_target`). 90 tests passed; Release desktop smoke passed; format verified. Merged into `main`.
 - **P3.4 (Issue #59):** Exact immutable snapshot execution. Connected Phase 1 immutable project snapshot store to desktop and CLI collection execution. Every run executes against an immutable content-addressed snapshot, preventing external file modifications during execution from altering results. Extended `ProjectSnapshots.CreateAsync` and `IProjectSession.SnapshotAsync` to support explicit in-memory dirty drafts (`EditorDraft`), writing draft contents into the isolated snapshot without overwriting saved project assets on disk. Recorded `SnapshotHash`, `GitCommit`, and `IsDirty` in run reports and results while keeping secrets omitted from metadata. 92 tests passed (0 failed, 4 skipped Node tests); Release solution build passed with 0 warnings/errors; desktop smoke passed; format verified. Ready for PR and merge into `main`.
+
+## Comprehensive UI & Engine Testing Audit (2026-11-09 23:25 IST)
+
+A comprehensive testing campaign across desktop views and core execution capabilities was conducted. An automated in-process WPF execution harness (`artifacts/ui-execution-harness/Program.cs`) exercised:
+1. **Mocks & Webhooks**: Mock server startup, routing, rules, fault simulation, log capture, and external binding boundaries.
+2. **Load Testing**: Closed-loop and open-loop models, virtual users, threshold evaluations, and explicit target confirmation safety checks.
+3. **Dataset Grid**: 100,000-row synthetic grid loading, search filtering, in-place cell editing, undo/redo stacks, and CSV export formula injection neutralization (`UI-55`).
+4. **Git Collaboration**: Repository discovery, initialization, branch management, and status discovery.
+5. **HTTP Workbench & Protocols**: Variable substitution helpers (`$guid`, `$timestamp`, `$randomInt`), Auth configuration bindings, empty URL rejection, and WebSocket connection diagnostics.
+
+### Bugs Discovered & Logged to GitHub Project 4
+All uncovered bugs have been filed with reproduction details and added to Project 4 (`Ready`, `P1`):
+- **#157**: `[Bug] Selected tab controls absent from Windows UI Automation tree`
+- **#158**: `[Bug] Project path and asset labels overlap on Project assets tab`
+- **#159**: `[Bug] Import publishes stale preview after source text changes`
+- **#160**: `[Bug] Missing file upload silently sends empty HTTP request`
+- **#161**: `[Bug] GraphQL silently sends request with invalid variables JSON`
+- **#162**: `[Bug] Parse Proto accepts arbitrary non-protobuf text as valid`
+- **#163**: `[Bug] Bearer and token authentication binds to AuthPassword but BuildDefinition expects AuthToken` (causes Bearer auth to silently send empty tokens)
+- **#164**: `[Bug] Desktop UI lacks collection execution and report controls in MainWindow`
+- **#165**: `[Bug] Opening project with malformed wrangler.json throws unhandled JsonException`
+- **#168**: `[Bug] Mock server silently coerces non-loopback host to 127.0.0.1 without diagnostic or error` (silently overrides non-loopback bindings instead of failing or alerting)
+
+### Missing Test Cases Authored & Synchronized to GitHub Project 4
+Missing test coverage was identified, authored, linked to Project 4 (`Backlog`, `P1`), and added to the local test suites:
+- **UI-62 (#166)**: `[Test Case] UI-62 Desktop collection execution and iteration reporting` (Phase 3)
+- **UI-63 (#167)**: `[Test Case] UI-63 Scheduled monitors execution, triggers and alerting` (Phase 8)
+- **UI-64 (#169)**: `[Test Case] UI-64 OpenAPI contract breaking change detection and validation` (Phase 13)
+- **UI-65 (#170)**: `[Test Case] UI-65 Static API documentation generation and catalog search` (Phase 13)
+- **UI-66 (#171)**: `[Test Case] UI-66 Playwright visual flow step evaluation and traffic capture` (Phase 12)
+
+*Note: Per explicit user directive, all bugs remain untouched and cataloged in GitHub Project 4; bug remediation begins in the next stage.*

@@ -608,5 +608,55 @@
     "positive_expected": "Controls remain reachable, focus visible, splitters move and read-only output cannot be edited.",
     "negative": "Try inaccessible disabled actions with no project and inspect screen at minimum size and high contrast.",
     "negative_expected": "No crash or hidden state change occurs; clipping, missing labels or inaccessible controls are recorded as defects."
+  },
+  {
+    "id": "UI-62",
+    "title": "Desktop collection execution and iteration reporting",
+    "area": "Collections & Workflows",
+    "setup": "Load a project containing a multi-request collection with chained environment variables.",
+    "positive": "Trigger collection run; observe iteration loops, assertion evaluations, and summary report generation with duration and status counts.",
+    "positive_expected": "Requests execute sequentially, variable substitutions apply correctly, and completion report reflects all results.",
+    "negative": "Execute a collection with an intentional failing assertion or invalid network endpoint.",
+    "negative_expected": "Execution records the failure accurately without hanging the dispatcher or aborting unhandled."
+  },
+  {
+    "id": "UI-63",
+    "title": "Scheduled monitors execution, triggers and alerting",
+    "area": "Monitors & Scheduling",
+    "setup": "Configure a monitor with a recurring interval and alert webhooks.",
+    "positive": "Trigger monitor run manually and observe execution history, health status, and alert dispatch.",
+    "positive_expected": "Monitor executes target requests, logs execution timestamp and response metrics, and updates health indicator.",
+    "negative": "Configure monitor with invalid cron schedule or unresolvable alert webhook URL.",
+    "negative_expected": "Configuration validation rejects malformed cron string; unreachable webhook records delivery failure in alert log."
+  },
+  {
+    "id": "UI-64",
+    "title": "OpenAPI contract breaking change detection and validation",
+    "area": "API Governance & Contracts",
+    "setup": "Provide an existing OpenAPI spec and an updated spec version with backward-compatible and breaking changes.",
+    "positive": "Run contract comparison on non-breaking spec update (additive fields, new optional endpoints).",
+    "positive_expected": "Diffing identifies new surfaces cleanly with 0 breaking change violations reported.",
+    "negative": "Run contract validation against breaking spec modification (deleted required property or removed endpoint).",
+    "negative_expected": "Breaking changes are identified with exact schema paths, rule severity, and remediation guidance."
+  },
+  {
+    "id": "UI-65",
+    "title": "Static API documentation generation and catalog search",
+    "area": "Documentation",
+    "setup": "Use an active project with rich markdown descriptions, parameter schemas, and response examples.",
+    "positive": "Trigger static documentation export; inspect generated HTML/assets and execute interactive catalog search.",
+    "positive_expected": "Generated site renders navigation hierarchy, syntax-highlighted code samples, schema tables, and responsive client search.",
+    "negative": "Trigger documentation export on an empty project or broken schema references.",
+    "negative_expected": "Generator completes with diagnostic warnings without throwing unhandled exceptions or corrupting files."
+  },
+  {
+    "id": "UI-66",
+    "title": "Playwright visual flow step evaluation and traffic capture",
+    "area": "Visual Automation",
+    "setup": "Configure a local test server and multi-step browser interaction flow with Playwright worker.",
+    "positive": "Execute visual flow steps (navigate, fill, click, assert text visible) and inspect captured network traffic.",
+    "positive_expected": "Steps complete sequentially, screenshots and trace artifacts are captured, and HTTP traffic populates collection history.",
+    "negative": "Execute step targeting a non-existent element selector with strict timeout.",
+    "negative_expected": "Flow halts gracefully at failing step, records diagnostic screenshot, and preserves network logs up to failure."
   }
 ]

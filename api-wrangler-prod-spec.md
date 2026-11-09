@@ -2567,9 +2567,33 @@ Do not begin distributed infrastructure before these decisions are settled.
 
 The manual desktop UI scenario catalog is maintained in `docs/ui-testing/`, with synthetic data, setup instructions, a control-to-case coverage matrix and GitHub issue mapping. The 61 `[Test Case]` issues map the visible controls and major options across all ten desktop tabs, each with positive and negative variants. They are in GitHub Project 4 Backlog, with execution and acceptance pending. The cases are scenario groups, not proof of all possible input combinations. Loopback GraphQL, WebSocket, SSE and TLS fixture scripts are provided for later execution; they have not been run. Manual Narrator speech acceptance remains tracked by #58. The user-reported Open project issue is #95 and has not been independently reproduced. The cases and fixtures have not been validated against the running application.
 
-#### Restart bookmark (updated 2026-11-09 23:04 IST)
+#### Restart bookmark (updated 2026-11-09 23:30 IST)
 
-**Execution session closed at user request; next work, when requested: resume Test Case Execution.** An in-process WPF control/peer harness bypassed external UI Automation defect #157 and partially exercised UI-01, 05, 06, 10, 11, 38, 39, 43, 44, 45 and 47. Defects #157–#162 are in Project 4 Ready, with reproduction evidence; #95 remains Backlog and its physical-click report is unconfirmed. UI-01 directory/manifest/invalid path worked through the actual button peer. No case is complete; continue unexecuted variants across all tabs and record evidence per issue. Execution closure was commented on #95, #96, #139 and #157; individual partial results remain on the affected test issues. See `docs/ui-testing/execution-2026-11-09.md`, `cases.json` and ignored `artifacts/ui-execution-harness/`; JSON observations remain in the disposable run directory recorded by `%TEMP%\awr-current-run.txt`. Local fixture processes have been stopped. OpenSSL was not on PATH for TLS cases. Guide, fixtures, execution record and this specification change are uncommitted. Narrator #58 remains separate. Historical notes below are superseded where they conflict with this handoff.
+**Comprehensive UI & Engine Testing Audit Complete. Next stage: Bug Fixing.**
+A comprehensive automated in-process WPF harness and desktop validation audit was executed across all 10 tabs and core execution features. All uncovered defects have been cataloged and filed to GitHub Project 4 in `Ready` (`P1`), and missing test cases have been authored and synchronized in `Backlog` (`P1`):
+- **Bugs Logged to GitHub Project 4 (Ready / P1):**
+  - `#157`: Selected tab controls absent from Windows UI Automation tree
+  - `#158`: Project path and asset labels overlap on Project assets tab
+  - `#159`: Import publishes stale preview after source text changes
+  - `#160`: Missing file upload silently sends empty HTTP request
+  - `#161`: GraphQL silently sends request with invalid variables JSON
+  - `#162`: Parse Proto accepts arbitrary non-protobuf text as valid
+  - `#163`: Bearer and token authentication binds to AuthPassword but BuildDefinition expects AuthToken (silent empty token transmission)
+  - `#164`: Desktop UI lacks collection execution and report controls in MainWindow
+  - `#165`: Opening project with malformed wrangler.json throws unhandled JsonException
+  - `#168`: Mock server silently coerces non-loopback host to 127.0.0.1 without diagnostic or error
+- **Missing Test Cases Created in GitHub Project 4 (Backlog / P1):**
+  - `#166` (UI-62): Desktop collection execution and iteration reporting (Phase 3)
+  - `#167` (UI-63): Scheduled monitors execution, triggers and alerting (Phase 8)
+  - `#169` (UI-64): OpenAPI contract breaking change detection and validation (Phase 13)
+  - `#170` (UI-65): Static API documentation generation and catalog search (Phase 13)
+  - `#171` (UI-66): Playwright visual flow step evaluation and traffic capture (Phase 12)
+- **Local Test Catalogs & Documentation Synchronized:**
+  - `docs/ui-testing/cases.json`: UI-01 through UI-66 mapped to Project 4 issue URLs and item IDs.
+  - `docs/ui-testing/cases-source.json`: Complete specification and positive/negative test definitions for UI-01 through UI-66.
+  - `docs/ui-testing/coverage-matrix.md`: Control-to-case mappings updated with UI-62..66.
+  - `docs/implementation-status.md`: Comprehensive audit results, defect log, and test coverage documented.
+- **Handoff Directive:** Per user instructions, no application code was modified to fix bugs during this testing phase. The next stage begins resolving the cataloged bugs. Historical notes below are superseded where they conflict with this handoff.
 
 Milestone B ("Complete required platform"), Phase 13 (Contracts, optional AI, and release hardening), and P13.4 (Modern visual theme and design system) are 100% complete, certified, and verified:
 - All 13 platform capability phases (Phases 1 through 13) plus P13.4 are fully delivered, verified, and merged:

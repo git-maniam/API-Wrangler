@@ -1,6 +1,6 @@
 # Desktop control coverage map
 
-This maps the current `MainWindow.xaml` surface to cases. Every listed case has a positive and a negative variant; scenario groups may contain multiple actions. This is planned coverage, not evidence of execution. UI-01 through UI-61 map to project issues in `cases.json`.
+This maps the current `MainWindow.xaml` and planned desktop execution surfaces to cases. Every listed case has a positive and a negative variant; scenario groups may contain multiple actions. This is planned coverage, not evidence of execution. UI-01 through UI-66 map to project issues in `cases.json`.
 
 | Surface and controls | Cases |
 | --- | --- |
@@ -19,5 +19,10 @@ This maps the current `MainWindow.xaml` surface to cases. Every listed case has 
 | Git: executable/path, initialize/clone/refresh, remotes/add/select/fetch/push, branch/create/switch/fast-forward/history, compare/merge/rebase, restore | UI-24, UI-27, UI-56, UI-57, UI-58, UI-60 |
 | Git commit review: selected paths, message, review diff and commit | UI-25 |
 | Git conflicts: find/load, base/local/incoming, editable result, each review choice including delete/save both, final diff, resolve, recovery | UI-26, UI-59 |
+| Collections & Workflows: execution loops, environment variable propagation, iteration reporting | UI-62 |
+| Monitors & Scheduling: periodic triggers, cron evaluation, health status, alert webhooks | UI-63 |
+| API Governance & Contracts: OpenAPI 3.0/3.1 contract comparison, breaking change detection | UI-64 |
+| Documentation: static HTML/Markdown generation, schema model viewer, catalog search | UI-65 |
+| Visual Automation: Playwright browser flows, UI assertions, and HTTP traffic interception | UI-66 |
 
-The UI has no collection-run controls despite a view-model command; CLI/backend workflows and unavailable UI features are outside this matrix. Accessibility speech observation remains #58. A mapped control is not proof that its observed behavior matches the expected contract.
+The UI currently lacks collection-runner controls in `MainWindow.xaml` despite view-model support (tracked in #164). Accessibility speech observation remains #58. A mapped control is not proof that its observed behavior matches the expected contract.
