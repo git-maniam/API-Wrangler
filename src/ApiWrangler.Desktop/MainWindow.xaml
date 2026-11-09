@@ -5,24 +5,34 @@
     xmlns:editor="http://icsharpcode.net/sharpdevelop/avalonedit"
     Title="API Wrangler — Workbench" Icon="Resources/App-Icon.png" Width="1180" Height="800" MinWidth="800" MinHeight="600">
     <Window.InputBindings><KeyBinding Key="Enter" Modifiers="Control" Command="{Binding SendCommand}" /></Window.InputBindings>
-    <Grid Margin="20" Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}">
+    <Grid Margin="16" Background="{DynamicResource SurfaceBackgroundBrush}">
         <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
-        <DockPanel Margin="0,0,0,16">
-            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
-                <Label Content="_Font:" Target="{Binding ElementName=FontFamilyCombo}" VerticalAlignment="Center" Margin="0,0,4,0" Padding="0" />
-                <ComboBox x:Name="FontFamilyCombo" ItemsSource="{Binding AvailableFontFamilies}" SelectedItem="{Binding EditorFontFamily}" Width="130" Margin="0,0,12,0" AutomationProperties.Name="Editor font family" />
-                <Label Content="_Size:" Target="{Binding ElementName=FontSizeCombo}" VerticalAlignment="Center" Margin="0,0,4,0" Padding="0" />
-                <ComboBox x:Name="FontSizeCombo" ItemsSource="{Binding AvailableFontSizes}" SelectedItem="{Binding EditorFontSize}" Width="65" AutomationProperties.Name="Editor font size" />
-            </StackPanel>
-            <TextBlock Text="API Wrangler" FontSize="26" FontWeight="SemiBold" />
-            <TextBlock Text="Local HTTP workbench · foundation preview" VerticalAlignment="Center" Margin="24,0,0,0" />
-        </DockPanel>
+        <Border Margin="0,0,0,12" Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="16,10">
+            <DockPanel>
+                <Border DockPanel.Dock="Right" Background="#F1F5F9" CornerRadius="6" Padding="8,4" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Label Content="_Font:" Target="{Binding ElementName=FontFamilyCombo}" VerticalAlignment="Center" Margin="0,0,4,0" Padding="0" />
+                        <ComboBox x:Name="FontFamilyCombo" ItemsSource="{Binding AvailableFontFamilies}" SelectedItem="{Binding EditorFontFamily}" Width="130" Margin="0,0,10,0" AutomationProperties.Name="Editor font family" />
+                        <Label Content="_Size:" Target="{Binding ElementName=FontSizeCombo}" VerticalAlignment="Center" Margin="0,0,4,0" Padding="0" />
+                        <ComboBox x:Name="FontSizeCombo" ItemsSource="{Binding AvailableFontSizes}" SelectedItem="{Binding EditorFontSize}" Width="65" AutomationProperties.Name="Editor font size" />
+                    </StackPanel>
+                </Border>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <Image Source="Resources/App-Icon.png" Width="32" Height="32" Margin="0,0,10,0" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality" />
+                    <TextBlock Text="API Wrangler" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center" />
+                    <Border Background="#FEF3C7" CornerRadius="10" Padding="8,3" Margin="12,0,0,0" VerticalAlignment="Center">
+                        <TextBlock Text="Workbench v1.0" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource BrandPrimaryBrush}" />
+                    </Border>
+                    <TextBlock Text="·  Local-first Git-backed API Testing Workbench" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center" Margin="12,0,0,0" />
+                </StackPanel>
+            </DockPanel>
+        </Border>
         <TabControl x:Name="MainTabs" Grid.Row="1">
             <TabItem Header="Project assets">
                 <Grid Margin="12" DataContext="{Binding ProjectEditor}">
                     <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
                     <DockPanel Grid.Row="1" Margin="0,0,0,8">
-                        <Button DockPanel.Dock="Right" Content="_Open project" Command="{Binding OpenProjectCommand}" Margin="8,0,0,0" />
+                        <Button DockPanel.Dock="Right" Style="{StaticResource PrimaryButtonStyle}" Content="_Open project" Command="{Binding OpenProjectCommand}" Margin="8,0,0,0" />
                         <Label DockPanel.Dock="Left" Content="_Project path" Target="{Binding ElementName=ProjectPathBox}" VerticalAlignment="Center" Padding="0" Margin="0,0,8,0" />
                         <TextBox x:Name="ProjectPathBox" Text="{Binding ProjectPath, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Project directory or manifest path" />
                     </DockPanel>
@@ -55,9 +65,9 @@
                         <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
                         <TextBlock x:Name="ProjectStatusText" Text="{Binding ProjectStatus}" TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite" />
                         <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
-                            <Button Content="_Save" Command="{Binding SaveAssetCommand}" IsEnabled="{Binding CanEdit}" Margin="8,0,0,0" />
-                            <Button Content="Use _disk" Command="{Binding UseDiskCommand}" IsEnabled="{Binding CanUseDisk}" Margin="8,0,0,0" AutomationProperties.HelpText="Discard the local draft and load the disk version." />
-                            <Button Content="Use d_raft" Command="{Binding UseDraftCommand}" IsEnabled="{Binding CanUseDraft}" Margin="8,0,0,0" AutomationProperties.HelpText="Keep the local draft; saving it will replace the disk version." />
+                            <Button Style="{StaticResource PrimaryButtonStyle}" Content="_Save" Command="{Binding SaveAssetCommand}" IsEnabled="{Binding CanEdit}" Margin="8,0,0,0" />
+                            <Button Style="{StaticResource SecondaryButtonStyle}" Content="Use _disk" Command="{Binding UseDiskCommand}" IsEnabled="{Binding CanUseDisk}" Margin="8,0,0,0" AutomationProperties.HelpText="Discard the local draft and load the disk version." />
+                            <Button Style="{StaticResource SecondaryButtonStyle}" Content="Use d_raft" Command="{Binding UseDraftCommand}" IsEnabled="{Binding CanUseDraft}" Margin="8,0,0,0" AutomationProperties.HelpText="Keep the local draft; saving it will replace the disk version." />
                         </StackPanel>
                     </Grid>
                 </Grid>
@@ -81,8 +91,8 @@
                         <TextBox x:Name="RequestNameBox" Text="{Binding RequestName, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Request name" />
                     </DockPanel>
                     <DockPanel Grid.Row="2" Margin="0,0,0,12">
-                        <Button DockPanel.Dock="Right" Content="_Send" Command="{Binding SendCommand}" FontWeight="SemiBold" Padding="20,8" Margin="8,0,0,0" AutomationProperties.Name="Send HTTP request" AutomationProperties.HelpText="Executes the configured request. Press Ctrl+Enter from anywhere in the workbench." />
-                        <Button DockPanel.Dock="Right" Content="_Cancel" Command="{Binding CancelSendCommand}" Padding="12,8" Margin="8,0,0,0" AutomationProperties.Name="Cancel sending request" />
+                        <Button DockPanel.Dock="Right" Style="{StaticResource PrimaryButtonStyle}" Content="_Send" Command="{Binding SendCommand}" FontWeight="Bold" Padding="24,8" Margin="8,0,0,0" AutomationProperties.Name="Send HTTP request" AutomationProperties.HelpText="Executes the configured request. Press Ctrl+Enter from anywhere in the workbench." />
+                        <Button DockPanel.Dock="Right" Style="{StaticResource SecondaryButtonStyle}" Content="_Cancel" Command="{Binding CancelSendCommand}" Padding="14,8" Margin="8,0,0,0" AutomationProperties.Name="Cancel sending request" />
                         <ComboBox ItemsSource="{Binding Methods}" SelectedItem="{Binding Method}" Width="100" Margin="0,0,8,0" AutomationProperties.Name="HTTP method" />
                         <TextBox Text="{Binding Url, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Request URL" AutomationProperties.HelpText="Enter an absolute HTTP(S) URL. Credentials are not permitted." />
                     </DockPanel>
@@ -476,8 +486,8 @@
                         <CheckBox DockPanel.Dock="Top" Content="Explicit target confirmation acknowledged" IsChecked="{Binding Confirmed}" Margin="0,4,0,8" />
 
                         <WrapPanel DockPanel.Dock="Top" Margin="0,4,0,8">
-                            <Button Content="Start Test" Command="{Binding StartLoadTestCommand}" Margin="0,0,8,0" Padding="12,3" />
-                            <Button Content="Cancel" Command="{Binding CancelLoadTestCommand}" Padding="12,3" />
+                            <Button Style="{StaticResource PrimaryButtonStyle}" Content="Start Test" Command="{Binding StartLoadTestCommand}" Margin="0,0,8,0" Padding="16,6" />
+                            <Button Style="{StaticResource SecondaryButtonStyle}" Content="Cancel" Command="{Binding CancelLoadTestCommand}" Padding="14,6" />
                         </WrapPanel>
 
                         <TextBlock DockPanel.Dock="Top" Text="{Binding Status}" FontWeight="SemiBold" Margin="0,4,0,4" />
