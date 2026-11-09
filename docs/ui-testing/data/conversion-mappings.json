@@ -1,0 +1,1 @@
+[{"Source":"_caseId","Target":"_caseId"},{"Source":"amount","Target":"amount","Type":"Decimal"},{"Source":"active","Target":"active","Type":"Boolean"},{"Source":"date","Target":"date","Type":"Date"},{"Source":"empty","Target":"empty","EmptyStringAsNull":true}]

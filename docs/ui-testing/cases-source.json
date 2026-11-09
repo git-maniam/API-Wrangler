@@ -1,0 +1,612 @@
+[
+  {
+    "id": "UI-01",
+    "title": "Open project and handle invalid paths",
+    "area": "Project assets",
+    "positive": "Enter the disposable project directory in Project path and click Open project; repeat using its wrangler.json path.",
+    "positive_expected": "Status confirms the project opened and its asset selector reflects the project for both path forms.",
+    "negative": "Enter a nonexistent directory and click Open project.",
+    "negative_expected": "A visible diagnostic identifies the problem; no unrelated project is opened or changed.",
+    "setup": "Create the disposable project as described in the guide. Related reported bug: #95."
+  },
+  {
+    "id": "UI-02",
+    "title": "Edit, save and reload a project asset",
+    "area": "Project assets",
+    "positive": "Open a writable project, select a valid editable JSON asset, change a harmless value, click Save, reopen the project and select the asset again.",
+    "positive_expected": "The saved value persists and the asset remains valid.",
+    "negative": "Make the JSON syntactically invalid and click Save.",
+    "negative_expected": "A diagnostic is shown and the last valid disk file remains intact.",
+    "setup": "Use a disposable project with an existing valid asset; retain a copy for comparison."
+  },
+  {
+    "id": "UI-03",
+    "title": "Protect drafts and resolve external edits",
+    "area": "Project assets",
+    "positive": "Edit an asset in the UI; change the same asset externally; use the conflict view and choose Use disk, then repeat choosing Use draft and Save.",
+    "positive_expected": "The first decision loads the disk version; the second preserves the draft until explicitly saved.",
+    "negative": "With an unsaved draft, attempt to select another asset or open another project.",
+    "negative_expected": "The switch is refused with a clear status and the draft is preserved.",
+    "setup": "Use two distinct valid assets and a disposable project; wait for file watcher refresh."
+  },
+  {
+    "id": "UI-04",
+    "title": "Request lifecycle and persistence",
+    "area": "HTTP workbench",
+    "positive": "Open a writable project, click New, name a request, set GET and http://127.0.0.1:5057/echo, Save, Close, then select it in Saved project request.",
+    "positive_expected": "The saved request reopens with its name, method and URL intact.",
+    "negative": "Attempt to save a request without an open writable project.",
+    "negative_expected": "A clear diagnostic is shown and no project asset is written.",
+    "setup": "Start the local fixture and use the disposable project."
+  },
+  {
+    "id": "UI-05",
+    "title": "Send HTTP methods, headers, query and body",
+    "area": "HTTP workbench",
+    "positive": "Set POST /echo; enter repeated query parameters and headers, select a text body with a distinctive value and click Send. Inspect response body and headers.",
+    "positive_expected": "The echo response reflects POST and the entered query, headers and body; response metadata is visible.",
+    "negative": "Enter a malformed header line and send.",
+    "negative_expected": "Input is rejected with a diagnostic and no successful response is presented for that request.",
+    "setup": "Use http://127.0.0.1:5057/echo; use only synthetic values."
+  },
+  {
+    "id": "UI-06",
+    "title": "Body formats and uploads",
+    "area": "HTTP workbench",
+    "positive": "Select raw body mode, enter {\"value\":1}, click Format body and send to /echo; repeat using file body mode with valid.json as upload path.",
+    "positive_expected": "Valid JSON formats in raw mode and the fixture receives the intended JSON or file bytes respectively.",
+    "negative": "Enter malformed JSON and format; then select file mode with a nonexistent file and send.",
+    "negative_expected": "Each invalid input produces a visible error; no unrelated file is sent.",
+    "setup": "Start the fixture; use docs/ui-testing/data/valid.json as the local file."
+  },
+  {
+    "id": "UI-07",
+    "title": "HTTP cancellation and response views",
+    "area": "HTTP workbench",
+    "positive": "Send GET /delay and click Cancel before ten seconds; then send GET /echo and inspect body, headers, cookies, view modes and local artifact path.",
+    "positive_expected": "Cancellation is reported promptly, the UI remains usable, and the following request displays its own response and artifact.",
+    "negative": "Send an invalid or unreachable URL.",
+    "negative_expected": "A clear transport or URL error is shown; stale successful output is not represented as the new response.",
+    "setup": "Start the fixture on 127.0.0.1:5057."
+  },
+  {
+    "id": "UI-08",
+    "title": "Redirects and transport security",
+    "area": "HTTP workbench",
+    "positive": "Send GET /redirect with Follow redirects enabled, then disabled.",
+    "positive_expected": "Enabled follows to /echo; disabled shows the redirect response.",
+    "negative": "Enter a URL containing embedded credentials or an invalid scheme and send.",
+    "negative_expected": "The unsafe or invalid URL is rejected visibly and credentials are not exposed.",
+    "setup": "Use the local fixture; do not use real credentials."
+  },
+  {
+    "id": "UI-09",
+    "title": "Authentication and variable inspection",
+    "area": "HTTP workbench",
+    "positive": "Configure a synthetic Basic or bearer credential, send to /echo, and inspect the received header; inspect a defined project/environment variable.",
+    "positive_expected": "The intended auth is applied and variable inspection shows the resolved non-secret value without exposing secret values.",
+    "negative": "Reference an undefined variable or supply incomplete authentication and send.",
+    "negative_expected": "The UI reports the problem without sending an unintended credential or leaking a secret.",
+    "setup": "Use test-only credentials and a disposable project/environment; sanitize any evidence."
+  },
+  {
+    "id": "UI-10",
+    "title": "Dataset preview and import",
+    "area": "Import dataset",
+    "positive": "Open a writable project, select valid.csv, CSV and UTF-8, enter a dataset name, prepare preview, then accept import.",
+    "positive_expected": "Two rows with the original unique case IDs appear in preview and the dataset is published only after acceptance.",
+    "negative": "Select duplicate-ids.csv and prepare preview.",
+    "negative_expected": "Duplicate case IDs are diagnosed and no dataset is published.",
+    "setup": "Use docs/ui-testing/data and the disposable project."
+  },
+  {
+    "id": "UI-11",
+    "title": "Dataset formats, conversion and missing IDs",
+    "area": "Import dataset",
+    "positive": "Import missing-ids.csv with explicit case-ID addition enabled; prepare and accept. Repeat with valid.json as JSON.",
+    "positive_expected": "Preview includes unique generated IDs and the accepted rows match preview; JSON rows retain their IDs.",
+    "negative": "Prepare missing-ids.csv with case-ID addition disabled, then prepare malformed.json as JSON.",
+    "negative_expected": "Both inputs produce clear validation errors and neither creates a dataset.",
+    "setup": "Use an isolated project and docs/ui-testing/data."
+  },
+  {
+    "id": "UI-12",
+    "title": "Dataset stale preview and cancellation",
+    "area": "Import dataset",
+    "positive": "Prepare valid.csv; alter the source file on disk without changing UI settings, then accept.",
+    "positive_expected": "Accepted rows match the prepared preview, not the later source edit.",
+    "negative": "Prepare again, change an import setting, then click Accept import; also cancel an active preparation.",
+    "negative_expected": "A stale preview cannot be accepted; cancellation does not publish a dataset.",
+    "setup": "Work on a disposable copy of valid.csv. Use a sufficiently large local file for cancellation if necessary."
+  },
+  {
+    "id": "UI-13",
+    "title": "Import preview and publish",
+    "area": "Import & export",
+    "positive": "Open a writable project, enter a supported cURL command for GET http://127.0.0.1:5057/echo, choose its format, preview and publish.",
+    "positive_expected": "The preview describes the imported request, and explicit publish creates the project asset without executing it.",
+    "negative": "Preview malformed source or attempt publish without a valid preview.",
+    "negative_expected": "An actionable diagnostic appears or publish remains unavailable; no asset is created and no command runs.",
+    "setup": "Use a disposable project; check the fixture receives no request during preview/publish."
+  },
+  {
+    "id": "UI-14",
+    "title": "GraphQL formatting and execution",
+    "area": "Protocols & Streaming",
+    "positive": "Paste sample.graphql, click Format, enter http://127.0.0.1:5061/graphql and execute; inspect response.",
+    "positive_expected": "Valid query formatting preserves meaning and the fixture returns data.health = ready.",
+    "negative": "Enter malformed GraphQL or malformed variables JSON and format or execute.",
+    "negative_expected": "The error is visible, the app stays open, and no false success is shown.",
+    "setup": "Start docs/ui-testing/protocol_fixture.py on port 5061; use data/sample.graphql."
+  },
+  {
+    "id": "UI-15",
+    "title": "gRPC proto parse and simulated call",
+    "area": "Protocols & Streaming",
+    "positive": "Paste sample.proto, click Parse Proto, enter the matching method and valid JSON payload, then click Simulate Call.",
+    "positive_expected": "The service/method parses and the transcript clearly shows the simulated result.",
+    "negative": "Enter malformed proto or invalid payload JSON and invoke the corresponding action.",
+    "negative_expected": "The UI shows an error without crashing or claiming a successful call.",
+    "setup": "Use sample.proto; this control is a simulation, not proof of network gRPC."
+  },
+  {
+    "id": "UI-16",
+    "title": "WebSocket and SSE connection lifecycle",
+    "area": "Protocols & Streaming",
+    "positive": "Connect to ws://127.0.0.1:5061/ws, send hello, inspect transcript and disconnect; connect to http://127.0.0.1:5061/events and observe the event.",
+    "positive_expected": "The transcript shows the echoed WebSocket message and fixture-ready SSE event; disconnect ends the session.",
+    "negative": "Connect to an invalid or unavailable endpoint and try sending after disconnect.",
+    "negative_expected": "Failure is visible, no message is claimed delivered, and the UI remains responsive.",
+    "setup": "Start docs/ui-testing/protocol_fixture.py on port 5061."
+  },
+  {
+    "id": "UI-17",
+    "title": "Mock rules, matching and logs",
+    "area": "Mocks & Webhooks",
+    "positive": "Start the local mock on loopback, add a GET rule for /qa with status 200 and a distinctive JSON body, send a local request to it, then Refresh Logs and Reset State.",
+    "positive_expected": "The rule returns its configured response, the request appears in logs, and reset clears state as indicated.",
+    "negative": "Try to start on an occupied port and add a rule with invalid input.",
+    "negative_expected": "Errors are visible; no second listener or invalid rule is silently installed.",
+    "setup": "Choose a free loopback port and occupy a different local port for the negative variant."
+  },
+  {
+    "id": "UI-18",
+    "title": "Mock faults and external bind guard",
+    "area": "Mocks & Webhooks",
+    "positive": "Create a delayed-response or HTTP-error rule and send a matching local request.",
+    "positive_expected": "The configured fault is observable and logged.",
+    "negative": "Attempt a non-loopback bind without selecting Allow external binding.",
+    "negative_expected": "The listener refuses external binding with a visible diagnostic.",
+    "setup": "Use only an isolated local test environment; stop the listener after the case."
+  },
+  {
+    "id": "UI-19",
+    "title": "Webhook listener capture",
+    "area": "Mocks & Webhooks",
+    "positive": "Start the webhook listener with a test path prefix, send a local POST with a synthetic payload, then Refresh Events and stop the listener.",
+    "positive_expected": "The event and count appear and the listener stops.",
+    "negative": "Send to a nonmatching path or after stopping the listener.",
+    "negative_expected": "It is not recorded as a matching live event; any connection failure is reported by the sender.",
+    "setup": "Use only loopback and synthetic data; determine the displayed listener URL before sending."
+  },
+  {
+    "id": "UI-20",
+    "title": "Load test run, thresholds and cancellation",
+    "area": "Load testing",
+    "positive": "Target local /echo with one virtual user, short duration, a permissive threshold and explicit target confirmation; click Start Test and inspect metrics. Repeat and cancel while running.",
+    "positive_expected": "The completed report contains request and percentile metrics; cancellation is visible and returns control.",
+    "negative": "Clear explicit confirmation and click Start Test; also try an invalid target URL.",
+    "negative_expected": "The test is refused with a diagnostic and no traffic is sent.",
+    "setup": "Start the local fixture. Never use a public endpoint for load tests."
+  },
+  {
+    "id": "UI-21",
+    "title": "Synthetic dataset browsing",
+    "area": "Dataset feasibility",
+    "positive": "Open the tab and scroll through the 100,000 synthetic rows, including near the end.",
+    "positive_expected": "Rows display with case ID, email and status; scrolling remains responsive.",
+    "negative": "Attempt to edit a cell or add a row.",
+    "negative_expected": "The read-only fixture does not accept or persist an edit.",
+    "setup": "Desktop application running."
+  },
+  {
+    "id": "UI-22",
+    "title": "Grid editing, filter and undo",
+    "area": "Dataset grid & clipboard",
+    "positive": "Insert a row, edit email and status, duplicate a case, filter for the email, clear filter, undo and redo an edit.",
+    "positive_expected": "Changes, filtered results and undo/redo reflect the selected operations; duplicate case identity remains unique.",
+    "negative": "Apply a filter with no match and attempt an operation requiring a selection with no row selected.",
+    "negative_expected": "No unrelated row changes; empty results or an actionable status is shown.",
+    "setup": "Use a fresh desktop session and synthetic values."
+  },
+  {
+    "id": "UI-23",
+    "title": "Clipboard, safe export and external results",
+    "area": "Dataset grid & clipboard",
+    "positive": "Copy valid.csv content to clipboard, click Paste clipboard, then export CSV with spreadsheet-safe export enabled; attach synthetic external results.",
+    "positive_expected": "Rows are previewed/imported as supported, exported data is readable, and attached results are identified as external.",
+    "negative": "Paste malformed data or a cURL command containing a harmless local URL; include a cell beginning =1+1 in an export.",
+    "negative_expected": "Malformed content is diagnosed; cURL is not executed; spreadsheet-safe export neutralizes the formula cell.",
+    "setup": "Use a disposable export location and inspect output as plain text; do not open unsafe data in a spreadsheet."
+  },
+  {
+    "id": "UI-24",
+    "title": "Git initialize, status and branches",
+    "area": "Git collaboration",
+    "positive": "Set an empty disposable repository path, Initialize, Refresh, create a branch and switch to it; inspect status and history.",
+    "positive_expected": "Repository and branch operations are reflected in the UI and existing data outside the repository is untouched.",
+    "negative": "Set an invalid Git executable or invalid repository path and refresh.",
+    "negative_expected": "The UI reports the Git/path error without crashing or changing another repository.",
+    "setup": "Use an empty temporary directory and installed Git; create an initial commit if branch operations require it."
+  },
+  {
+    "id": "UI-25",
+    "title": "Git review and commit selected assets",
+    "area": "Git collaboration",
+    "positive": "Change one disposable project asset, enter its repository-relative path and commit message, review selected files, inspect the diff, then commit reviewed files.",
+    "positive_expected": "The displayed diff matches the selected change and the commit includes only reviewed files.",
+    "negative": "Change a selected file after review or leave the commit message invalid, then attempt commit.",
+    "negative_expected": "Stale or invalid review is rejected and no unintended commit is made.",
+    "setup": "Use a disposable Git repository with a baseline commit and configured local identity."
+  },
+  {
+    "id": "UI-26",
+    "title": "Git conflicts and resolution",
+    "area": "Git collaboration",
+    "positive": "Create a conflict in a disposable project asset, Find conflicts, Load versions, review local or incoming version and mark the reviewed path resolved.",
+    "positive_expected": "Base/local/incoming and final diff are visible and only the reviewed resolution is staged.",
+    "negative": "Attempt to resolve without reviewing, or use an invalid save-both path.",
+    "negative_expected": "Resolution is refused and conflict versions remain recoverable.",
+    "setup": "Create two divergent local branches editing the same project asset and merge to produce a conflict."
+  },
+  {
+    "id": "UI-27",
+    "title": "Git remotes and integration failures",
+    "area": "Git collaboration",
+    "positive": "Use a disposable local bare repository as remote; add/select it, fetch, push a test branch and inspect history.",
+    "positive_expected": "Remote and branch state update as requested without exposing credentials.",
+    "negative": "Fetch an unreachable remote or fast-forward a divergent branch.",
+    "negative_expected": "The error is visible and local work is not silently overwritten.",
+    "setup": "Create a local bare repository and working clone; use no production repository or credentials."
+  },
+  {
+    "id": "UI-28",
+    "title": "Keyboard, accessibility and theme traversal",
+    "area": "Desktop shell",
+    "positive": "Navigate every top-level tab by keyboard, change font family and size, use access keys and Ctrl+Enter on a local request, and inspect focus at normal and high-contrast settings.",
+    "positive_expected": "All tabs render, controls are reachable with visible focus, font settings affect editors and the shortcut sends the request.",
+    "negative": "Navigate with no project open and attempt unavailable actions; check for clipped controls or unlabeled focus targets.",
+    "negative_expected": "Unavailable actions are disabled or explain their prerequisites; focus remains visible and no crash occurs.",
+    "setup": "Use Windows 11 x64; Narrator speech observation remains separately tracked in #58."
+  },
+  {
+    "id": "UI-29",
+    "title": "Project read-only ownership and recovery",
+    "area": "Project assets",
+    "setup": "Use a disposable project and two application instances.",
+    "positive": "Open the same project in both instances; inspect editability, then close the owner and reopen in the second instance.",
+    "positive_expected": "Only the writer can save; the other instance reports read-only and can later acquire ownership.",
+    "negative": "Keep a dirty draft, close or interrupt the application and reopen the project.",
+    "negative_expected": "Recovery or a clear diagnostic preserves the draft; it is not silently applied over disk."
+  },
+  {
+    "id": "UI-30",
+    "title": "Project watcher and disk protection",
+    "area": "Project assets",
+    "setup": "Open two distinct valid project assets in a disposable project.",
+    "positive": "Without a dirty draft, edit the selected asset externally and wait for refresh.",
+    "positive_expected": "The disk and editor views reflect the external version.",
+    "negative": "Delete or corrupt the selected asset externally while a draft exists.",
+    "negative_expected": "The UI warns or blocks unsafe save and preserves recoverable content."
+  },
+  {
+    "id": "UI-31",
+    "title": "HTTP method matrix",
+    "area": "HTTP workbench",
+    "setup": "Start the HTTP fixture at 127.0.0.1:5057.",
+    "positive": "Send GET, POST, PUT, PATCH, DELETE and OPTIONS to /echo, then HEAD to /echo.",
+    "positive_expected": "The fixture reports the chosen method for supported methods; HEAD does not display a response body.",
+    "negative": "Send to an unavailable port and an unsupported URL scheme.",
+    "negative_expected": "A transport or validation diagnostic is shown and the app stays responsive."
+  },
+  {
+    "id": "UI-32",
+    "title": "HTTP raw, none and form body modes",
+    "area": "HTTP workbench",
+    "setup": "Start the HTTP fixture; use /echo.",
+    "positive": "For POST select each of raw, none, urlencoded and form-data. Send raw {\"value\":1}, then name=alice and role=qa for the form modes.",
+    "positive_expected": "Echoed body and Content-Type correspond to each selected mode; none sends no body.",
+    "negative": "Supply malformed form input or a missing file in file mode and send.",
+    "negative_expected": "The UI reports the input or file error and does not claim a successful send."
+  },
+  {
+    "id": "UI-33",
+    "title": "HTTP authentication mode matrix",
+    "area": "HTTP workbench",
+    "setup": "Use local /echo and test-only values user=qa and secret=synthetic-token.",
+    "positive": "Exercise none, basic, bearer and apiKey, inspecting the echo request headers.",
+    "positive_expected": "Each mode produces its intended synthetic auth or none; no other mode remains unintentionally active.",
+    "negative": "Select oauth2, windows and certificate without their prerequisites and try to send.",
+    "negative_expected": "Unsupported or incomplete configuration is reported; no credential is silently invented or exposed."
+  },
+  {
+    "id": "UI-34",
+    "title": "HTTP variable scope and substitution",
+    "area": "HTTP workbench",
+    "setup": "Import postman-environment.json into a disposable project; use local /echo.",
+    "positive": "Select UI QA environment, inspect variables, and send a URL containing {{baseUrl}}/echo.",
+    "positive_expected": "The resolved value and its scope are displayed and the local fixture receives the request; secret values stay redacted in inspection.",
+    "negative": "Reference a missing variable and a cyclic pair in a disposable environment.",
+    "negative_expected": "A diagnostic identifies unresolved or cyclic expansion and no unsafe target is contacted."
+  },
+  {
+    "id": "UI-35",
+    "title": "HTTP response formatting and large data",
+    "area": "HTTP workbench",
+    "setup": "Start the HTTP fixture.",
+    "positive": "Send GET /echo, switch Pretty and Raw, then send /large and inspect local artifact.",
+    "positive_expected": "Pretty and Raw preserve the response content; large output remains usable and its local artifact is accessible.",
+    "negative": "Attempt to edit response body, headers, cookies or artifact path.",
+    "negative_expected": "Read-only output does not accept edits or alter saved response bytes."
+  },
+  {
+    "id": "UI-36",
+    "title": "HTTP TLS and redirect security",
+    "area": "HTTP workbench",
+    "setup": "Use a disposable local HTTPS endpoint with a self-signed certificate and a second local origin; record endpoint setup.",
+    "positive": "Send with TLS validation enabled and then explicitly enable Ignore TLS errors; test a cross-origin redirect carrying a synthetic Authorization header.",
+    "positive_expected": "Validation rejects the untrusted certificate by default; explicit override permits the local request and cross-origin redirect strips authorization.",
+    "negative": "Disable the override again and retry; never use real credentials.",
+    "negative_expected": "The untrusted certificate is rejected and the test token is not sent to the redirected origin."
+  },
+  {
+    "id": "UI-37",
+    "title": "Dataset format and encoding matrix",
+    "area": "Import dataset",
+    "setup": "Use valid.csv, valid.tsv, valid.json and valid.jsonl plus generated encoding variants from the guide.",
+    "positive": "Prepare and accept each CSV, TSV, JSON array and JSONL input; repeat CSV with UTF-8, UTF-16 LE and Windows-1252.",
+    "positive_expected": "Two correct rows and stable case IDs appear for every matching format/encoding.",
+    "negative": "Choose a deliberately incompatible format or encoding for a non-ASCII file.",
+    "negative_expected": "The import reports an error or visibly incorrect preview for rejection; no incorrect data is accepted."
+  },
+  {
+    "id": "UI-38",
+    "title": "Dataset mappings and typed conversion",
+    "area": "Import dataset",
+    "setup": "Use conversions.csv in a writable disposable project.",
+    "positive": "Set mappings to the conversion-mappings.json contents; prepare and accept.",
+    "positive_expected": "Preview and saved rows contain decimal, boolean and ISO date values, and empty is null as specified.",
+    "negative": "Change the numeric or date input to an invalid value and prepare.",
+    "negative_expected": "A conversion diagnostic is shown and no dataset is published."
+  },
+  {
+    "id": "UI-39",
+    "title": "Dataset delimiter culture and quoting",
+    "area": "Import dataset",
+    "setup": "Use quoted.csv and semicolon.csv in data.",
+    "positive": "Prepare quoted.csv with comma, then semicolon.csv with semicolon and culture de-DE using the supplied decimal mapping.",
+    "positive_expected": "Quoted commas/newlines are retained as fields and 12,50 converts to decimal 12.50.",
+    "negative": "Set a multi-character delimiter or an invalid culture and prepare.",
+    "negative_expected": "The UI reports invalid settings without modifying project assets."
+  },
+  {
+    "id": "UI-40",
+    "title": "Dataset browse and cancellation",
+    "area": "Import dataset",
+    "setup": "Use a disposable writable project and valid.csv; generate the large file as described in the guide.",
+    "positive": "Use Browse to choose valid.csv and prepare. Cancel the file chooser in a separate attempt.",
+    "positive_expected": "The chosen path is populated and prepared; cancelling the chooser does not replace the current path.",
+    "negative": "Cancel preparation and cancel acceptance while processing the large file.",
+    "negative_expected": "Cancellation is reported; inspect project state before retrying and no earlier dataset is overwritten."
+  },
+  {
+    "id": "UI-41",
+    "title": "Dataset preview bounds and repeat acceptance",
+    "area": "Import dataset",
+    "setup": "Generate the 1000-row large CSV from the guide in a writable project.",
+    "positive": "Prepare and inspect row count and preview, then accept once.",
+    "positive_expected": "The count reflects all rows, preview is bounded to 100 rows / 64 KiB, and one dataset is created.",
+    "negative": "Click Accept again without a new preview, then attempt preparation with no writable project.",
+    "negative_expected": "Both actions are refused with an informative status and do not create another dataset."
+  },
+  {
+    "id": "UI-42",
+    "title": "Import Postman collection and environment",
+    "area": "Import & export",
+    "setup": "Use postman-collection.json and postman-environment.json with a writable project.",
+    "positive": "Browse each file, select its matching format, preview and publish explicitly.",
+    "positive_expected": "Counts and proposed files match the fixture; synthetic secret detection is reported and project assets are published only after confirmation.",
+    "negative": "Preview malformed.json as either format.",
+    "negative_expected": "Validation errors appear, publish is unavailable and project files remain unchanged."
+  },
+  {
+    "id": "UI-43",
+    "title": "Import OpenAPI, HAR, cURL and detection",
+    "area": "Import & export",
+    "setup": "Use openapi.json, traffic.har and request.curl.txt.",
+    "positive": "Preview each file with AutoDetect and its explicit format; publish each to a fresh disposable project.",
+    "positive_expected": "The format and expected request counts appear, then only the explicitly accepted assets are created.",
+    "negative": "Select a mismatched explicit format or empty source.",
+    "negative_expected": "An error is shown and no invalid import is published or executed."
+  },
+  {
+    "id": "UI-44",
+    "title": "Import preview freshness and file picker",
+    "area": "Import & export",
+    "setup": "Use request.curl.txt and a writable project; fixture logs should be observable.",
+    "positive": "Browse a file, inspect preview counts, warnings and source; cancel a subsequent file dialog.",
+    "positive_expected": "The selected file populates source and preview; cancel preserves existing source; preview causes no HTTP request.",
+    "negative": "Change the source after preview and try to publish without refreshing.",
+    "negative_expected": "Publishing stale content is prevented or explicitly identified; no unintended asset is written."
+  },
+  {
+    "id": "UI-45",
+    "title": "GraphQL variables and syntax highlighting",
+    "area": "Protocols & Streaming",
+    "setup": "Start protocol_fixture.py on loopback port 5061.",
+    "positive": "Enter http://127.0.0.1:5061/graphql, sample.graphql and {} variables; format and execute.",
+    "positive_expected": "Query and variables remain editable with highlighting; response contains data.health = ready.",
+    "negative": "Enter invalid JSON variables and invalid query syntax.",
+    "negative_expected": "Diagnostics are visible; invalid input is not shown as a successful response."
+  },
+  {
+    "id": "UI-46",
+    "title": "GraphQL schema and network error",
+    "area": "Protocols & Streaming",
+    "setup": "Start the protocol fixture; it supports only the synthetic health query.",
+    "positive": "Execute the health query, inspect response and edit query text.",
+    "positive_expected": "A formatted response is displayed and editor remains responsive.",
+    "negative": "Use an unavailable endpoint or a query the fixture rejects.",
+    "negative_expected": "The transport or GraphQL error is visible; previous success is not attributed to the new request."
+  },
+  {
+    "id": "UI-47",
+    "title": "gRPC parse variants and transcript",
+    "area": "Protocols & Streaming",
+    "setup": "Use sample.proto and a disposable desktop session.",
+    "positive": "Parse sample.proto; set /demo.Greeter/Greet and {\"message\":\"hello\"}; simulate the call.",
+    "positive_expected": "A service/method is discovered and the simulated transcript reflects input.",
+    "negative": "Use invalid proto and an unknown method or malformed payload.",
+    "negative_expected": "The UI reports a parse or invocation diagnostic without claiming a real network call."
+  },
+  {
+    "id": "UI-48",
+    "title": "Streaming message types and state",
+    "area": "Protocols & Streaming",
+    "setup": "Start protocol_fixture.py; use ws://127.0.0.1:5061/ws and http://127.0.0.1:5061/events.",
+    "positive": "Connect WebSocket, send hello, inspect echoed transcript and disconnect; connect SSE and inspect fixture-ready.",
+    "positive_expected": "WebSocket send/receive and SSE event are visible, and disconnect returns to idle.",
+    "negative": "Send before connecting, use a bad URL, or send on SSE.",
+    "negative_expected": "The operation is rejected or reports an error without fabricating a message."
+  },
+  {
+    "id": "UI-49",
+    "title": "Mock rule specificity and logs",
+    "area": "Mocks & Webhooks",
+    "setup": "Use a free loopback port and disposable mock server.",
+    "positive": "Add GET /qa/{id} and GET /qa/fixed with distinct bodies; request /qa/fixed, then Refresh Logs and Reset State.",
+    "positive_expected": "The exact rule wins and logs show the request; reset clears state.",
+    "negative": "Request an unmatched path and attempt an invalid status or path.",
+    "negative_expected": "No unrelated rule matches and invalid configuration is rejected or reported."
+  },
+  {
+    "id": "UI-50",
+    "title": "Mock fault mode matrix",
+    "area": "Mocks & Webhooks",
+    "setup": "Start a mock on a free loopback port.",
+    "positive": "For each fault choice None, DelayedResponse, HttpError, RateLimit, MalformedPayload and ConnectionTermination, add a distinct path and request it.",
+    "positive_expected": "Each response, delay or termination matches the selected configured fault and is observable in logs.",
+    "negative": "Enter a negative delay or invalid HTTP status.",
+    "negative_expected": "Invalid values do not silently create a valid-looking rule or crash the UI."
+  },
+  {
+    "id": "UI-51",
+    "title": "Webhook listener prefix and restart",
+    "area": "Mocks & Webhooks",
+    "setup": "Use the displayed local listener URL and prefix /webhooks/incoming.",
+    "positive": "Start listener, send two synthetic POSTs, refresh events, stop and restart.",
+    "positive_expected": "Matching events and count are visible and listener lifecycle is reflected.",
+    "negative": "Send a request outside the prefix and try starting while the port is occupied.",
+    "negative_expected": "Out-of-prefix traffic is not treated as a matching event and bind errors are visible."
+  },
+  {
+    "id": "UI-52",
+    "title": "Load testing model and threshold matrix",
+    "area": "Load testing",
+    "setup": "Start local HTTP fixture; use small bounded values and explicit confirmation.",
+    "positive": "Run closed-loop and open-loop models against /echo with permissive thresholds, then with an intentionally impossible latency threshold.",
+    "positive_expected": "Each report identifies the model and metrics; the intentionally impossible threshold is reported failed.",
+    "negative": "Use zero or negative VUs/duration and malformed threshold values.",
+    "negative_expected": "Invalid configuration is rejected without generating load."
+  },
+  {
+    "id": "UI-53",
+    "title": "Dataset grid insert delete duplicate and fill",
+    "area": "Dataset grid & clipboard",
+    "setup": "Start with synthetic grid and record selected rows.",
+    "positive": "Insert a row, edit email, duplicate it, select a column and Fill down, then delete a selected row and undo/redo.",
+    "positive_expected": "Each action affects only the intended rows; duplicates receive unique IDs and undo/redo restores the appropriate state.",
+    "negative": "Perform delete, duplicate or fill with no valid selection.",
+    "negative_expected": "No unintended row changes and an appropriate status is shown."
+  },
+  {
+    "id": "UI-54",
+    "title": "Dataset grid clipboard input formats",
+    "area": "Dataset grid & clipboard",
+    "setup": "Use valid.csv, valid.tsv, clipboard.json and request.curl.txt.",
+    "positive": "Copy each dataset content to clipboard and use Paste clipboard; inspect summary and resulting rows.",
+    "positive_expected": "CSV, TSV and JSON are recognized with their rows; cURL is previewed without execution.",
+    "negative": "Copy malformed.csv or malformed.json and paste.",
+    "negative_expected": "Malformed data is diagnosed without silently inserting corrupted rows."
+  },
+  {
+    "id": "UI-55",
+    "title": "Grid export safety and results",
+    "area": "Dataset grid & clipboard",
+    "setup": "Create rows with =1+1, +1, -1 and @test in text cells; use a disposable destination.",
+    "positive": "Export with Spreadsheet-safe export selected and inspect output as plain text; attach external-results.json content.",
+    "positive_expected": "Formula-leading text is neutralized and external evidence is marked non-Wrangler.",
+    "negative": "Disable safe export and inspect the same output as plain text; attach invalid or empty content.",
+    "negative_expected": "Unsafe mode does not falsely claim neutralization; invalid result input is diagnosed or left unattached."
+  },
+  {
+    "id": "UI-56",
+    "title": "Git clone and remote configuration",
+    "area": "Git collaboration",
+    "setup": "Create a disposable local bare repository as instructed in the guide.",
+    "positive": "Enter its local path as remote URL and an empty destination, click Clone; add and select a second local remote.",
+    "positive_expected": "Clone and remote selection are reflected in status and local Git configuration.",
+    "negative": "Clone to a nonempty destination or select an unknown remote.",
+    "negative_expected": "An error is displayed and existing files and remote configuration are preserved."
+  },
+  {
+    "id": "UI-57",
+    "title": "Git branch and integration operations",
+    "area": "Git collaboration",
+    "setup": "Create disposable branches with known commits and an initial clean working tree.",
+    "positive": "Create and switch branches, fast-forward, merge a non-conflicting branch and rebase a second branch.",
+    "positive_expected": "History and current branch show the requested operations and preserve unrelated project files.",
+    "negative": "Attempt a fast-forward of divergent history and switch with conflicting dirty changes.",
+    "negative_expected": "The operation is refused or reports conflicts without silently discarding work."
+  },
+  {
+    "id": "UI-58",
+    "title": "Git restore and history",
+    "area": "Git collaboration",
+    "setup": "Commit an editable project asset in a disposable repository, then change it.",
+    "positive": "Load History, enter its repository-relative path and revision, and use Restore path.",
+    "positive_expected": "History shows commits and the targeted asset returns to the selected revision.",
+    "negative": "Try a nonexistent revision or a path outside api-wrangler/.",
+    "negative_expected": "Restore is rejected; no outside or unrelated file is modified."
+  },
+  {
+    "id": "UI-59",
+    "title": "Git conflict resolution choices",
+    "area": "Git collaboration",
+    "setup": "Create and reset a disposable conflict for each variant.",
+    "positive": "Load versions; separately review edited result, local, incoming, deletion and save both to a valid new path; inspect each final diff and resolve.",
+    "positive_expected": "Each reviewed choice produces the expected staged result and recovery copies; save both keeps both versions.",
+    "negative": "Modify the draft after review or choose an existing/outside save-both path.",
+    "negative_expected": "Stale review or unsafe destination is rejected and original conflict data remains recoverable."
+  },
+  {
+    "id": "UI-60",
+    "title": "GitHub compare and push failures",
+    "area": "Git collaboration",
+    "setup": "Use a disposable repository and a synthetic GitHub remote; do not push to production.",
+    "positive": "Enter a valid GitHub comparison base and branch, then click Compare.",
+    "positive_expected": "A browser opens the intended comparison URL without embedding credentials.",
+    "negative": "Use a non-GitHub remote or missing base and attempt Compare; push to an unreachable local remote.",
+    "negative_expected": "An informative error appears and no unintended browser target or repository update occurs."
+  },
+  {
+    "id": "UI-61",
+    "title": "Shell resize, focus and read-only panels",
+    "area": "Desktop shell",
+    "setup": "Run at 800x600 and a larger window on Windows 11 x64.",
+    "positive": "Visit each top-level and nested tab, resize, drag both editor splitters, and use Tab, Shift+Tab and access keys.",
+    "positive_expected": "Controls remain reachable, focus visible, splitters move and read-only output cannot be edited.",
+    "negative": "Try inaccessible disabled actions with no project and inspect screen at minimum size and high contrast.",
+    "negative_expected": "No crash or hidden state change occurs; clipping, missing labels or inaccessible controls are recorded as defects."
+  }
+]

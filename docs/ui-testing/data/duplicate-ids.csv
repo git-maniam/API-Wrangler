@@ -1,0 +1,3 @@
+_caseId,email,status
+duplicate,alice@example.test,200
+duplicate,bob@example.test,404

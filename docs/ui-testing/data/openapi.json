@@ -1,0 +1,1 @@
+{"openapi":"3.0.1","info":{"title":"UI QA API","version":"1.0.0"},"servers":[{"url":"http://127.0.0.1:5057"}],"paths":{"/echo":{"get":{"tags":["Echo"],"summary":"Echo query","parameters":[{"name":"q","in":"query","example":"hello"}]}}}}

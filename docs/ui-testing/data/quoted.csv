@@ -1,0 +1,4 @@
+_caseId,email,status
+quote-1,"alice,qa@example.test",200
+quote-2,"line one
+line two@example.test",404

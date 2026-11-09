@@ -1,0 +1,3 @@
+_caseId,email,status,amount
+case-001,alice@example.test,200,12.50
+case-002,bob@example.test,404,0.00
