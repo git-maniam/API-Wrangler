@@ -224,9 +224,13 @@ public sealed class HttpTransport : IHttpTransport, IDisposable
         {
             RemovePartial();
             // Do not include exception text: URLs, credentials, and server data may be embedded in it.
-            return Result(ExecutionOutcome.Error, exception is ResponseLimitException
-                ? "Response exceeded the configured saved-body limit. Partial body removed."
-                : "Request failed. Check the URL, headers, connectivity, TLS configuration, and artifact storage.");
+            string message = exception switch
+            {
+                ResponseLimitException => "Response exceeded the configured saved-body limit. Partial body removed.",
+                FileNotFoundException fnf => $"Upload file not found: '{Path.GetFileName(fnf.FileName ?? fnf.Message)}'. Check the file path.",
+                _ => "Request failed. Check the URL, headers, connectivity, TLS configuration, and artifact storage."
+            };
+            return Result(ExecutionOutcome.Error, message);
         }
         finally
         {
@@ -315,15 +319,15 @@ public sealed class HttpTransport : IHttpTransport, IDisposable
                     }
                     return multipart;
                 case "file":
-                    if (!string.IsNullOrEmpty(definition.BodyDefinition.FilePath) && File.Exists(definition.BodyDefinition.FilePath))
+                    if (string.IsNullOrWhiteSpace(definition.BodyDefinition.FilePath) || !File.Exists(definition.BodyDefinition.FilePath))
                     {
-                        var stream = File.OpenRead(definition.BodyDefinition.FilePath);
-                        var fileContent = new StreamContent(stream);
-                        if (!string.IsNullOrEmpty(definition.ContentType))
-                            fileContent.Headers.ContentType = MediaTypeHeaderValue.Parse(definition.ContentType);
-                        return fileContent;
+                        throw new FileNotFoundException($"Upload file not found: '{definition.BodyDefinition.FilePath}'.", definition.BodyDefinition.FilePath);
                     }
-                    return null;
+                    var fileStream = File.OpenRead(definition.BodyDefinition.FilePath);
+                    var fileContent = new StreamContent(fileStream);
+                    if (!string.IsNullOrEmpty(definition.ContentType))
+                        fileContent.Headers.ContentType = MediaTypeHeaderValue.Parse(definition.ContentType);
+                    return fileContent;
                 case "raw":
                 default:
                     if (!string.IsNullOrEmpty(definition.BodyDefinition.Text))

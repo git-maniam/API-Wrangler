@@ -46,6 +46,7 @@ public partial class MainViewModel(
     [ObservableProperty] private ProjectAsset? selectedCollection;
     [ObservableProperty] private string collectionExecutionStatus = "";
     [ObservableProperty] private CollectionExecutionReport? latestCollectionReport;
+    [ObservableProperty] private string collectionReportDetails = "";
     [ObservableProperty] private string variablesInspectionText = "";
     [ObservableProperty] private string authType = "none";
     [ObservableProperty] private string authUsername = "";
@@ -117,6 +118,7 @@ public partial class MainViewModel(
             var report = await runner.ExecuteCollectionAsync(snapView, collectionId, baseContext: varContext, snapshot: snapshot, cancellationToken: token);
             LatestCollectionReport = report;
             CollectionExecutionStatus = $"{report.Status}: {report.PassedRequests}/{report.TotalRequestsRun} requests passed ({report.Duration.TotalMilliseconds:F0} ms).";
+            CollectionReportDetails = new ConsoleReporter().GenerateReport(report);
             Status = $"Collection run {report.Status}: {report.PassedRequests}/{report.TotalRequestsRun} passed.";
         }
         catch (OperationCanceledException)
@@ -149,6 +151,52 @@ public partial class MainViewModel(
         var fmt = StructuredTextEngine.DetectFormat(value);
         RequestHighlighting = fmt == StructuredFormat.Json ? "Json"
             : fmt == StructuredFormat.Xml ? "XML" : "None";
+    }
+
+    partial void OnAuthPasswordChanged(string value)
+    {
+        if (string.Equals(AuthType, "bearer", StringComparison.OrdinalIgnoreCase))
+        {
+            AuthToken = value;
+        }
+        else if (string.Equals(AuthType, "apiKey", StringComparison.OrdinalIgnoreCase))
+        {
+            AuthApiKeyValue = value;
+        }
+    }
+
+    partial void OnAuthUsernameChanged(string value)
+    {
+        if (string.Equals(AuthType, "apiKey", StringComparison.OrdinalIgnoreCase))
+        {
+            AuthApiKeyName = value;
+        }
+    }
+
+    partial void OnAuthTypeChanged(string value)
+    {
+        if (string.Equals(value, "bearer", StringComparison.OrdinalIgnoreCase))
+        {
+            if (string.IsNullOrEmpty(AuthPassword) && !string.IsNullOrEmpty(AuthToken))
+            {
+                AuthPassword = AuthToken;
+            }
+            else if (!string.IsNullOrEmpty(AuthPassword) && string.IsNullOrEmpty(AuthToken))
+            {
+                AuthToken = AuthPassword;
+            }
+        }
+        else if (string.Equals(value, "apiKey", StringComparison.OrdinalIgnoreCase))
+        {
+            if (string.IsNullOrEmpty(AuthPassword) && !string.IsNullOrEmpty(AuthApiKeyValue))
+            {
+                AuthPassword = AuthApiKeyValue;
+            }
+            if (string.IsNullOrEmpty(AuthUsername) && !string.IsNullOrEmpty(AuthApiKeyName))
+            {
+                AuthUsername = AuthApiKeyName;
+            }
+        }
     }
 
     public async Task InitializeSettingsAsync(CancellationToken cancellationToken = default)
@@ -375,6 +423,20 @@ public partial class MainViewModel(
             AuthApiKeyName = req.Auth?.ApiKeyName ?? "X-Api-Key";
             AuthApiKeyValue = req.Auth?.ApiKeyValue ?? "";
             AuthApiKeyLocation = req.Auth?.ApiKeyLocation ?? "header";
+            if (string.Equals(AuthType, "bearer", StringComparison.OrdinalIgnoreCase))
+            {
+                if (string.IsNullOrEmpty(AuthPassword) && !string.IsNullOrEmpty(AuthToken))
+                    AuthPassword = AuthToken;
+                else if (!string.IsNullOrEmpty(AuthPassword) && string.IsNullOrEmpty(AuthToken))
+                    AuthToken = AuthPassword;
+            }
+            else if (string.Equals(AuthType, "apiKey", StringComparison.OrdinalIgnoreCase))
+            {
+                if (string.IsNullOrEmpty(AuthPassword) && !string.IsNullOrEmpty(AuthApiKeyValue))
+                    AuthPassword = AuthApiKeyValue;
+                if (string.IsNullOrEmpty(AuthUsername) && !string.IsNullOrEmpty(AuthApiKeyName))
+                    AuthUsername = AuthApiKeyName;
+            }
             Status = $"Loaded request {target.Path}.";
         }
         catch (Exception ex)
@@ -415,6 +477,24 @@ public partial class MainViewModel(
     {
         try
         {
+            if (string.Equals(BodyMode, "file", StringComparison.OrdinalIgnoreCase))
+            {
+                if (string.IsNullOrWhiteSpace(BodyFilePath))
+                {
+                    Status = "File body mode requires a file upload path.";
+                    RawResponseBody = "Upload file path is required when body mode is 'file'.";
+                    ApplyResponseViewMode();
+                    return;
+                }
+                if (!File.Exists(BodyFilePath))
+                {
+                    Status = $"Upload file not found: {BodyFilePath}";
+                    RawResponseBody = $"Specified upload file does not exist: '{BodyFilePath}'.";
+                    ApplyResponseViewMode();
+                    return;
+                }
+            }
+
             var request = BuildDefinition();
             var varContext = BuildVariableContext();
             Status = "Sending…";
@@ -497,14 +577,24 @@ public partial class MainViewModel(
             };
         }
 
+        string effectiveToken = !string.IsNullOrEmpty(AuthToken)
+            ? AuthToken
+            : (string.Equals(AuthType, "bearer", StringComparison.OrdinalIgnoreCase) ? AuthPassword : "");
+        string effectiveKeyName = !string.IsNullOrEmpty(AuthApiKeyName) && AuthApiKeyName != "X-Api-Key"
+            ? AuthApiKeyName
+            : (string.Equals(AuthType, "apiKey", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrEmpty(AuthUsername) ? AuthUsername : AuthApiKeyName);
+        string effectiveKeyValue = !string.IsNullOrEmpty(AuthApiKeyValue)
+            ? AuthApiKeyValue
+            : (string.Equals(AuthType, "apiKey", StringComparison.OrdinalIgnoreCase) ? AuthPassword : "");
+
         var authDef = new RequestAuthDefinition
         {
             Type = AuthType,
             Username = AuthUsername,
             Password = AuthPassword,
-            Token = AuthToken,
-            ApiKeyName = AuthApiKeyName,
-            ApiKeyValue = AuthApiKeyValue,
+            Token = effectiveToken,
+            ApiKeyName = effectiveKeyName,
+            ApiKeyValue = effectiveKeyValue,
             ApiKeyLocation = AuthApiKeyLocation
         };
 

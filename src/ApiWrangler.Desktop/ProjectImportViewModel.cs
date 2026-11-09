@@ -34,6 +34,21 @@ public partial class ProjectImportViewModel(Func<IProjectSession?> getSession) :
 
     private ImportPreview? currentPreview;
 
+    partial void OnSourceTextChanged(string value) => InvalidatePreview();
+    partial void OnSourcePathChanged(string value) => InvalidatePreview();
+    partial void OnSelectedFormatChanged(ImportSourceFormat value) => InvalidatePreview();
+
+    private void InvalidatePreview()
+    {
+        currentPreview = null;
+        CanPublish = false;
+        PreviewSummary = "";
+        EntityCountsText = "";
+        DetectedSecretsText = "";
+        UnsupportedFeaturesText = "";
+        Status = "Source changed. Click 'Preview Import' to generate a new preview.";
+    }
+
     [RelayCommand]
     private void Browse()
     {

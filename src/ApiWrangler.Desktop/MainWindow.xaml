@@ -31,8 +31,9 @@
             <TabItem Header="Project assets">
                 <Grid Margin="12" DataContext="{Binding ProjectEditor}">
                     <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
-                    <DockPanel Grid.Row="1" Margin="0,0,0,8">
+                    <DockPanel Grid.Row="0" Margin="0,0,0,8">
                         <Button DockPanel.Dock="Right" Style="{StaticResource PrimaryButtonStyle}" Content="_Open project" Command="{Binding OpenProjectCommand}" Margin="8,0,0,0" />
+                        <Button DockPanel.Dock="Right" Content="_Browse..." Command="{Binding BrowseCommand}" Margin="8,0,0,0" AutomationProperties.Name="Browse for project folder" />
                         <Label DockPanel.Dock="Left" Content="_Project path" Target="{Binding ElementName=ProjectPathBox}" VerticalAlignment="Center" Padding="0" Margin="0,0,8,0" />
                         <TextBox x:Name="ProjectPathBox" Text="{Binding ProjectPath, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Project directory or manifest path" />
                     </DockPanel>
@@ -85,8 +86,13 @@
                         <ComboBox x:Name="SavedRequestCombo" ItemsSource="{Binding ProjectRequests}" SelectedItem="{Binding SelectedProjectRequest}" DisplayMemberPath="Path" AutomationProperties.Name="Saved project request" />
                     </DockPanel>
                     <DockPanel Grid.Row="1" Margin="0,0,0,8">
+                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
+                            <Label Content="_Collection:" Target="{Binding ElementName=CollectionCombo}" VerticalAlignment="Center" Margin="12,0,8,0" Padding="0" />
+                            <ComboBox x:Name="CollectionCombo" ItemsSource="{Binding ProjectCollections}" SelectedItem="{Binding SelectedCollection}" DisplayMemberPath="Path" Width="170" AutomationProperties.Name="Selected project collection" />
+                            <Button Content="Run _collection" Command="{Binding RunCollectionCommand}" Padding="10,2" Margin="8,0,0,0" AutomationProperties.Name="Run selected collection" />
+                        </StackPanel>
                         <Label Content="_Environment:" Target="{Binding ElementName=EnvironmentCombo}" VerticalAlignment="Center" Margin="0,0,8,0" Padding="0" />
-                        <ComboBox x:Name="EnvironmentCombo" ItemsSource="{Binding ProjectEnvironments}" SelectedItem="{Binding SelectedEnvironment}" DisplayMemberPath="Path" Width="200" AutomationProperties.Name="Active environment" />
+                        <ComboBox x:Name="EnvironmentCombo" ItemsSource="{Binding ProjectEnvironments}" SelectedItem="{Binding SelectedEnvironment}" DisplayMemberPath="Path" Width="180" AutomationProperties.Name="Active environment" />
                         <Label Content="Name:" Target="{Binding ElementName=RequestNameBox}" VerticalAlignment="Center" Margin="16,0,8,0" Padding="0" />
                         <TextBox x:Name="RequestNameBox" Text="{Binding RequestName, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Request name" />
                     </DockPanel>
@@ -184,6 +190,12 @@
                         <TabItem Header="Response headers"><TextBox Text="{Binding ResponseHeaders, Mode=OneWay}" IsReadOnly="True" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" FontFamily="{Binding EditorFontFamily}" FontSize="{Binding EditorFontSize}" AutomationProperties.Name="Response headers" /></TabItem>
                         <TabItem Header="Cookies"><TextBox Text="{Binding ResponseCookies, Mode=OneWay}" IsReadOnly="True" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" FontFamily="{Binding EditorFontFamily}" FontSize="{Binding EditorFontSize}" AutomationProperties.Name="Response cookies" /></TabItem>
                         <TabItem Header="Local artifact"><TextBox Text="{Binding ArtifactPath, Mode=OneWay}" IsReadOnly="True" TextWrapping="Wrap" AutomationProperties.Name="Local response body path" /></TabItem>
+                        <TabItem Header="Collection report">
+                            <DockPanel Margin="8">
+                                <TextBlock DockPanel.Dock="Top" Text="{Binding CollectionExecutionStatus}" FontWeight="Bold" Margin="0,0,0,8" AutomationProperties.Name="Collection execution status summary" />
+                                <TextBox Text="{Binding CollectionReportDetails, Mode=OneWay}" IsReadOnly="True" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" FontFamily="{Binding EditorFontFamily}" FontSize="{Binding EditorFontSize}" AutomationProperties.Name="Collection run report output" />
+                            </DockPanel>
+                        </TabItem>
                     </TabControl>
                 </Grid>
             </TabItem>

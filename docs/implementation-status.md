@@ -484,4 +484,18 @@ Missing test coverage was identified, authored, linked to Project 4 (`Backlog`, 
 - **UI-65 (#170)**: `[Test Case] UI-65 Static API documentation generation and catalog search` (Phase 13)
 - **UI-66 (#171)**: `[Test Case] UI-66 Playwright visual flow step evaluation and traffic capture` (Phase 12)
 
-*Note: Per explicit user directive, all bugs remain untouched and cataloged in GitHub Project 4; bug remediation begins in the next stage.*
+### Bug Remediation & Resolution (2026-11-09 23:55 IST)
+All 11 active defects cataloged above have been resolved and certified via automated test suites:
+- **#95**: Added `Browse...` folder picker dialog and unblocked `Open project` button from overlapping label. Closed and marked Done.
+- **#157**: Named `PART_SelectedContentHost` in `FluentTheme.xaml` TabControl template, exposing tab contents to UI Automation. Closed and marked Done.
+- **#158**: Separated `Project path` DockPanel (`Grid.Row="0"`) and `Project asset` label (`Grid.Row="1"`), eliminating overlap. Closed and marked Done.
+- **#159**: Added automatic preview invalidation and disabled `CanPublish` in `ProjectImportViewModel` when source content changes. Closed and marked Done.
+- **#160**: Added missing file validation in `HttpTransport` and `MainViewModel.SendAsync`, surfacing explicit error. Closed and marked Done.
+- **#161**: Validated GraphQL variables JSON in `ProtocolExpansionViewModel.ExecuteGraphQLAsync`, reporting syntax errors. Closed and marked Done.
+- **#162**: Added protobuf syntax validation in `ProtoParser.ParseSingleProto`, rejecting arbitrary text. Closed and marked Done.
+- **#163**: Synchronized Bearer token binding in `MainViewModel` to populate `RequestAuthDefinition.Token`. Closed and marked Done.
+- **#164**: Added desktop collection selector, `Run collection` button, and `Collection report` tab in `MainWindow.xaml`. Closed and marked Done.
+- **#165**: Expanded catch filter in `ProjectEditorViewModel.OpenProjectAsync` to handle `JsonException` and invalid formatting. Closed and marked Done.
+- **#168**: Enforced non-loopback host validation in `MockEngine.StartAsync`, throwing explicit exception without opt-in. Closed and marked Done.
+
+Automated in-process WPF harness (`artifacts/ui-execution-harness/Program.cs`) passed 31/31 observations across all 10 tabs; Release test suite passed 293/293 tests with 0 failures; desktop smoke and formatting verified. Ready for public pre-release packaging.

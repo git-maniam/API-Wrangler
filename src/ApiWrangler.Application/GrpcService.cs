@@ -108,6 +108,20 @@ public static class ProtoParser
         string clean = Regex.Replace(content, @"//[^\r\n]*", "");
         clean = Regex.Replace(clean, @"/\*[\s\S]*?\*/", "");
 
+        string trimmed = clean.Trim();
+        if (string.IsNullOrWhiteSpace(trimmed))
+        {
+            syntaxErrors.Add($"Empty protobuf content in '{fileName}'.");
+            return;
+        }
+
+        bool hasProtoConstruct = Regex.IsMatch(trimmed, @"\b(syntax\s*=\s*[""']proto[23][""']|package\s+|service\s+[A-Za-z0-9_]+\s*\{|message\s+[A-Za-z0-9_]+\s*\{|enum\s+[A-Za-z0-9_]+\s*\{|import\s+)");
+        if (!hasProtoConstruct)
+        {
+            syntaxErrors.Add($"Invalid protobuf definition in '{fileName}': no valid syntax, package, service, message, or enum constructs recognized.");
+            return;
+        }
+
         string packageName = "";
         var pkgMatch = Regex.Match(clean, @"package\s+([A-Za-z0-9_.]+)\s*;");
         if (pkgMatch.Success)

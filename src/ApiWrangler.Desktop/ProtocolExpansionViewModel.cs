@@ -59,7 +59,23 @@ public partial class ProtocolExpansionViewModel : ObservableObject
             JsonObject? varsObj = null;
             if (!string.IsNullOrWhiteSpace(GraphQLVariables))
             {
-                try { varsObj = JsonNode.Parse(GraphQLVariables) as JsonObject; } catch { }
+                try
+                {
+                    var node = JsonNode.Parse(GraphQLVariables);
+                    if (node is not JsonObject obj)
+                    {
+                        GraphQLStatus = "Invalid GraphQL variables: must be a JSON object (e.g. {\"key\": \"value\"}).";
+                        GraphQLResponse = "GraphQL variables must be a JSON object.";
+                        return;
+                    }
+                    varsObj = obj;
+                }
+                catch (System.Text.Json.JsonException jex)
+                {
+                    GraphQLStatus = $"Invalid GraphQL variables JSON: {jex.Message}";
+                    GraphQLResponse = $"Failed to parse GraphQL variables JSON: {jex.Message}";
+                    return;
+                }
             }
 
             var req = new GraphQLRequestDefinition(
@@ -105,7 +121,7 @@ public partial class ProtocolExpansionViewModel : ObservableObject
         try
         {
             var result = ProtoParser.Parse(ProtoContent, "service.proto", Array.Empty<string>());
-            if (result.IsValid)
+            if (result.IsValid && result.Services.Count > 0)
             {
                 var methods = result.Services.SelectMany(s => s.Methods).ToList();
                 GrpcStatus = $"Parsed {result.Services.Count} service(s), {methods.Count} method(s).";
@@ -114,9 +130,13 @@ public partial class ProtocolExpansionViewModel : ObservableObject
                     GrpcMethod = methods[0].FullPath;
                 }
             }
+            else if (result.IsValid && result.Services.Count == 0)
+            {
+                GrpcStatus = "No gRPC service definitions found in protobuf content.";
+            }
             else
             {
-                GrpcStatus = $"Proto syntax/import error: {string.Join("; ", result.MissingImports.Concat(result.SyntaxErrors))}";
+                GrpcStatus = $"Proto syntax error: {string.Join("; ", result.MissingImports.Concat(result.SyntaxErrors))}";
             }
         }
         catch (Exception ex)

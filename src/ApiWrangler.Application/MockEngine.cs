@@ -173,8 +173,17 @@ public sealed class MockEngine : IAsyncDisposable
             throw new InvalidOperationException("RequireAuthentication is enabled but no AuthToken was configured.");
         }
 
-        // Enforce loopback unless explicitly enabled
-        string host = config.AllowExternalBinding ? config.Host : "127.0.0.1";
+        static bool IsLoopbackHost(string h) =>
+            string.Equals(h, "127.0.0.1", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(h, "localhost", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(h, "::1", StringComparison.OrdinalIgnoreCase);
+
+        if (!config.AllowExternalBinding && !IsLoopbackHost(config.Host))
+        {
+            throw new InvalidOperationException($"Cannot bind to non-loopback host '{config.Host}' without explicit opt-in (AllowExternalBinding). Enable external binding and configure an authentication token to expose the mock server.");
+        }
+
+        string host = config.Host;
         string url = $"http://{host}:{config.Port}";
 
         var builder = WebApplication.CreateBuilder();

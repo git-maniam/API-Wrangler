@@ -179,22 +179,12 @@ public sealed class MockEngineTests
     }
 
     [Fact]
-    public async Task MockEngine_ExternalBinding_DefaultsToLoopback()
+    public async Task MockEngine_NonLoopbackHostWithoutExternalBinding_ThrowsInvalidOperationException()
     {
         await using var engine = new MockEngine();
-        // Even if config host requests 0.0.0.0 without AllowExternalBinding, loopback is enforced
         var config = new MockServerConfiguration(Host: "0.0.0.0", Port: 0, AllowExternalBinding: false);
-        await engine.StartAsync(config);
-
-        try
-        {
-            Assert.NotNull(engine.ListeningUrl);
-            Assert.Contains("127.0.0.1", engine.ListeningUrl);
-        }
-        finally
-        {
-            await engine.StopAsync();
-        }
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => engine.StartAsync(config));
+        Assert.Contains("Cannot bind to non-loopback host", ex.Message);
     }
 }
 

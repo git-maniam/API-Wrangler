@@ -43,6 +43,20 @@ public partial class ProjectEditorViewModel(IProjectRepository repository) : Obs
     public async Task RefreshProjectAsync() => await RefreshAsync();
 
     [RelayCommand]
+    private void Browse()
+    {
+        var dialog = new Microsoft.Win32.OpenFolderDialog
+        {
+            Title = "Select API Wrangler Project Directory"
+        };
+        if (dialog.ShowDialog() == true)
+        {
+            ProjectPath = dialog.FolderName;
+            _ = OpenProjectAsync();
+        }
+    }
+
+    [RelayCommand]
     private async Task OpenProjectAsync()
     {
         if (operationPending || disposed) return;
@@ -77,7 +91,7 @@ public partial class ProjectEditorViewModel(IProjectRepository repository) : Obs
             OnPropertyChanged(nameof(CanUseDisk));
             OnPropertyChanged(nameof(CanUseDraft));
         }
-        catch (Exception error) when (error is IOException or UnauthorizedAccessException or ArgumentException)
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException or ArgumentException or System.Text.Json.JsonException or FormatException or InvalidOperationException)
         {
             ProjectStatus = error.Message;
             OnPropertyChanged(nameof(CanEdit));
