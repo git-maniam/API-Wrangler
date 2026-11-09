@@ -1,4 +1,4 @@
-param(
+﻿param(
     [string]$SourceDirectory = "",
     [string]$InstallDirectory = "$env:LOCALAPPDATA\Programs\ApiWrangler",
     [switch]$NoDesktopShortcut = $false
@@ -41,7 +41,7 @@ if (Test-Path $startMenuDir) {
     $startShortcut = $wsh.CreateShortcut($startShortcutPath)
     $startShortcut.TargetPath = $exePath
     $startShortcut.WorkingDirectory = $InstallDirectory
-    $startShortcut.Description = "API Wrangler — Git-backed API Workbench"
+    $startShortcut.Description = "API Wrangler - Git-backed API Workbench"
     $startShortcut.IconLocation = "$exePath,0"
     $startShortcut.Save()
     Write-Output "Created Start Menu shortcut: $startShortcutPath"
@@ -55,7 +55,7 @@ if (-not $NoDesktopShortcut) {
         $desktopShortcut = $wsh.CreateShortcut($desktopShortcutPath)
         $desktopShortcut.TargetPath = $exePath
         $desktopShortcut.WorkingDirectory = $InstallDirectory
-        $desktopShortcut.Description = "API Wrangler — Git-backed API Workbench"
+        $desktopShortcut.Description = "API Wrangler - Git-backed API Workbench"
         $desktopShortcut.IconLocation = "$exePath,0"
         $desktopShortcut.Save()
         Write-Output "Created Desktop shortcut: $desktopShortcutPath"
