@@ -317,8 +317,18 @@ internal static class DesktopDiagnostics
                 throw new InvalidOperationException("Cancellation or dispatcher responsiveness failed.");
         }
         finally { timer.Stop(); }
+
+        // Verify every tab renders and lays out cleanly without throwing (including Protocols & Streaming)
+        for (var i = 0; i < window.MainTabs.Items.Count; i++)
+        {
+            window.MainTabs.SelectedIndex = i;
+            await window.Dispatcher.InvokeAsync(() => window.UpdateLayout(), DispatcherPriority.ApplicationIdle);
+        }
+        window.MainTabs.SelectedIndex = 1;
+        await window.Dispatcher.InvokeAsync(() => window.UpdateLayout(), DispatcherPriority.ApplicationIdle);
+
         await File.WriteAllTextAsync(Path.Combine(directory, "http-smoke.json"), JsonSerializer.Serialize(new
-        { editorRoundTrip = true, httpRoundTrip = true, cancellation = true, dispatcherTicksDuringRequest = ticks }));
+        { editorRoundTrip = true, httpRoundTrip = true, cancellation = true, allTabsRendered = true, dispatcherTicksDuringRequest = ticks }));
     }
 
     public static async Task RecordAsync(MainWindow window, MainViewModel model, string directory)

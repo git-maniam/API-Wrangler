@@ -2,6 +2,13 @@
 
 ## Phase 13.4 complete: Modern visual theme and design system (Fluent & App-Icon palette) (2026-11-09 17:05 IST)
 
+### Hotfix: Protocols & Streaming highlighting crash resolved (2026-11-09 20:20 IST)
+- Root cause: In `GraphQLXshd` within `DatasetHighlightingDefinitions.cs`, the comment span was defined as `<Begin>#</Begin>`. Because AvalonEdit parses XSHD regular expressions with `RegexOptions.IgnorePatternWhitespace`, an unescaped `#` character was treated as a regex comment character, causing the expression to compile to an empty match (0 characters) and triggering an immediate `System.InvalidOperationException` upon selecting the tab.
+- Fix:
+  - Escaped comment regex to `<Begin>\#</Begin>` and set `multiline="true"` for block strings in `GraphQLXshd`.
+  - Added automated tab traversal to `DesktopDiagnostics.TestHttpAsync` so that `scripts/Test-Desktop.ps1` renders and lays out all tabs in `window.MainTabs` (`allTabsRendered: true`).
+  - Re-published and updated installed desktop application under `%LOCALAPPDATA%\Programs\ApiWrangler\`.
+
 Modern visual theme and design system implemented and verified on branch `feature/modern-fluent-ui`:
 - P13.4 (Issue #93):
   - Design system & color tokens (`Themes/FluentTheme.xaml`):

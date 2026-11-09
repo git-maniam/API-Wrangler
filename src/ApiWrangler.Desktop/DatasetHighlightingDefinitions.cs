@@ -101,10 +101,10 @@ public static class DatasetHighlightingDefinitions
 
             <RuleSet>
                 <Span color="Comment">
-                    <Begin>#</Begin>
+                    <Begin>\#</Begin>
                 </Span>
 
-                <Span color="String">
+                <Span color="String" multiline="true">
                     <Begin>"""</Begin>
                     <End>"""</End>
                 </Span>
