@@ -271,4 +271,3 @@ public sealed class VisualFlowTests
         Assert.Null(session.CurrentNodeId);
     }
 }
-

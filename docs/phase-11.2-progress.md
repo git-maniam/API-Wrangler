@@ -33,4 +33,3 @@ Implement shared mock deployment capabilities enabling self-hosted execution wit
    - Validated semantic equivalence between local loopback and hosted shared mock execution.
    - Validated state reset and administrative health/log endpoints.
    - Validated strict bounded retention enforcement under load.
-

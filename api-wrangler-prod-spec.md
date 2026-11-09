@@ -2532,23 +2532,37 @@ Do not begin distributed infrastructure before these decisions are settled.
 
 **Implementation checkpoint (2026-11-07):** Phase 1 project discovery, versioned schemas, canonical assets, journaled persistence, watcher/recovery behavior, snapshots, local settings, and a desktop asset editor are implemented in PR #57. The five Phase 1 exit checks pass locally. After the Linux writer-lease fix, hosted Windows and Linux headless jobs each passed 30 tests with zero skipped; desktop build, format, and publish passed. ADR-0002 defines version 1 as the first supported format. P1.1-P1.3 are In review; P1.4 manual project-editor accessibility acceptance is In progress. The phase epic remains In progress until review, acceptance, and merge. See docs/implementation-status.md and docs/phase-1-exit-review.md.
 
-#### Restart bookmark (updated 2026-11-09 02:03 IST)
+#### Restart bookmark (updated 2026-11-09 10:58 IST)
 
-Phase 13 (Contracts, optional AI, and release hardening — Milestone B) is fully implemented and verified on branch `phase13-installer-milestone-b`:
-- P13.3 (Issue #52):
-  - Installer and packaging (`scripts/Install-ApiWrangler.ps1`, `scripts/Uninstall-ApiWrangler.ps1`, `scripts/Package-Release.ps1`):
-    - Per-user PowerShell installer deploying to `%LOCALAPPDATA%\Programs\ApiWrangler\`.
-    - User data invariance guarantee: User projects and SQLite operational storage under `%LOCALAPPDATA%\ApiWrangler\` remain isolated and strictly preserved across installation, upgrade, and uninstallation.
-    - Release packaging: Generates Windows x64 self-contained desktop zip, Windows x64 CLI zip, and Linux x64 CLI zip.
-    - Supply chain integrity: Generates SHA256 checksums (`SHA256SUMS.txt`), CycloneDX SBOM (`sbom.json`), and Third-Party Notices (`THIRD_PARTY_NOTICES.md`).
-  - Icon pipeline (`scripts/Generate-AppIcon.ps1`): Generates multi-resolution icon frames (16 to 256px) from `App-Icon.png` into `src/ApiWrangler.Desktop/Resources/app-icon.ico`. Embedded as `<ApplicationIcon>` in `ApiWrangler.Desktop.csproj` and `Icon` in `MainWindow.xaml`.
-  - Operational manuals: `docs/operations/installation-and-updates.md`, `docs/operations/operational-verification-manual.md`, and `docs/milestone-b-acceptance-review.md`.
-  - Integration tests (`PackagingAndLifecycleTests.cs`): 4 tests verifying multi-resolution icon frames, user data preservation across upgrade/uninstall, zero critical placeholders in production code, and SBOM/checksum format compliance.
-- P13.2 (Issue #51): Optional AI assistance with explicit context, Git credential redaction gate, and reviewable unified diffs.
-- P13.1 (Issue #50): OpenAPI breaking change detection, secret-free static documentation generation, 10,000-request catalog search, and multi-language client SDK generation.
-- Full automated test suite: 306 passed, 0 failed, 0 skipped. `scripts/Test-Desktop.ps1` passed cleanly. `dotnet format --verify-no-changes` passed.
-- Documentation: Verified in `docs/phase-13.3-progress.md`, `docs/phase-13-exit-review.md`, and `docs/milestone-b-acceptance-review.md`.
-- Next work: push branch `phase13-installer-milestone-b`, open PR for Issue #52, move ticket in Project 4 to In review, await CI checks, squash-merge into `main`, mark Issue #52 and Parent Epic #49 Done in Project 4, and celebrate full Milestone B platform completion.
+Milestone B ("Complete required platform") and Phase 13 (Contracts, optional AI, and release hardening) are 100% complete, certified, and merged into `main` (commit `256e378`):
+- All 13 platform capability phases (Phases 1 through 13) are fully delivered, verified, and merged:
+  - Phase 1: Canonical project storage, journaled persistence, and desktop asset editor.
+  - Phase 2: HTTP testing workbench, request parameterization, auth, and TLS inspection.
+  - Phase 3: Collection regression, typed assertions, CLI runner, and snapshot execution.
+  - Phase 4: Delimited/JSON datasets, clipboard integration, type conversion, and iteration evidence.
+  - Phase 5: Git/GitHub collaboration, branch/merge, conflicts, and existing auth reuse.
+  - Phase 6: Script runtime, isolated Node probe, and execution diagnostics.
+  - Phase 7: GraphQL formatting & highlighting, gRPC streaming, and WebSocket/SSE protocols.
+  - Phase 8: Local mock engine, deterministic specificity matching, fault scenarios, and webhook debugger with byte-perfect HMAC verification.
+  - Phase 9: Closed/open-loop load testing engine, latency histograms (P50/P90/P95/P99), and threshold policies.
+  - Phase 10: Scheduled monitors, recurring cron engine, alert webhooks, and historical retention.
+  - Phase 11: Distributed load coordination across workers and hosted mock deployments with mandatory auth gates.
+  - Phase 12: Playwright browser traffic capture, bidirectional scenario evaluation, and text-backed visual execution flows with debugger stepping.
+  - Phase 13: OpenAPI breaking change analysis, secret-free documentation generation, 10,000-request catalog search, multi-language client SDKs, optional AI with strict Git credential redaction and reviewable diffs, per-user installer, portable ZIP release packaging, multi-resolution application icon, and supply chain artifacts (SBOM, SHA256 checksums, third-party notices).
+- Verification & Test Evidence:
+  - 306 automated integration and unit tests pass in Release mode with 0 failures and 0 skipped.
+  - Desktop WPF smoke test (`scripts/Test-Desktop.ps1`) passes cleanly.
+  - Cross-platform headless checks pass on Windows x64 and Ubuntu/Linux x64.
+  - Code formatting is verified (`dotnet format --verify-no-changes`).
+- Documentation & Artifacts:
+  - Certified in `docs/milestone-b-acceptance-review.md` and `docs/phase-13-exit-review.md`.
+  - Operational guides: `docs/operations/installation-and-updates.md` and `docs/operations/operational-verification-manual.md`.
+- GitHub Project 4 Status:
+  - Parent Epic #49 (`[Phase 13]`): Done.
+  - P13.1 (#50), P13.2 (#51), P13.3 (#52): Done.
+  - Issue #58 (`[P1.4] Project editor accessibility acceptance`): Remains In progress for manual interactive Windows Narrator speech observation per established policy.
+  - Deferred backlog items: Issue #53 (ARM64 desktop) and Issue #60 (Schema migration).
+- Current repository state: `main` is clean, all branches merged, and all commits pushed to GitHub (`origin/main`). Execution is at a clean, certified logical stop.
 Published checkpoint: implementation `9156d80` pushed; PR #69 is now non-draft and P4.1 (#20) is In review. P4 (#19) remains In progress. Hosted desktop/Windows/Linux checks were pending at 11:25 IST. Resume by checking those results and PR review before merge/completion; local evidence is 62 passing tests and the passing desktop dataset smoke described below. No tests/builds rerun for this final metadata refresh. Next 30-minute refresh is due by 11:55 IST if execution is active.
 
 Current verified handoff: P4.1 file-backed import and desktop prepare/accept workflow implemented on `phase4-delimited-reader`, PR #69 being submitted for review. `PreparedDatasetFile` streams validated rows to a temporary spool; `ImportDatasetFileAsync` holds the project writer gate, verifies the prepared hash, publishes immutable JSONL then atomically saves its definition. Full-source mappings/culture/null/date conversions use the same streaming converter as preview. Desktop supports CSV/TSV/JSON/JSONL, UTF-8/UTF-16 LE/Windows-1252, explicit case-ID addition, cancellation and stale-preview rejection. Source changes after preparation cannot alter accepted rows. Release solution build succeeded; 62 dataset/persistence tests passed, 0 skipped. Desktop dataset smoke passed and screenshot inspected (`artifacts/dataset-ui-smoke/dataset-import.png`). A smoke-only compile error referencing the wrong tab name was corrected and the desktop rebuild/smoke passed. Changed-file formatting only afterward; no broad retest. Prior unverified notes below are superseded. Next: inspect PR #69 review/CI, resolve findings; do not mark P4.1 Done until acceptance and merge. P4 epic stays In progress; then continue P4.2 (#21) grid/clipboard work. Preserve 14 unrelated whitespace edits. No external blocker. Limits and crash-orphan behavior: `docs/dataset-import.md`.

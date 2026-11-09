@@ -30,7 +30,7 @@ foreach ($sz in $sizes) {
 
     $ms = New-Object System.IO.MemoryStream
     $resized.Save($ms, [System.Drawing.Imaging.ImageFormat]::Png)
-    $pngStreams += ,@($sz, $ms.ToArray())
+    $pngStreams += , @($sz, $ms.ToArray())
     $resized.Dispose()
 }
 $source.Dispose()
