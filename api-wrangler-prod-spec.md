@@ -2563,7 +2563,7 @@ Do not begin distributed infrastructure before these decisions are settled.
 
 **Implementation checkpoint (2026-11-07):** Phase 1 project discovery, versioned schemas, canonical assets, journaled persistence, watcher/recovery behavior, snapshots, local settings, and a desktop asset editor are implemented in PR #57. The five Phase 1 exit checks pass locally. After the Linux writer-lease fix, hosted Windows and Linux headless jobs each passed 30 tests with zero skipped; desktop build, format, and publish passed. ADR-0002 defines version 1 as the first supported format. P1.1-P1.3 are In review; P1.4 manual project-editor accessibility acceptance is In progress. The phase epic remains In progress until review, acceptance, and merge. See docs/implementation-status.md and docs/phase-1-exit-review.md.
 
-#### Restart bookmark (updated 2026-11-09 20:20 IST)
+#### Restart bookmark (updated 2026-11-09 21:23 IST)
 
 Milestone B ("Complete required platform"), Phase 13 (Contracts, optional AI, and release hardening), and P13.4 (Modern visual theme and design system) are 100% complete, certified, and verified:
 - All 13 platform capability phases (Phases 1 through 13) plus P13.4 are fully delivered, verified, and merged:
@@ -2581,7 +2581,7 @@ Milestone B ("Complete required platform"), Phase 13 (Contracts, optional AI, an
   - Phase 12: Playwright browser traffic capture, bidirectional scenario evaluation, and text-backed visual execution flows with debugger stepping.
   - Phase 13: OpenAPI breaking change analysis, secret-free documentation generation, 10,000-request catalog search, multi-language client SDKs, optional AI with strict Git credential redaction and reviewable diffs, per-user installer, portable ZIP release packaging, multi-resolution application icon, and supply chain artifacts (SBOM, SHA256 checksums, third-party notices).
   - P13.4 (Modern visual theme and design system): Centralized Fluent resource dictionary (`Themes/FluentTheme.xaml`) merged into `App.xaml`, Windows 11 Fluent control templates with rounded geometry (`CornerRadius="6"` / `"8"`), brand color palette extracted from `App-Icon.png` (Amber Gold `#D97706`, Crimson Terracotta `#B43F2C`, Deep Slate `#0F172A`, Surface Background `#F8FAFC`, Card Background `#FFFFFF`), modernized top header with app icon, bold title typography, and workbench pill badge, segmented clean tab styling, and WCAG 2.1 AA text contrast compliance.
-  - Hotfix (Protocols & Streaming): Escaped `#` regex in `GraphQLXshd` (`<Begin>\#</Begin>`), preventing AvalonEdit zero-length match infinite-loop guard exception. Added exhaustive automated tab traversal in `scripts/Test-Desktop.ps1` (`allTabsRendered: true`).
+  - Hotfix (Protocols & Streaming): Escaped `#` regex in `GraphQLXshd` (`<Begin>\#</Begin>`), preventing AvalonEdit zero-length match infinite-loop guard exception. Added exhaustive automated tab traversal in `scripts/Test-Desktop.ps1` (`allTabsRendered: true`). Commit `c5643f5`.
 - Verification & Test Evidence:
   - 306 automated integration and unit tests pass in Release mode with 0 failures and 0 skipped.
   - Desktop WPF smoke test (`scripts/Test-Desktop.ps1`) passes cleanly with full tab layout verification (`{"editorRoundTrip":true,"httpRoundTrip":true,"cancellation":true,"allTabsRendered":true,"dispatcherTicksDuringRequest":9}`).
