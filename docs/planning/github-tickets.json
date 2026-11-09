@@ -1227,6 +1227,31 @@
       ]
     },
     {
+      "key": "P13.4",
+      "title": "[P13.4] Modern visual theme and design system (Fluent & App-Icon palette)",
+      "kind": "task",
+      "parent": "P13",
+      "phase": 13,
+      "milestone": "Milestone B — Complete required platform",
+      "status": "In progress",
+      "priority": "P1",
+      "size": "S",
+      "spec": "26.5",
+      "dependsOn": [
+        "P13.3"
+      ],
+      "description": "Modernize the desktop workbench UI from classic default styling into a modern Windows 11 Fluent interface infused with the warm Amber Gold/Terracotta brand palette extracted from App-Icon.png.",
+      "acceptance": [
+        "Centralized Fluent resource dictionary (Themes/FluentTheme.xaml) merged into application resources.",
+        "Brand color palette derived from App-Icon (BrandPrimaryColor #D97706, BrandCrimsonColor #B43F2C, SurfaceBackgroundColor #F8FAFC, CardBackgroundColor #FFFFFF).",
+        "Modern control styling with rounded geometry (CornerRadius=6/8), visual hover/press states, and focus indicators.",
+        "Modernized top header with application icon, bold typography, and workbench badge.",
+        "Segmented tab controls removing legacy 3D bevels with clean underline/pill active indicators.",
+        "Strict accessibility compliance: WCAG 2.1 AA text contrast maintained and all AutomationProperties preserved.",
+        "All 306 integration tests, desktop verification smoke test, and formatting checks pass without regression."
+      ]
+    },
+    {
       "key": "LATER-SCHEMA-MIGRATION",
       "title": "[Deferred] First supported schema-version migration",
       "kind": "task",
