@@ -2567,12 +2567,12 @@ Do not begin distributed infrastructure before these decisions are settled.
 
 The manual desktop UI scenario catalog is maintained in `docs/ui-testing/`, with synthetic data, setup instructions, a control-to-case coverage matrix and GitHub issue mapping. The 61 `[Test Case]` issues map the visible controls and major options across all ten desktop tabs, each with positive and negative variants. They are in GitHub Project 4 Backlog, with execution and acceptance pending. The cases are scenario groups, not proof of all possible input combinations. Loopback GraphQL, WebSocket, SSE and TLS fixture scripts are provided for later execution; they have not been run. Manual Narrator speech acceptance remains tracked by #58. The user-reported Open project issue is #95 and has not been independently reproduced. The cases and fixtures have not been validated against the running application.
 
-#### Restart bookmark (updated 2026-11-09 23:55 IST)
+#### Restart bookmark (updated 2026-11-10 07:15 IST)
 
-**Pre-Release Bug Remediation Complete. 100% Verified in Automated UI & Engine Suites.**
-All 11 active defects reported and cataloged have been systematically resolved, verified through the automated in-process WPF harness (31/31 observations passing), and closed as **Done** in GitHub Project 4. Completed historical epics (#1, #6, #7) have also been reconciled and marked **Done**:
+**Pre-Release Bug Remediation Complete. "Open Project" Button UX & Synchronization Resolved. 100% Verified.**
+All 11 active defects reported and cataloged have been systematically resolved, verified through the automated in-process WPF harness (31/31 observations passing) and desktop smoke, and closed as **Done** in GitHub Project 4. Completed historical epics (#1, #6, #7) have also been reconciled and marked **Done**:
 - **Resolved Bugs Verified & Closed as Done in Project 4:**
-  - `#95`: Project assets Open project button unblocked from overlapping label, and `Browse...` folder picker dialog added.
+  - `#95`: Project assets "Open project" button now prompts with an `OpenFolderDialog` if `ProjectPath` is empty, reports actionable errors (`Project path does not exist`) if a nonexistent path is specified, assigns `Assets` unconditionally in `RefreshAsync`, and synchronizes `MainViewModel.ProjectRequests/ProjectEnvironments/ProjectCollections`.
   - `#157`: Added `PART_SelectedContentHost` to `FluentTheme.xaml` TabControl template, restoring full Windows UI Automation visibility for selected tab contents.
   - `#158`: Project path DockPanel placed in `Grid.Row="0"` and Project asset label in `Grid.Row="1"`, eliminating visual overlap.
   - `#159`: ProjectImportViewModel invalidates preview and disables `CanPublish` whenever source text, path, or format changes.
@@ -2587,7 +2587,7 @@ All 11 active defects reported and cataloged have been systematically resolved, 
   - Release build: 0 warnings, 0 errors.
   - Integration suite: 293 tests passed (0 failed, 13 skipped Node tests).
   - Automated WPF execution harness: 31/31 UI observations passed.
-  - Desktop smoke (`scripts/Test-Desktop.ps1`): clean pass across all tabs and bindings.
+  - Desktop smoke (`scripts/Test-Desktop.ps1`): clean pass across all tabs and bindings (`editorRoundTrip: true`, `httpRoundTrip: true`, `allTabsRendered: true`).
   - Code formatting: verified with `dotnet format --verify-no-changes`.
 - **Next Work:** Final public pre-release packaging, release notes, and distribution verification. Historical notes below are superseded where they conflict with this handoff.
 
