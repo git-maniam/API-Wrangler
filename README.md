@@ -60,6 +60,41 @@ dotnet run --project src/ApiWrangler.Cli -c Release -- git-probe --repository .
 
 `git-probe --fetch` explicitly fetches origin without integrating files. `send` writes raw response bodies locally and prints metadata, not response contents. Redirects are returned without following them. HTTP status codes do not yet run assertions. Project initialization in the desktop, authentication flows, collections, secret management, and the final CLI commands remain unimplemented.
 
+## Local installation (Windows)
+
+To build and install the self-contained API Wrangler desktop application locally with Desktop and Start Menu shortcuts:
+
+1. **Publish the self-contained Release bundle:**
+   ```powershell
+   ./scripts/Publish-Desktop.ps1 -Runtime win-x64
+   ```
+   This compiles the full application into `artifacts/publish/win-x64/` and bundles `docs/help.html` and licenses into a preview archive (`artifacts/ApiWrangler-win-x64-preview.zip`).
+
+2. **Install to user profile programs:**
+   ```powershell
+   ./scripts/Install-ApiWrangler.ps1
+   ```
+   - Installs binaries to: `%LOCALAPPDATA%\Programs\ApiWrangler\`
+   - Creates a **Desktop shortcut**: `API Wrangler.lnk`
+   - Creates a **Start Menu shortcut**: under `Programs > API Wrangler`
+   - Bundles the offline documentation manual (`docs/help.html`).
+
+3. **Launch the application:**
+   - Double-click the **API Wrangler** shortcut on your Desktop or Start Menu.
+   - Or launch from PowerShell:
+     ```powershell
+     Start-Process "$env:LOCALAPPDATA\Programs\ApiWrangler\ApiWrangler.Desktop.exe"
+     ```
+
+4. **Built-in Documentation:**
+   - Click the **`[?] Help`** button on the bottom status bar of the application window or press <kbd>F1</kbd> at any time to open the complete offline documentation manual ([docs/help.html](docs/help.html)) covering all 10 tabs, visual UI diagrams, JSON payloads, variables/secrets syntax, and CLI commands.
+
+5. **Uninstall:**
+   ```powershell
+   ./scripts/Uninstall-ApiWrangler.ps1
+   ```
+   Removes application binaries and shortcuts. Local project data, settings, and DPAPI secrets stored under `%LOCALAPPDATA%\ApiWrangler` are strictly preserved.
+
 ## Optional Node feasibility tests
 
 Install/configure Node 26.13.0, then explicitly build the worker:
