@@ -65,6 +65,20 @@ public partial class ProjectEditorViewModel(IProjectRepository repository) : Obs
             ProjectStatus = "Resolve or save the current draft before opening another project.";
             return;
         }
+        if (string.IsNullOrWhiteSpace(ProjectPath))
+        {
+            var dialog = new Microsoft.Win32.OpenFolderDialog
+            {
+                Title = "Select API Wrangler Project Directory"
+            };
+            if (dialog.ShowDialog() != true) return;
+            ProjectPath = dialog.FolderName;
+        }
+        else if (!Directory.Exists(ProjectPath) && !File.Exists(ProjectPath))
+        {
+            ProjectStatus = $"Project path does not exist: {ProjectPath}";
+            return;
+        }
         SetOperationPending(true);
         try
         {
@@ -303,8 +317,17 @@ public partial class ProjectEditorViewModel(IProjectRepository repository) : Obs
             ProjectStatus = "The selected asset was removed from disk. Copy the draft before continuing.";
             return;
         }
+        Assets = view.Assets;
         selected ??= view.Assets.FirstOrDefault();
-        if (selected is null) return;
+        if (selected is null)
+        {
+            settingSelection = true;
+            try { SelectedAsset = null; }
+            finally { settingSelection = false; }
+            EditorText = "";
+            DiskText = "";
+            return;
+        }
         if (IsDirty && baseHash is not null)
         {
             diskHash = selected.Hash;
@@ -313,7 +336,6 @@ public partial class ProjectEditorViewModel(IProjectRepository repository) : Obs
             if (HasConflict) ProjectStatus = "The disk file changed while the editor has a draft. Choose Use disk or Use draft.";
             return;
         }
-        Assets = view.Assets;
         settingSelection = true;
         try { SelectedAsset = selected; }
         finally { settingSelection = false; }

@@ -10,20 +10,40 @@ using CommunityToolkit.Mvvm.Input;
 
 namespace ApiWrangler.Desktop;
 
-public partial class MainViewModel(
-    HttpRequestService requests,
-    ProjectEditorViewModel projectEditor,
-    LocalSettingsStore? settingsStore = null) : ObservableObject
+public partial class MainViewModel : ObservableObject
 {
-    private readonly LocalSettingsStore settingsStore = settingsStore ?? new LocalSettingsStore();
-    public ProjectEditorViewModel ProjectEditor { get; } = projectEditor;
-    public DatasetImportViewModel DatasetImport { get; } = new(() => projectEditor.CurrentSession);
-    public ProjectImportViewModel ProjectImport { get; } = new(() => projectEditor.CurrentSession);
+    private readonly HttpRequestService requests;
+    private readonly LocalSettingsStore settingsStore;
+    public ProjectEditorViewModel ProjectEditor { get; }
+    public DatasetImportViewModel DatasetImport { get; }
+    public ProjectImportViewModel ProjectImport { get; }
     public ProtocolExpansionViewModel Protocol { get; } = new();
     public MockServerViewModel Mocks { get; } = new();
     public LoadTestingViewModel LoadTesting { get; } = new();
     public DatasetGridViewModel DatasetGrid { get; } = new();
     public GitWorkbenchViewModel Git { get; } = new();
+
+    public MainViewModel(
+        HttpRequestService requests,
+        ProjectEditorViewModel projectEditor,
+        LocalSettingsStore? settingsStore = null)
+    {
+        this.requests = requests;
+        this.ProjectEditor = projectEditor;
+        this.settingsStore = settingsStore ?? new LocalSettingsStore();
+        this.DatasetImport = new(() => projectEditor.CurrentSession);
+        this.ProjectImport = new(() => projectEditor.CurrentSession);
+
+        projectEditor.PropertyChanged += (s, e) =>
+        {
+            if (e.PropertyName is nameof(ProjectEditorViewModel.Assets) or null or "")
+            {
+                OnPropertyChanged(nameof(ProjectRequests));
+                OnPropertyChanged(nameof(ProjectEnvironments));
+                OnPropertyChanged(nameof(ProjectCollections));
+            }
+        };
+    }
 
     [ObservableProperty] private string requestName = "Untitled request";
     [ObservableProperty] private string requestDescription = "";

@@ -170,6 +170,17 @@ internal static class DesktopDiagnostics
         var editor = model.ProjectEditor;
         editor.ProjectPath = project;
         await editor.OpenProjectCommand.ExecuteAsync(null);
+        if (editor.Assets.Count == 0 || !model.ProjectRequests.Any() || !model.ProjectEnvironments.Any())
+            throw new InvalidOperationException("Opening project did not populate editor assets or synchronize MainViewModel request/environment collections.");
+
+        var invalidPath = Path.Combine(directory, "nonexistent-dir-" + Guid.NewGuid().ToString("N"));
+        editor.ProjectPath = invalidPath;
+        await editor.OpenProjectCommand.ExecuteAsync(null);
+        if (!editor.ProjectStatus.Contains("does not exist", StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException($"Opening nonexistent path did not report clear status. Status was: {editor.ProjectStatus}");
+
+        editor.ProjectPath = project;
+        await editor.OpenProjectCommand.ExecuteAsync(null);
         await using (var second = new ProjectEditorViewModel(new ProjectRepository()))
         {
             second.ProjectPath = project;
