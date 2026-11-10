@@ -492,6 +492,40 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
+    [RelayCommand]
+    private void OpenHelp()
+    {
+        try
+        {
+            var baseDir = AppDomain.CurrentDomain.BaseDirectory;
+            var candidates = new[]
+            {
+                Path.Combine(baseDir, "docs", "help.html"),
+                Path.Combine(baseDir, "help.html"),
+                Path.Combine(Directory.GetCurrentDirectory(), "docs", "help.html"),
+                Path.Combine(AppContext.BaseDirectory, "docs", "help.html"),
+                Path.GetFullPath(Path.Combine(baseDir, "..", "..", "..", "..", "docs", "help.html")),
+                Path.GetFullPath(Path.Combine(baseDir, "..", "..", "..", "..", "..", "docs", "help.html"))
+            };
+            var helpPath = candidates.FirstOrDefault(File.Exists);
+            if (helpPath is null)
+            {
+                Status = "Help file not found. Ensure docs/help.html exists.";
+                return;
+            }
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = helpPath,
+                UseShellExecute = true
+            });
+            Status = $"Opened help: {Path.GetFileName(helpPath)}";
+        }
+        catch (Exception ex)
+        {
+            Status = $"Error opening help: {ex.Message}";
+        }
+    }
+
     [RelayCommand(IncludeCancelCommand = true)]
     private async Task SendAsync(CancellationToken token)
     {

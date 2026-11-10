@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>API Wrangler — Documentation & User Manual</title>
+  <style>
+    :root {
+      --primary: #0284c7;
+      --primary-hover: #0369a1;
+      --primary-light: #e0f2fe;
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --card-bg: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --accent-green: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-red: #ef4444;
+      --accent-purple: #8b5cf6;
+      --code-bg: #0f172a;
+      --code-text: #f1f5f9;
+      --sidebar-width: 290px;
+      --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+      --radius: 8px;
+    }
+
+    [data-theme="dark"] {
+      --primary: #38bdf8;
+      --primary-hover: #0ea5e9;
+      --primary-light: #082f49;
+      --bg: #0b0f19;
+      --surface: #131b2e;
+      --card-bg: #1e293b;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --border: #334155;
+      --code-bg: #020617;
+      --code-text: #e2e8f0;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* Sidebar Navigation */
+    #sidebar {
+      width: var(--sidebar-width);
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      overflow-y: auto;
+      padding: 24px 16px;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, #0284c7, #2563eb);
+      color: white;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      font-weight: bold;
+      font-size: 18px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+    }
+    .brand-title {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    .brand-badge {
+      font-size: 11px;
+      font-weight: 600;
+      background: var(--primary-light);
+      color: var(--primary);
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-left: auto;
+    }
+
+    .search-box {
+      margin-bottom: 20px;
+    }
+    .search-box input {
+      width: 100%;
+      padding: 8px 12px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .search-box input:focus { border-color: var(--primary); }
+
+    .nav-group-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      font-weight: 700;
+      margin: 16px 8px 8px;
+    }
+    .nav-links { list-style: none; }
+    .nav-links li a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      color: var(--text);
+      text-decoration: none;
+      font-size: 13.5px;
+      border-radius: var(--radius);
+      transition: all 0.15s;
+    }
+    .nav-links li a:hover, .nav-links li a.active {
+      background: var(--primary-light);
+      color: var(--primary);
+      font-weight: 600;
+    }
+    .nav-badge {
+      font-size: 10px;
+      margin-left: auto;
+      padding: 2px 5px;
+      border-radius: 4px;
+      background: var(--border);
+      color: var(--text-muted);
+    }
+
+    /* Main Content */
+    #main {
+      margin-left: var(--sidebar-width);
+      flex: 1;
+      padding: 40px 56px;
+      max-width: 1200px;
+    }
+
+    /* Theme Switcher */
+    .top-bar {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 24px;
+    }
+    .theme-toggle {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 6px 12px;
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Typography */
+    h1 { font-size: 32px; font-weight: 800; margin-bottom: 12px; letter-spacing: -0.03em; }
+    h2 { font-size: 24px; font-weight: 700; margin: 40px 0 16px; padding-bottom: 8px; border-bottom: 1px solid var(--border); letter-spacing: -0.02em; }
+    h3 { font-size: 18px; font-weight: 600; margin: 24px 0 10px; }
+    p { margin-bottom: 16px; color: var(--text); }
+    strong { font-weight: 600; }
+
+    /* Callouts */
+    .callout {
+      padding: 16px 20px;
+      border-radius: var(--radius);
+      border-left: 4px solid var(--primary);
+      background: var(--surface);
+      margin: 20px 0;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .callout.tip { border-left-color: var(--accent-green); background: rgba(16, 185, 129, 0.08); }
+    .callout.warn { border-left-color: var(--accent-amber); background: rgba(245, 158, 11, 0.08); }
+    .callout.danger { border-left-color: var(--accent-red); background: rgba(239, 68, 68, 0.08); }
+    .callout h4 { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+
+    /* Mock UI Screenshot Visuals */
+    .ui-mock {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      margin: 24px 0;
+      overflow: hidden;
+    }
+    .ui-mock-header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .ui-mock-dots { display: flex; gap: 6px; }
+    .ui-mock-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dot-red { background: #ef4444; }
+    .dot-amber { background: #f59e0b; }
+    .dot-green { background: #10b981; }
+    .ui-mock-title { font-size: 12px; font-weight: 600; color: var(--text-muted); margin-left: 8px; }
+    .ui-mock-body { padding: 20px; font-size: 13.5px; }
+
+    /* Control Legend Badges */
+    .badge-pin {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 22px;
+      background: var(--primary);
+      color: white;
+      border-radius: 50%;
+      font-size: 11px;
+      font-weight: 700;
+      margin-right: 6px;
+    }
+
+    /* Code Blocks */
+    pre {
+      background: var(--code-bg);
+      color: var(--code-text);
+      padding: 16px 20px;
+      border-radius: var(--radius);
+      overflow-x: auto;
+      font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+      font-size: 13px;
+      line-height: 1.5;
+      margin: 16px 0;
+      position: relative;
+    }
+    code {
+      font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+      font-size: 13px;
+      padding: 2px 6px;
+      background: rgba(148, 163, 184, 0.15);
+      border-radius: 4px;
+    }
+    pre code { padding: 0; background: none; }
+
+    .btn-copy {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: rgba(255,255,255,0.15);
+      border: none;
+      color: #fff;
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .btn-copy:hover { background: rgba(255,255,255,0.25); }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+      background: var(--surface);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    th, td {
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      font-size: 13.5px;
+    }
+    th {
+      background: rgba(148, 163, 184, 0.08);
+      font-weight: 600;
+      color: var(--text);
+    }
+    tr:last-child td { border-bottom: none; }
+
+    /* Shortcut Grid */
+    .shortcut-card {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      margin-bottom: 8px;
+    }
+    kbd {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      box-shadow: 0 1px 1px rgba(0,0,0,0.1);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 3px 6px;
+      font-family: inherit;
+    }
+
+    footer {
+      margin-top: 60px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 13px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation Sidebar -->
+  <aside id="sidebar">
+    <div class="brand">
+      <div class="brand-icon">AW</div>
+      <div>
+        <div class="brand-title">API Wrangler</div>
+        <div style="font-size: 11px; color: var(--text-muted);">Workbench v1.0 User Manual</div>
+      </div>
+      <span class="brand-badge">Docs</span>
+    </div>
+
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="Search documentation..." onkeyup="filterDocs()">
+    </div>
+
+    <div class="nav-group-title">Getting Started</div>
+    <ul class="nav-links">
+      <li><a href="#overview">Architecture & Philosophy</a></li>
+      <li><a href="#quickstart">Quick Start in 2 Minutes</a></li>
+      <li><a href="#shortcuts">Keyboard Shortcuts</a></li>
+    </ul>
+
+    <div class="nav-group-title">Desktop Workbench Tabs</div>
+    <ul class="nav-links">
+      <li><a href="#tab-assets"><span class="badge-pin">1</span> Project Assets</a></li>
+      <li><a href="#tab-http"><span class="badge-pin">2</span> HTTP Workbench</a></li>
+      <li><a href="#tab-dataset-import"><span class="badge-pin">3</span> Import Dataset</a></li>
+      <li><a href="#tab-import-export"><span class="badge-pin">4</span> Import & Export</a></li>
+      <li><a href="#tab-protocols"><span class="badge-pin">5</span> Protocols & Streaming</a></li>
+      <li><a href="#tab-mocks"><span class="badge-pin">6</span> Mocks & Webhooks</a></li>
+      <li><a href="#tab-load"><span class="badge-pin">7</span> Load Testing</a></li>
+      <li><a href="#tab-feasibility"><span class="badge-pin">8</span> Dataset Feasibility</a></li>
+      <li><a href="#tab-grid"><span class="badge-pin">9</span> Grid & Clipboard</a></li>
+      <li><a href="#tab-git"><span class="badge-pin">10</span> Git Collaboration</a></li>
+    </ul>
+
+    <div class="nav-group-title">Automation & Reference</div>
+    <ul class="nav-links">
+      <li><a href="#variables-reference">Variables & Secrets Syntax</a></li>
+      <li><a href="#cli-reference">Headless CLI Reference</a></li>
+      <li><a href="#troubleshooting">Diagnostics & FAQs</a></li>
+    </ul>
+  </aside>
+
+  <!-- Main Documentation -->
+  <main id="main">
+    <div class="top-bar">
+      <button class="theme-toggle" onclick="toggleTheme()">🌓 Toggle Dark Mode</button>
+    </div>
+
+    <!-- Section: Overview -->
+    <section id="overview">
+      <h1>API Wrangler User Manual & Functional Reference</h1>
+      <p class="lead" style="font-size: 17px; color: var(--text-muted); margin-bottom: 24px;">
+        A high-performance, local-first Windows API testing workbench built on a content-addressed storage engine with full Git collaboration, zero cloud lock-in, and DPAPI-encrypted secrets.
+      </p>
+
+      <div class="callout tip">
+        <h4>⚡ Core Architecture Highlights</h4>
+        <ul style="margin-left: 20px; font-size: 13.5px;">
+          <li><strong>Git-First & Local-First:</strong> All collections, requests, environments, and mock rules exist as human-readable, canonical JSON files in your repository under <code>api-wrangler/</code> or alongside <code>wrangler.json</code>.</li>
+          <li><strong>Zero Cloud Telemetry:</strong> Runs completely offline on loopback and LAN without external cloud account requirements.</li>
+          <li><strong>Hardware DPAPI Security:</strong> Secrets in <code>{{secret:KEY}}</code> are encrypted using Windows DPAPI and never leak into Git commits or execution logs.</li>
+          <li><strong>Atomic Draft Recovery:</strong> In-flight typing is saved locally in memory and cache; sudden power interruptions or git switches never lose edits.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Section: Quickstart -->
+    <section id="quickstart">
+      <h2>🚀 Quick Start (2 Minutes)</h2>
+      <ol style="margin-left: 20px; margin-bottom: 20px;">
+        <li><strong>Open a Project:</strong> Launch API Wrangler, navigate to the <strong>Project assets</strong> tab, and click <strong>Open project</strong>. If no path is entered, the folder browser opens. Choose any project folder containing a <code>wrangler.json</code>.</li>
+        <li><strong>Send a Request:</strong> Switch to the <strong>HTTP workbench</strong> tab, select your request from the <em>Saved request</em> dropdown or type a URL (e.g. <code>http://127.0.0.1:5057/echo</code>), and press <kbd>Ctrl+Enter</kbd>.</li>
+        <li><strong>Run a Collection:</strong> Pick a collection from the <em>Collection</em> dropdown and click <strong>Run collection</strong> to execute automated test iterations with full assertion reporting.</li>
+      </ol>
+    </section>
+
+    <!-- Section: Tab 1 - Project Assets -->
+    <section id="tab-assets">
+      <h2>1. Project Assets Tab</h2>
+      <p>The <strong>Project assets</strong> tab manages your API Wrangler project directory, schema validation, live file watching, and draft vs. disk conflict resolutions.</p>
+
+      <div class="ui-mock">
+        <div class="ui-mock-header">
+          <div class="ui-mock-dots"><div class="ui-mock-dot dot-red"></div><div class="ui-mock-dot dot-amber"></div><div class="ui-mock-dot dot-green"></div></div>
+          <div class="ui-mock-title">Tab: Project assets</div>
+        </div>
+        <div class="ui-mock-body">
+          <div style="display: flex; gap: 8px; margin-bottom: 12px; align-items: center;">
+            <span class="badge-pin">A</span><strong>Project path:</strong>
+            <div style="flex:1; border: 1px solid var(--border); padding: 4px 8px; background: var(--bg); border-radius: 4px;">D:\Git-Projects\MyApiProject</div>
+            <button style="padding: 4px 10px; background: var(--border); border: none; border-radius: 4px;"><span class="badge-pin">B</span>Browse...</button>
+            <button style="padding: 4px 12px; background: var(--primary); color: white; border: none; border-radius: 4px; font-weight: bold;"><span class="badge-pin">C</span>Open project</button>
+          </div>
+          <div style="margin-bottom: 12px;">
+            <span class="badge-pin">D</span><strong>Project asset:</strong> <code>collections/default/requests/hello.request.json</code>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; background: var(--bg); padding: 12px; border-radius: 4px;">
+            <div><strong>Editor Draft (In-Memory Buffer)</strong><pre style="margin-top:6px;">{
+  "name": "Hello API",
+  "method": "GET",
+  "url": "http://127.0.0.1:5057/echo"
+}</pre></div>
+            <div><strong>Current Disk Version</strong><pre style="margin-top:6px;">{
+  "name": "Hello API",
+  "method": "GET",
+  "url": "http://127.0.0.1:5057/echo"
+}</pre></div>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px;">
+            <span style="color: var(--accent-green); font-size: 12px;">● Status: Project opened.</span>
+            <div style="display: flex; gap: 8px;">
+              <button style="padding: 4px 10px; background: var(--primary); color: white; border: none; border-radius: 4px;">Save</button>
+              <button style="padding: 4px 10px; background: var(--border); border: none; border-radius: 4px;">Use disk</button>
+              <button style="padding: 4px 10px; background: var(--border); border: none; border-radius: 4px;">Use draft</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <h3>Functional Use Cases</h3>
+      <table>
+        <tr><th>Action</th><th>Control</th><th>Description</th></tr>
+        <tr><td><strong>Select Project Folder</strong></td><td><span class="badge-pin">B</span> Browse...</td><td>Launches the Windows native folder picker to select any directory containing <code>wrangler.json</code>.</td></tr>
+        <tr><td><strong>Open / Reload Project</strong></td><td><span class="badge-pin">C</span> Open project</td><td>Opens the directory in the path box. If path is empty, automatically triggers folder selection. Synchronizes requests and collections across the entire app.</td></tr>
+        <tr><td><strong>Choose Active Asset</strong></td><td><span class="badge-pin">D</span> Project asset dropdown</td><td>Lists all validated manifests, requests, environments, collections, and mock assets.</td></tr>
+        <tr><td><strong>Resolve Disk Conflict</strong></td><td>Use disk / Use draft buttons</td><td>If an external Git pull or editor modified the file on disk while you were typing, compare the split diff and choose whether to discard the draft or overwrite disk.</td></tr>
+      </table>
+
+      <h3>Sample <code>wrangler.json</code> Manifest</h3>
+      <pre><code>{
+  "$schema": "./schemas/wrangler.schema.json",
+  "schemaVersion": 1,
+  "projectId": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+  "name": "E-Commerce Microservices",
+  "defaultEnvironmentId": "5a4f7831-5612-4299-90bc-27151121ad10",
+  "paths": {
+    "collections": "collections",
+    "environments": "environments",
+    "datasets": "datasets",
+    "reports": "reports"
+  },
+  "execution": {
+    "requestTimeoutMs": 30000,
+    "maxConcurrentRequests": 4,
+    "maxRedirects": 10,
+    "tlsVerification": true
+  }
+}</code></pre>
+    </section>
+
+    <!-- Section: Tab 2 - HTTP Workbench -->
+    <section id="tab-http">
+      <h2>2. HTTP Workbench Tab</h2>
+      <p>The primary testing interface for crafting requests, injecting variables and authentication headers, inspecting responses, and running collections.</p>
+
+      <div class="ui-mock">
+        <div class="ui-mock-header">
+          <div class="ui-mock-dots"><div class="ui-mock-dot dot-red"></div><div class="ui-mock-dot dot-amber"></div><div class="ui-mock-dot dot-green"></div></div>
+          <div class="ui-mock-title">Tab: HTTP workbench</div>
+        </div>
+        <div class="ui-mock-body">
+          <!-- Request Bar -->
+          <div style="display: flex; gap: 8px; margin-bottom: 12px; align-items: center;">
+            <select style="padding: 6px; font-weight: bold; border-radius: 4px; border: 1px solid var(--border);"><option>GET</option><option>POST</option><option>PUT</option><option>DELETE</option></select>
+            <input type="text" value="https://api.example.com/v1/orders/{{orderId}}" style="flex:1; padding: 6px 10px; border-radius: 4px; border: 1px solid var(--border);">
+            <button style="padding: 6px 16px; background: var(--primary); color: white; border: none; border-radius: 4px; font-weight: bold;">Send (Ctrl+Enter)</button>
+            <button style="padding: 6px 12px; background: var(--border); border: none; border-radius: 4px;">Cancel</button>
+          </div>
+          <!-- Subtabs -->
+          <div style="border-bottom: 1px solid var(--border); display: flex; gap: 16px; font-size: 13px; font-weight: 600; padding-bottom: 6px; margin-bottom: 10px;">
+            <span style="color: var(--primary); border-bottom: 2px solid var(--primary);">Headers</span>
+            <span>Body</span>
+            <span>Query params</span>
+            <span>Transport settings</span>
+            <span>Variables</span>
+            <span>Auth</span>
+          </div>
+          <!-- Request Body / Headers -->
+          <pre style="margin: 0; padding: 10px; font-size: 12px;">Accept: application/json
+Authorization: Bearer {{secret:jwtToken}}
+X-Correlation-ID: {{$guid}}</pre>
+        </div>
+      </div>
+
+      <h3>Request Features</h3>
+      <ul>
+        <li><strong>Multi-part & File Uploads:</strong> Choose body mode <code>file</code> or <code>form-data</code>. Validates path existence before transmission to avoid sending empty bodies.</li>
+        <li><strong>Cross-Origin Security:</strong> By default, redirects follow same-origin rules. Cross-origin redirects strip sensitive <code>Authorization</code> headers automatically.</li>
+        <li><strong>TLS Error Override:</strong> Check <em>Ignore TLS certificate errors</em> for self-signed development certificates without modifying machine root certificates.</li>
+        <li><strong>Response Formatting:</strong> Automatic JSON, XML, and HTML syntax highlighting with collapsible trees and byte formatting.</li>
+      </ul>
+    </section>
+
+    <!-- Section: Tab 3 - Import Dataset -->
+    <section id="tab-dataset-import">
+      <h2>3. Import Dataset Tab</h2>
+      <p>Allows importing high-volume CSV, TSV, JSON, and JSONL data files directly into version-controlled project datasets with column typing.</p>
+      
+      <div class="callout tip">
+        <h4>Dataset Capabilities</h4>
+        <p>Supports bounded preview sampling (up to 1,000 cases in GUI), custom delimiters (comma, tab, pipe, semicolon), custom date-time patterns, and type inference (integer, double, boolean, ISO datetime).</p>
+      </div>
+
+      <pre><code># Sample CSV file for data-driven runs
+id,customerId,expectedTotal,currency,isPriority
+ORD-101,CUST-9921,49.99,USD,true
+ORD-102,CUST-8812,120.50,USD,false
+ORD-103,CUST-4431,890.00,EUR,true</code></pre>
+    </section>
+
+    <!-- Section: Tab 4 - Import & Export -->
+    <section id="tab-import-export">
+      <h2>4. Import & Export Tab</h2>
+      <p>Seamlessly migrate existing collections and environments from other industry tools into native API Wrangler projects.</p>
+
+      <table>
+        <tr><th>Format</th><th>Version Support</th><th>Notes</th></tr>
+        <tr><td><strong>Postman Collections</strong></td><td>Collection v2.1 (.json)</td><td>Translates folders into collections, script assertions into native assertions.</td></tr>
+        <tr><td><strong>Postman Environments</strong></td><td>Format v1 (.json)</td><td>Extracts key-values; separates plain variables from secret entries.</td></tr>
+        <tr><td><strong>OpenAPI / Swagger</strong></td><td>v3.0.x and v3.1.x (JSON & YAML)</td><td>Generates request templates, path parameters, headers, and sample bodies.</td></tr>
+        <tr><td><strong>HTTP Archive (HAR)</strong></td><td>HAR 1.2</td><td>Extracts captured network traces into reproducible API Wrangler requests.</td></tr>
+        <tr><td><strong>cURL Command Line</strong></td><td>Standard POSIX syntax</td><td>Paste raw <code>curl -X POST ...</code> to instantly populate headers, method, and payload.</td></tr>
+      </table>
+    </section>
+
+    <!-- Section: Tab 5 - Protocols & Streaming -->
+    <section id="tab-protocols">
+      <h2>5. Protocols & Streaming Tab</h2>
+      <p>Expands testing capabilities beyond classic REST to modern GraphQL, gRPC, WebSocket, and Server-Sent Events (SSE) interfaces.</p>
+
+      <h3>GraphQL Query Execution</h3>
+      <pre><code>query FetchUserOrders($userId: ID!, $limit: Int) {
+  user(id: $userId) {
+    id
+    name
+    email
+    orders(limit: $limit) {
+      orderId
+      total
+      status
+    }
+  }
+}</code></pre>
+
+      <h3>gRPC Protocol Buffers</h3>
+      <p>Load <code>.proto</code> files directly into the workspace. The built-in <code>ProtoParser</code> validates syntax, packages, service definitions, and messages without requiring local <code>protoc</code> installations.</p>
+    </section>
+
+    <!-- Section: Tab 6 - Mocks & Webhooks -->
+    <section id="tab-mocks">
+      <h2>6. Mocks & Webhooks Tab</h2>
+      <p>Built-in embedded loopback mock server and webhook listener for offline development, fault simulation, and webhook callback verification.</p>
+
+      <div class="callout warn">
+        <h4>🔒 Security Guard: Loopback Only</h4>
+        <p>The mock server binds exclusively to <code>127.0.0.1</code> to prevent exposing mock endpoints to the external network, unless explicitly configured.</p>
+      </div>
+
+      <h3>Fault Injection Testing</h3>
+      <ul>
+        <li><strong>Fixed Latency:</strong> Simulate slow networks (e.g. 2,000 ms delay).</li>
+        <li><strong>TCP Abort / Connection Reset:</strong> Simulates abrupt socket disconnects.</li>
+        <li><strong>Rate Limiting (HTTP 429):</strong> Validate client exponential backoff and retry policies.</li>
+      </ul>
+    </section>
+
+    <!-- Section: Tab 7 - Load Testing -->
+    <section id="tab-load">
+      <h2>7. Load Testing Tab</h2>
+      <p>Local load generation engine supporting virtual users (VUs) and arrival-rate schedules with latency percentile profiling.</p>
+
+      <table>
+        <tr><th>Metric</th><th>Target / SLA</th><th>Description</th></tr>
+        <tr><td><strong>Min / Max</strong></td><td>—</td><td>Outlier latency bounds.</td></tr>
+        <tr><td><strong>p50 (Median)</strong></td><td>&lt; 50 ms</td><td>Typical response time for 50% of requests.</td></tr>
+        <tr><td><strong>p95 / p99</strong></td><td>&lt; 200 ms</td><td>Tail latency under peak virtual user load.</td></tr>
+        <tr><td><strong>Error Rate</strong></td><td>0.00%</td><td>Percentage of non-2xx responses or network timeouts.</td></tr>
+      </table>
+    </section>
+
+    <!-- Section: Tab 8 & 9 - Datasets & Grid -->
+    <section id="tab-grid">
+      <h2>8 & 9. Dataset Feasibility, Grid & Clipboard</h2>
+      <p>High-performance tabular grid capable of rendering up to <strong>100,000 cases</strong> using UI virtualization, with direct clipboard copy/paste to and from Excel or Google Sheets.</p>
+      <ul style="margin-left: 20px;">
+        <li><kbd>Ctrl+C</kbd> / <kbd>Ctrl+V</kbd>: Full TSV/CSV format fidelity with Excel.</li>
+        <li><strong>Fill Down:</strong> Quickly duplicate parameter sequences across rows.</li>
+        <li><strong>Safe Export:</strong> Export validated data tables into CSV or project JSON without external disk leakage.</li>
+      </ul>
+    </section>
+
+    <!-- Section: Tab 10 - Git Collaboration -->
+    <section id="tab-git">
+      <h2>10. Git Collaboration Tab</h2>
+      <p>Provides visual Git staging, history inspection, and an advanced <strong>3-Way Conflict Resolver</strong> specifically optimized for API project assets.</p>
+
+      <div class="ui-mock">
+        <div class="ui-mock-header">
+          <div class="ui-mock-dots"><div class="ui-mock-dot dot-red"></div><div class="ui-mock-dot dot-amber"></div><div class="ui-mock-dot dot-green"></div></div>
+          <div class="ui-mock-title">3-Way Git Conflict Resolver</div>
+        </div>
+        <div class="ui-mock-body">
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; font-size: 12px;">
+            <div style="border: 1px solid var(--border); padding: 8px; border-radius: 4px;"><strong>Base (Common Ancestor)</strong><br><code>version: 1.0</code></div>
+            <div style="border: 1px solid var(--border); padding: 8px; border-radius: 4px;"><strong>Local (Stage 2)</strong><br><code>version: 1.1-local</code></div>
+            <div style="border: 1px solid var(--border); padding: 8px; border-radius: 4px;"><strong>Incoming (Stage 3)</strong><br><code>version: 1.1-team</code></div>
+          </div>
+          <div style="margin-top: 10px;">
+            <button style="padding: 4px 8px; font-size: 12px; background: var(--primary); color: white; border: none; border-radius: 4px;">Review Edited Result</button>
+            <button style="padding: 4px 8px; font-size: 12px; background: var(--border); border: none; border-radius: 4px;">Use Local</button>
+            <button style="padding: 4px 8px; font-size: 12px; background: var(--border); border: none; border-radius: 4px;">Use Incoming</button>
+            <button style="padding: 4px 8px; font-size: 12px; background: var(--border); border: none; border-radius: 4px;">Save Both Versions</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section: Variables Reference -->
+    <section id="variables-reference">
+      <h2>Variables, Secrets & Generators Reference</h2>
+      <table>
+        <tr><th>Syntax</th><th>Resolution Scope</th><th>Example</th></tr>
+        <tr><td><code>{{varName}}</code></td><td>Hierarchy: Environment &gt; Collection &gt; Project &gt; Global</td><td><code>{{baseUrl}}/api/v1</code></td></tr>
+        <tr><td><code>{{secret:KEY}}</code></td><td>Windows DPAPI Encrypted Vault (Never committed)</td><td><code>{{secret:GITHUB_TOKEN}}</code></td></tr>
+        <tr><td><code>{{$guid}}</code></td><td>Generates a random RFC 4122 v4 UUID</td><td><code>e85f4b23-1d2a-4f51-b8ef-12a1f2e1a491</code></td></tr>
+        <tr><td><code>{{$isoTimestamp}}</code></td><td>Current UTC timestamp in ISO 8601 format</td><td><code>2026-11-10T07:30:00Z</code></td></tr>
+        <tr><td><code>{{$randomInt(min,max)}}</code></td><td>Generates a random integer within bounds</td><td><code>{{$randomInt(100,999)}}</code></td></tr>
+      </table>
+    </section>
+
+    <!-- Section: Keyboard Shortcuts -->
+    <section id="shortcuts">
+      <h2>⌨️ Keyboard Shortcuts Reference</h2>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <div class="shortcut-card"><span>Send Active Request</span><kbd>Ctrl + Enter</kbd></div>
+        <div class="shortcut-card"><span>Open Help & Documentation</span><kbd>F1</kbd></div>
+        <div class="shortcut-card"><span>Save Request / Asset</span><kbd>Ctrl + S</kbd></div>
+        <div class="shortcut-card"><span>Cancel Running Request</span><kbd>Esc</kbd></div>
+        <div class="shortcut-card"><span>Copy Grid Selection</span><kbd>Ctrl + C</kbd></div>
+        <div class="shortcut-card"><span>Paste into Grid / Table</span><kbd>Ctrl + V</kbd></div>
+      </div>
+    </section>
+
+    <!-- Section: CLI Reference -->
+    <section id="cli-reference">
+      <h2>💻 Headless CLI Reference</h2>
+      <p>The shared execution engine can run headlessly in CI/CD pipelines (GitHub Actions, GitLab CI, Azure Pipelines).</p>
+      
+      <pre><code># Initialize a new project
+api-wrangler init --project ./my-api --name "Production Regression"
+
+# Validate project schemas and references
+api-wrangler validate --project ./my-api
+
+# Execute an entire collection with JUnit and HTML test reports
+api-wrangler run --project ./my-api --collection "Auth & Payments" --environment "Staging" --reporter junit,html --output ./reports
+
+# Execute a single ad-hoc request
+api-wrangler send --url https://api.example.com/health --method GET</code></pre>
+    </section>
+
+    <!-- Section: Troubleshooting -->
+    <section id="troubleshooting">
+      <h2>Diagnostics & Troubleshooting</h2>
+      <div class="callout danger">
+        <h4>Common Issues & Resolutions</h4>
+        <ul style="margin-left: 20px; font-size: 13.5px;">
+          <li><strong>"No wrangler.json was found in the selected project":</strong> Ensure you selected the folder containing <code>wrangler.json</code> or click <em>Browse...</em> to choose the folder directly.</li>
+          <li><strong>"Port already in use":</strong> If the mock server fails to start, verify that port 5058 is not occupied by another instance or service.</li>
+          <li><strong>"Upload file not found":</strong> If a request has body mode set to <code>file</code>, ensure the absolute path exists on disk before clicking Send.</li>
+        </ul>
+      </div>
+    </section>
+
+    <footer>
+      API Wrangler · Git-backed local-first API workbench · Version 1.0 Release · Licensed under Apache-2.0
+    </footer>
+  </main>
+
+  <script>
+    function toggleTheme() {
+      const current = document.documentElement.getAttribute('data-theme');
+      const target = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', target);
+      localStorage.setItem('awr_theme', target);
+    }
+    
+    // Restore saved theme preference
+    if (localStorage.getItem('awr_theme') === 'dark') {
+      document.documentElement.setAttribute('data-theme', 'dark');
+    }
+
+    function filterDocs() {
+      const query = document.getElementById('searchInput').value.toLowerCase();
+      const sections = document.querySelectorAll('main section');
+      sections.forEach(sec => {
+        const text = sec.innerText.toLowerCase();
+        sec.style.display = text.includes(query) ? '' : 'none';
+      });
+    }
+
+    // Smooth scroll for nav links
+    document.querySelectorAll('#sidebar a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function(e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth' });
+          document.querySelectorAll('#sidebar a').forEach(a => a.classList.remove('active'));
+          this.classList.add('active');
+        }
+      });
+    });
+  </script>
+</body>
+</html>
+

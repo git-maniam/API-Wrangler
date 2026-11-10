@@ -13,6 +13,12 @@
     <Resource Include="Resources/App-Icon.png" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\..\docs\help.html" Link="docs\help.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="../ApiWrangler.Execution/ApiWrangler.Execution.csproj" />
     <ProjectReference Include="../ApiWrangler.Storage/ApiWrangler.Storage.csproj" />
     <PackageReference Include="CommunityToolkit.Mvvm" />
